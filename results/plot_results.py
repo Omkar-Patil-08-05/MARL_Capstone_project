@@ -23,7 +23,7 @@ print(pos_path)
 # -------------------------------
 # LOAD DATA
 # -------------------------------
-cov = pd.read_csv(cov_path)
+cov = pd.read_csv(cov_path) 
 pos = pd.read_csv(pos_path)
 
 # -------------------------------

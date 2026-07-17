@@ -115,7 +115,7 @@ class ControllerNode(Node):
                 test_pos = self.action_mapper.get_next_pos(pos, a)
                 x, y = test_pos[0], test_pos[1]
 
-                # 🚨 HARD OBSTACLE BLOCK
+                # HARD OBSTACLE BLOCK
                 if (x, y) in self.obstacles:
                     continue 
 
