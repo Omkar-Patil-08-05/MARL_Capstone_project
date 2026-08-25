@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+
+<sdf version="1.9">
+
+<model name="damaged_building_small">
+
+  <static>true</static>
+
+  <link name="building">
+
+    <!-- Main Building -->
+
+    <collision name="main_collision">
+      <geometry>
+        <box>
+          <size>8 8 6</size>
+        </box>
+      </geometry>
+    </collision>
+
+    <visual name="main_visual">
+      <geometry>
+        <box>
+          <size>8 8 6</size>
+        </box>
+      </geometry>
+
+      <material>
+        <ambient>0.65 0.65 0.65 1</ambient>
+        <diffuse>0.65 0.65 0.65 1</diffuse>
+      </material>
+    </visual>
+
+    <!-- Missing Roof -->
+
+    <visual name="roof_damage">
+
+      <pose>1.5 1.5 3.2 0.4 0.2 0</pose>
+
+      <geometry>
+        <box>
+          <size>5 5 0.4</size>
+        </box>
+      </geometry>
+
+      <material>
+        <ambient>0.35 0.35 0.35 1</ambient>
+        <diffuse>0.35 0.35 0.35 1</diffuse>
+      </material>
+
+    </visual>
+
+    <!-- Collapsed Wall -->
+
+    <visual name="collapsed_wall">
+
+      <pose>-3.4 0 1 0 0 0.45</pose>
+
+      <geometry>
+        <box>
+          <size>0.4 8 2</size>
+        </box>
+      </geometry>
+
+      <material>
+        <ambient>0.45 0.45 0.45 1</ambient>
+        <diffuse>0.45 0.45 0.45 1</diffuse>
+      </material>
+
+    </visual>
+
+    <!-- Fallen Concrete -->
+
+    <visual name="fallen_piece1">
+
+      <pose>4.8 1.2 0.35 0.5 0.1 0.3</pose>
+
+      <geometry>
+        <box>
+          <size>1.2 0.8 0.6</size>
+        </box>
+      </geometry>
+
+      <material>
+        <ambient>0.42 0.42 0.42 1</ambient>
+        <diffuse>0.42 0.42 0.42 1</diffuse>
+      </material>
+
+    </visual>
+
+    <visual name="fallen_piece2">
+
+      <pose>3.8 -2 0.45 0.2 0.5 0.8</pose>
+
+      <geometry>
+        <box>
+          <size>1.5 1 0.5</size>
+        </box>
+      </geometry>
+
+      <material>
+        <ambient>0.38 0.38 0.38 1</ambient>
+        <diffuse>0.38 0.38 0.38 1</diffuse>
+      </material>
+
+    </visual>
+
+    <inertial>
+      <mass>1000</mass>
+    </inertial>
+
+  </link>
+
+</model>
+
+</sdf>

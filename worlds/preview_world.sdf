@@ -1,0 +1,3570 @@
+<?xml version="1.0"?>
+
+<sdf version="1.9">
+
+<world name="earthquake">
+
+<physics type="dart">
+
+<max_step_size>0.004</max_step_size>
+
+<real_time_factor>1</real_time_factor>
+
+</physics>
+
+<plugin
+filename="gz-sim-physics-system"
+name="gz::sim::systems::Physics"/>
+
+<plugin
+filename="gz-sim-user-commands-system"
+name="gz::sim::systems::UserCommands"/>
+
+<plugin
+filename="gz-sim-scene-broadcaster-system"
+name="gz::sim::systems::SceneBroadcaster"/>
+
+
+    <scene>
+
+      <ambient>0.65 0.65 0.65 1</ambient>
+
+      <background>0.72 0.84 0.97 1</background>
+
+      <grid>false</grid>
+
+      <origin_visual>false</origin_visual>
+
+    </scene>
+
+    <light name="sun" type="directional">
+
+      <cast_shadows>true</cast_shadows>
+
+      <pose>0 0 200 0 0 0</pose>
+
+      <diffuse>1 1 1 1</diffuse>
+
+      <specular>0.2 0.2 0.2 1</specular>
+
+      <direction>-0.4 0.2 -1</direction>
+
+    </light>
+
+    <model name="ground_plane">
+
+      <static>true</static>
+
+      <link name="link">
+
+        <collision name="collision">
+
+          <geometry>
+
+            <plane>
+
+              <normal>0 0 1</normal>
+
+              <size>1000 1000</size>
+
+            </plane>
+
+          </geometry>
+
+        </collision>
+
+        <visual name="visual">
+
+          <geometry>
+
+            <plane>
+
+              <normal>0 0 1</normal>
+
+              <size>1000 1000</size>
+
+            </plane>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.25 0.52 0.25 1</ambient>
+
+            <diffuse>0.25 0.52 0.25 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+
+    <model name="hroad_0">
+
+      <static>true</static>
+
+      <pose>0.00 -72.00 0.010 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 12.000 0.020</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.10 0.10 0.10 1</ambient>
+
+            <diffuse>0.10 0.10 0.10 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hside_top_0">
+
+      <static>true</static>
+
+      <pose>0.00 -64.50 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 3.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hside_bottom_0">
+
+      <static>true</static>
+
+      <pose>0.00 -79.50 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 3.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hline_0">
+
+      <static>true</static>
+
+      <pose>0.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hroad_1">
+
+      <static>true</static>
+
+      <pose>0.00 -24.00 0.010 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 12.000 0.020</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.10 0.10 0.10 1</ambient>
+
+            <diffuse>0.10 0.10 0.10 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hside_top_1">
+
+      <static>true</static>
+
+      <pose>0.00 -16.50 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 3.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hside_bottom_1">
+
+      <static>true</static>
+
+      <pose>0.00 -31.50 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 3.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hline_1">
+
+      <static>true</static>
+
+      <pose>0.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hroad_2">
+
+      <static>true</static>
+
+      <pose>0.00 24.00 0.010 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 12.000 0.020</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.10 0.10 0.10 1</ambient>
+
+            <diffuse>0.10 0.10 0.10 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hside_top_2">
+
+      <static>true</static>
+
+      <pose>0.00 31.50 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 3.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hside_bottom_2">
+
+      <static>true</static>
+
+      <pose>0.00 16.50 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 3.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hline_2">
+
+      <static>true</static>
+
+      <pose>0.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hroad_3">
+
+      <static>true</static>
+
+      <pose>0.00 72.00 0.010 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 12.000 0.020</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.10 0.10 0.10 1</ambient>
+
+            <diffuse>0.10 0.10 0.10 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hside_top_3">
+
+      <static>true</static>
+
+      <pose>0.00 79.50 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 3.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hside_bottom_3">
+
+      <static>true</static>
+
+      <pose>0.00 64.50 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 3.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="hline_3">
+
+      <static>true</static>
+
+      <pose>0.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>144.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vroad_0">
+
+      <static>true</static>
+
+      <pose>-72.00 0.00 0.010 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 144.000 0.020</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.10 0.10 0.10 1</ambient>
+
+            <diffuse>0.10 0.10 0.10 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vside_left_0">
+
+      <static>true</static>
+
+      <pose>-79.50 0.00 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>3.000 144.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vside_right_0">
+
+      <static>true</static>
+
+      <pose>-64.50 0.00 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>3.000 144.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vline_0">
+
+      <static>true</static>
+
+      <pose>-72.00 0.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 144.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vroad_1">
+
+      <static>true</static>
+
+      <pose>-24.00 0.00 0.010 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 144.000 0.020</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.10 0.10 0.10 1</ambient>
+
+            <diffuse>0.10 0.10 0.10 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vside_left_1">
+
+      <static>true</static>
+
+      <pose>-31.50 0.00 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>3.000 144.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vside_right_1">
+
+      <static>true</static>
+
+      <pose>-16.50 0.00 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>3.000 144.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vline_1">
+
+      <static>true</static>
+
+      <pose>-24.00 0.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 144.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vroad_2">
+
+      <static>true</static>
+
+      <pose>24.00 0.00 0.010 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 144.000 0.020</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.10 0.10 0.10 1</ambient>
+
+            <diffuse>0.10 0.10 0.10 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vside_left_2">
+
+      <static>true</static>
+
+      <pose>16.50 0.00 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>3.000 144.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vside_right_2">
+
+      <static>true</static>
+
+      <pose>31.50 0.00 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>3.000 144.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vline_2">
+
+      <static>true</static>
+
+      <pose>24.00 0.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 144.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vroad_3">
+
+      <static>true</static>
+
+      <pose>72.00 0.00 0.010 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 144.000 0.020</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.10 0.10 0.10 1</ambient>
+
+            <diffuse>0.10 0.10 0.10 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vside_left_3">
+
+      <static>true</static>
+
+      <pose>64.50 0.00 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>3.000 144.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vside_right_3">
+
+      <static>true</static>
+
+      <pose>79.50 0.00 0.030 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>3.000 144.000 0.060</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.72 0.72 0.72 1</ambient>
+
+            <diffuse>0.72 0.72 0.72 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="vline_3">
+
+      <static>true</static>
+
+      <pose>72.00 0.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 144.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_0_0">
+
+      <static>true</static>
+
+      <pose>-72.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_0_0">
+
+      <static>true</static>
+
+      <pose>-72.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_0_1">
+
+      <static>true</static>
+
+      <pose>-24.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_0_1">
+
+      <static>true</static>
+
+      <pose>-24.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_0_2">
+
+      <static>true</static>
+
+      <pose>24.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_0_2">
+
+      <static>true</static>
+
+      <pose>24.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_0_3">
+
+      <static>true</static>
+
+      <pose>72.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_0_3">
+
+      <static>true</static>
+
+      <pose>72.00 -72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_1_0">
+
+      <static>true</static>
+
+      <pose>-72.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_1_0">
+
+      <static>true</static>
+
+      <pose>-72.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_1_1">
+
+      <static>true</static>
+
+      <pose>-24.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_1_1">
+
+      <static>true</static>
+
+      <pose>-24.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_1_2">
+
+      <static>true</static>
+
+      <pose>24.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_1_2">
+
+      <static>true</static>
+
+      <pose>24.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_1_3">
+
+      <static>true</static>
+
+      <pose>72.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_1_3">
+
+      <static>true</static>
+
+      <pose>72.00 -24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_2_0">
+
+      <static>true</static>
+
+      <pose>-72.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_2_0">
+
+      <static>true</static>
+
+      <pose>-72.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_2_1">
+
+      <static>true</static>
+
+      <pose>-24.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_2_1">
+
+      <static>true</static>
+
+      <pose>-24.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_2_2">
+
+      <static>true</static>
+
+      <pose>24.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_2_2">
+
+      <static>true</static>
+
+      <pose>24.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_2_3">
+
+      <static>true</static>
+
+      <pose>72.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_2_3">
+
+      <static>true</static>
+
+      <pose>72.00 24.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_3_0">
+
+      <static>true</static>
+
+      <pose>-72.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_3_0">
+
+      <static>true</static>
+
+      <pose>-72.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_3_1">
+
+      <static>true</static>
+
+      <pose>-24.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_3_1">
+
+      <static>true</static>
+
+      <pose>-24.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_3_2">
+
+      <static>true</static>
+
+      <pose>24.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_3_2">
+
+      <static>true</static>
+
+      <pose>24.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_3_3">
+
+      <static>true</static>
+
+      <pose>72.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>12.000 0.300 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+    <model name="intersection_cross_3_3">
+
+      <static>true</static>
+
+      <pose>72.00 72.00 0.041 0 0 0</pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+
+              <size>0.300 12.000 0.005</size>
+
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>0.95 0.95 0.70 1</ambient>
+
+            <diffuse>0.95 0.95 0.70 1</diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+
+  <model name="house_0_0_0">
+
+    <static>true</static>
+
+    <pose>
+      -56.00
+      -44.00
+      0.00
+      1.570800
+      0.000000
+      -1.570796
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/small_house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="tree_0_0_0">
+    <static>true</static>
+    <pose>-55.05 -37.29 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="house_0_0_1">
+
+    <static>true</static>
+
+    <pose>
+      -48.00
+      -44.00
+      0.00
+      1.570800
+      0.000000
+      -1.570796
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/small_house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="tree_0_0_1">
+    <static>true</static>
+    <pose>-49.07 -37.59 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="house_0_0_2">
+
+    <static>true</static>
+
+    <pose>
+      -40.00
+      -44.00
+      0.00
+      1.570800
+      0.000000
+      -1.570796
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/small_house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="tree_0_0_2">
+    <static>true</static>
+    <pose>-40.20 -38.89 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="res_car_0_0">
+
+    <static>true</static>
+
+    <pose>
+      -55.59
+      -58.48
+      4.74
+      1.570800
+      0.000000
+      -1.570796
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Cars/old_rusty_car.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="park_tree_0_1_2">
+    <static>true</static>
+    <pose>11.85 -36.92 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="park_tree_0_1_4">
+    <static>true</static>
+    <pose>10.88 -48.70 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="park_tree_0_1_5">
+    <static>true</static>
+    <pose>-11.73 -59.13 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="park_tree_0_1_6">
+    <static>true</static>
+    <pose>-0.00 -58.46 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="park_tree_0_1_7">
+    <static>true</static>
+    <pose>11.97 -58.98 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="comm_bld_0_2">
+
+    <static>true</static>
+
+    <pose>
+      46.61
+      -44.36
+      -5.10
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/futuristic_building.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="comm_car_0_2_1_0">
+
+    <static>true</static>
+
+    <pose>
+      40.78
+      -58.06
+      4.74
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Cars/old_rusty_car.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="comm_car_0_2_1_1">
+
+    <static>true</static>
+
+    <pose>
+      47.76
+      -57.61
+      4.74
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Cars/old_rusty_car.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="comm_tree_0_2_1">
+    <static>true</static>
+    <pose>36.75 -58.59 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="comm_tree_0_2_2">
+    <static>true</static>
+    <pose>58.52 -58.08 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="tower_1">
+
+    <static>true</static>
+
+    <pose>
+      58.00
+      -38.00
+      6.71
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Towers/40_meter_radiotower.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="house_1_0">
+
+    <static>true</static>
+
+    <pose>
+      -48.00
+      2.00
+      -42.50
+      1.570800
+      0.000000
+      3.141593
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="tree_1_0_1">
+    <static>true</static>
+    <pose>-59.96 8.30 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="house_1_1_0">
+
+    <static>true</static>
+
+    <pose>
+      -8.00
+      4.00
+      0.00
+      1.570800
+      0.000000
+      -1.570796
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/small_house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="house_1_1_1">
+
+    <static>true</static>
+
+    <pose>
+      0.00
+      4.00
+      0.00
+      1.570800
+      0.000000
+      -1.570796
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/small_house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="house_1_1_2">
+
+    <static>true</static>
+
+    <pose>
+      8.00
+      4.00
+      0.00
+      1.570800
+      0.000000
+      -1.570796
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/small_house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="tree_1_1_2">
+    <static>true</static>
+    <pose>6.84 11.14 0.00 0 0 0</pose>
+    <link name="link">
+      <visual name="trunk">
+        <pose>0 0 1.25 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.2</radius>
+            <length>2.5</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.45 0.25 0.1 1</ambient>
+          <diffuse>0.45 0.25 0.1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Leaves -->
+      <visual name="leaves1">
+        <pose>0 0 2.75 0 0 0</pose>
+        <geometry><sphere><radius>0.8</radius></sphere></geometry>
+        <material><ambient>0.0 0.6 0.0 1</ambient><diffuse>0.0 0.6 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves2">
+        <pose>0.3 0 2.95 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.7 0.0 1</ambient><diffuse>0.0 0.7 0.0 1</diffuse></material>
+      </visual>
+      <visual name="leaves3">
+        <pose>-0.3 0.2 2.85 0 0 0</pose>
+        <geometry><sphere><radius>0.6</radius></sphere></geometry>
+        <material><ambient>0.0 0.5 0.0 1</ambient><diffuse>0.0 0.5 0.0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="res_car_1_1">
+
+    <static>true</static>
+
+    <pose>
+      -6.14
+      -10.23
+      4.74
+      1.570800
+      0.000000
+      -1.570796
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Cars/old_rusty_car.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_bld_1_2">
+
+    <static>true</static>
+
+    <pose>
+      48.04
+      1.17
+      -0.03
+      1.570800
+      0.000000
+      3.141593
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/abandoned_building.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_rubble_1_2_1">
+
+    <static>true</static>
+
+    <pose>
+      51.49
+      -8.88
+      0.00
+      1.570800
+      0.000000
+      1.585067
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_rubble_1_2_2">
+
+    <static>true</static>
+
+    <pose>
+      37.41
+      -3.11
+      0.00
+      1.570800
+      0.000000
+      4.156458
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="ind_bld_2_0">
+
+    <static>true</static>
+
+    <pose>
+      -51.56
+      51.82
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/abandoned_construction_building.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="ind_rubble_2_0">
+
+    <static>true</static>
+
+    <pose>
+      -39.21
+      40.51
+      0.00
+      1.570800
+      0.000000
+      2.140717
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="ind_truck_2_0">
+
+    <static>true</static>
+
+    <pose>
+      -39.23
+      50.02
+      4.74
+      1.570800
+      0.000000
+      0.573823
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Cars/old_rusty_car.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_bld_2_1">
+
+    <static>true</static>
+
+    <pose>
+      2.00
+      48.69
+      -0.03
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/abandoned_building.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_rubble_2_1_1">
+
+    <static>true</static>
+
+    <pose>
+      8.88
+      40.43
+      0.00
+      1.570800
+      0.000000
+      5.463864
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_rubble_2_1_2">
+
+    <static>true</static>
+
+    <pose>
+      -10.14
+      46.23
+      0.00
+      1.570800
+      0.000000
+      0.096432
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="house_2_2">
+
+    <static>true</static>
+
+    <pose>
+      48.00
+      50.00
+      -42.50
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+
+</world>
+
+</sdf>

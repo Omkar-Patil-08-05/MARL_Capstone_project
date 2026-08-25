@@ -1,31 +1,89 @@
-# ROS2 build
-build/
-install/
-log/
+# ============================================================
+# MARL Capstone - Git Ignore
+# ============================================================
 
+# -------------------------
 # Python
+# -------------------------
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.pyright/
+.ruff_cache/
 
-# Virtual env
+# Virtual environments
+.venv/
 venv/
-.env/
+env/
+ENV/
 
-# VS Code
-.vscode/
+# -------------------------
+# ROS 2 workspaces
+# -------------------------
+drone_ws/build/
+drone_ws/install/
+drone_ws/log/
 
-# System
-.DS_Store
+# ROS generated/cache files
+**/.colcon/
+**/.ros/
 
-# Logs
+# -------------------------
+# Training/runtime results
+# -------------------------
+marl_drone_project/results/
+marl_drone_project/**/__pycache__/
+results/
+drone_ws/results/
+
+# -------------------------
+# Temporary logs
+# -------------------------
 *.log
-
-# Temp
 *.tmp
+*.bak
+test_log.txt
+blender_output.txt
 
-# Large files (optional)
-*.bag
+# -------------------------
+# Large/generated Blender files
+# -------------------------
+*.blend1
 
-# Ignore duplicate model copies
-marl_drone_project/qmix_phase1.pth
+# -------------------------
+# Generic downloaded asset collection
+# -------------------------
+assets/
+
+# -------------------------
+# External dependency repositories
+# -------------------------
+external_worlds/
+
+# Micro-XRCE-DDS-Agent is an external dependency.
+# We don't vendor its source/build tree into the capstone repo.
+tools/
+
+# -------------------------
+# Generated/cache artifacts
+# -------------------------
+*.pyc
+*.egg-info/
+*.egg-info/*
+.pytest_cache/
+
+# -------------------------
+# OS / editor
+# -------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Blender source/project files are not required for Gazebo runtime
+*.blend

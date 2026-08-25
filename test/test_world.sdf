@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="test">
+
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics"/>
+
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster"/>
+
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands"/>
+
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors"/>
+
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 100 0 0 0</pose>
+    </light>
+
+    <model name="building">
+      <static>true</static>
+      <link name="link">
+
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>
+file:///home/capstone/capstone_project/assets_real/Buildings/abandoned_building.glb
+              </uri>
+            </mesh>
+          </geometry>
+        </visual>
+
+      </link>
+    </model>
+
+  </world>
+</sdf>

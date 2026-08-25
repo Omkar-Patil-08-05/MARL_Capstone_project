@@ -1,0 +1,7 @@
+{
+    "venvPath": "/home/capstone/capstone_project_antigravity/marl_drone_project",
+    "venv": "venv",
+    "extraPaths": [
+        "."
+    ]
+}
