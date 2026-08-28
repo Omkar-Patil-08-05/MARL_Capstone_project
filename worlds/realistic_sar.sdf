@@ -114,7 +114,7 @@
 
             <box>
 
-              <size>80.000 5.000 0.020</size>
+              <size>78.000 3.000 0.020</size>
 
             </box>
 
@@ -138,7 +138,7 @@
 
       <static>true</static>
 
-      <pose>50.00 15.75 0.030 0 0 0</pose>
+      <pose>50.00 14.75 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -148,7 +148,7 @@
 
             <box>
 
-              <size>80.000 1.500 0.060</size>
+              <size>78.000 1.500 0.060</size>
 
             </box>
 
@@ -172,7 +172,7 @@
 
       <static>true</static>
 
-      <pose>50.00 9.25 0.030 0 0 0</pose>
+      <pose>50.00 10.25 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -182,7 +182,7 @@
 
             <box>
 
-              <size>80.000 1.500 0.060</size>
+              <size>78.000 1.500 0.060</size>
 
             </box>
 
@@ -216,7 +216,7 @@
 
             <box>
 
-              <size>80.000 0.300 0.005</size>
+              <size>78.000 0.300 0.005</size>
 
             </box>
 
@@ -250,7 +250,7 @@
 
             <box>
 
-              <size>80.000 5.000 0.020</size>
+              <size>78.000 3.000 0.020</size>
 
             </box>
 
@@ -274,7 +274,7 @@
 
       <static>true</static>
 
-      <pose>50.00 40.75 0.030 0 0 0</pose>
+      <pose>50.00 39.75 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -284,7 +284,7 @@
 
             <box>
 
-              <size>80.000 1.500 0.060</size>
+              <size>78.000 1.500 0.060</size>
 
             </box>
 
@@ -308,7 +308,7 @@
 
       <static>true</static>
 
-      <pose>50.00 34.25 0.030 0 0 0</pose>
+      <pose>50.00 35.25 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -318,7 +318,7 @@
 
             <box>
 
-              <size>80.000 1.500 0.060</size>
+              <size>78.000 1.500 0.060</size>
 
             </box>
 
@@ -352,7 +352,7 @@
 
             <box>
 
-              <size>80.000 0.300 0.005</size>
+              <size>78.000 0.300 0.005</size>
 
             </box>
 
@@ -386,7 +386,7 @@
 
             <box>
 
-              <size>80.000 5.000 0.020</size>
+              <size>78.000 3.000 0.020</size>
 
             </box>
 
@@ -410,7 +410,7 @@
 
       <static>true</static>
 
-      <pose>50.00 65.75 0.030 0 0 0</pose>
+      <pose>50.00 64.75 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -420,7 +420,7 @@
 
             <box>
 
-              <size>80.000 1.500 0.060</size>
+              <size>78.000 1.500 0.060</size>
 
             </box>
 
@@ -444,7 +444,7 @@
 
       <static>true</static>
 
-      <pose>50.00 59.25 0.030 0 0 0</pose>
+      <pose>50.00 60.25 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -454,7 +454,7 @@
 
             <box>
 
-              <size>80.000 1.500 0.060</size>
+              <size>78.000 1.500 0.060</size>
 
             </box>
 
@@ -488,7 +488,7 @@
 
             <box>
 
-              <size>80.000 0.300 0.005</size>
+              <size>78.000 0.300 0.005</size>
 
             </box>
 
@@ -522,7 +522,7 @@
 
             <box>
 
-              <size>80.000 5.000 0.020</size>
+              <size>78.000 3.000 0.020</size>
 
             </box>
 
@@ -546,7 +546,7 @@
 
       <static>true</static>
 
-      <pose>50.00 90.75 0.030 0 0 0</pose>
+      <pose>50.00 89.75 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -556,7 +556,7 @@
 
             <box>
 
-              <size>80.000 1.500 0.060</size>
+              <size>78.000 1.500 0.060</size>
 
             </box>
 
@@ -580,7 +580,7 @@
 
       <static>true</static>
 
-      <pose>50.00 84.25 0.030 0 0 0</pose>
+      <pose>50.00 85.25 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -590,7 +590,7 @@
 
             <box>
 
-              <size>80.000 1.500 0.060</size>
+              <size>78.000 1.500 0.060</size>
 
             </box>
 
@@ -624,7 +624,7 @@
 
             <box>
 
-              <size>80.000 0.300 0.005</size>
+              <size>78.000 0.300 0.005</size>
 
             </box>
 
@@ -658,7 +658,7 @@
 
             <box>
 
-              <size>5.000 80.000 0.020</size>
+              <size>3.000 78.000 0.020</size>
 
             </box>
 
@@ -682,7 +682,7 @@
 
       <static>true</static>
 
-      <pose>9.25 50.00 0.030 0 0 0</pose>
+      <pose>10.25 50.00 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -692,7 +692,7 @@
 
             <box>
 
-              <size>1.500 80.000 0.060</size>
+              <size>1.500 78.000 0.060</size>
 
             </box>
 
@@ -716,7 +716,7 @@
 
       <static>true</static>
 
-      <pose>15.75 50.00 0.030 0 0 0</pose>
+      <pose>14.75 50.00 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -726,7 +726,7 @@
 
             <box>
 
-              <size>1.500 80.000 0.060</size>
+              <size>1.500 78.000 0.060</size>
 
             </box>
 
@@ -760,7 +760,7 @@
 
             <box>
 
-              <size>0.300 80.000 0.005</size>
+              <size>0.300 78.000 0.005</size>
 
             </box>
 
@@ -794,7 +794,7 @@
 
             <box>
 
-              <size>5.000 80.000 0.020</size>
+              <size>3.000 78.000 0.020</size>
 
             </box>
 
@@ -818,7 +818,7 @@
 
       <static>true</static>
 
-      <pose>34.25 50.00 0.030 0 0 0</pose>
+      <pose>35.25 50.00 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -828,7 +828,7 @@
 
             <box>
 
-              <size>1.500 80.000 0.060</size>
+              <size>1.500 78.000 0.060</size>
 
             </box>
 
@@ -852,7 +852,7 @@
 
       <static>true</static>
 
-      <pose>40.75 50.00 0.030 0 0 0</pose>
+      <pose>39.75 50.00 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -862,7 +862,7 @@
 
             <box>
 
-              <size>1.500 80.000 0.060</size>
+              <size>1.500 78.000 0.060</size>
 
             </box>
 
@@ -896,7 +896,7 @@
 
             <box>
 
-              <size>0.300 80.000 0.005</size>
+              <size>0.300 78.000 0.005</size>
 
             </box>
 
@@ -930,7 +930,7 @@
 
             <box>
 
-              <size>5.000 80.000 0.020</size>
+              <size>3.000 78.000 0.020</size>
 
             </box>
 
@@ -954,7 +954,7 @@
 
       <static>true</static>
 
-      <pose>59.25 50.00 0.030 0 0 0</pose>
+      <pose>60.25 50.00 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -964,7 +964,7 @@
 
             <box>
 
-              <size>1.500 80.000 0.060</size>
+              <size>1.500 78.000 0.060</size>
 
             </box>
 
@@ -988,7 +988,7 @@
 
       <static>true</static>
 
-      <pose>65.75 50.00 0.030 0 0 0</pose>
+      <pose>64.75 50.00 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -998,7 +998,7 @@
 
             <box>
 
-              <size>1.500 80.000 0.060</size>
+              <size>1.500 78.000 0.060</size>
 
             </box>
 
@@ -1032,7 +1032,7 @@
 
             <box>
 
-              <size>0.300 80.000 0.005</size>
+              <size>0.300 78.000 0.005</size>
 
             </box>
 
@@ -1066,7 +1066,7 @@
 
             <box>
 
-              <size>5.000 80.000 0.020</size>
+              <size>3.000 78.000 0.020</size>
 
             </box>
 
@@ -1090,7 +1090,7 @@
 
       <static>true</static>
 
-      <pose>84.25 50.00 0.030 0 0 0</pose>
+      <pose>85.25 50.00 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -1100,7 +1100,7 @@
 
             <box>
 
-              <size>1.500 80.000 0.060</size>
+              <size>1.500 78.000 0.060</size>
 
             </box>
 
@@ -1124,7 +1124,7 @@
 
       <static>true</static>
 
-      <pose>90.75 50.00 0.030 0 0 0</pose>
+      <pose>89.75 50.00 0.030 0 0 0</pose>
 
       <link name="link">
 
@@ -1134,7 +1134,7 @@
 
             <box>
 
-              <size>1.500 80.000 0.060</size>
+              <size>1.500 78.000 0.060</size>
 
             </box>
 
@@ -1168,7 +1168,7 @@
 
             <box>
 
-              <size>0.300 80.000 0.005</size>
+              <size>0.300 78.000 0.005</size>
 
             </box>
 
@@ -1202,7 +1202,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1236,7 +1236,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1270,7 +1270,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1304,7 +1304,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1338,7 +1338,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1372,7 +1372,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1406,7 +1406,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1440,7 +1440,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1474,7 +1474,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1508,7 +1508,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1542,7 +1542,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1576,7 +1576,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1610,7 +1610,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1644,7 +1644,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1678,7 +1678,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1712,7 +1712,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1746,7 +1746,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1780,7 +1780,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1814,7 +1814,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1848,7 +1848,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1882,7 +1882,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1916,7 +1916,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -1950,7 +1950,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -1984,7 +1984,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -2018,7 +2018,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -2052,7 +2052,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -2086,7 +2086,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -2120,7 +2120,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -2154,7 +2154,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -2188,7 +2188,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -2222,7 +2222,7 @@
 
             <box>
 
-              <size>5.000 0.300 0.005</size>
+              <size>3.000 0.300 0.005</size>
 
             </box>
 
@@ -2256,7 +2256,7 @@
 
             <box>
 
-              <size>0.300 5.000 0.005</size>
+              <size>0.300 3.000 0.005</size>
 
             </box>
 
@@ -2289,79 +2289,57 @@
     </link>
   </model>
 
-  <model name="victim_1">
+  <model name="res_house_1">
+
     <static>true</static>
-    <pose>47.00 28.00 0.25 0 0 0</pose>
+
+    <pose>
+      45.11
+      22.33
+      -42.50
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
     <link name="link">
+
+
+      <collision name="collision">
+        <pose>4.8856 2.6729 47.5000 0 0 0</pose>
+        <geometry>
+          <box><size>21.8900 21.8900 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
       <visual name="visual">
-        <geometry><sphere><radius>0.25</radius></sphere></geometry>
-        <material><ambient>1.0 0.2 0.2 1</ambient><diffuse>1.0 0.2 0.2 1</diffuse></material>
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
       </visual>
+
+
     </link>
+
   </model>
 
-  <model name="victim_2">
-    <static>true</static>
-    <pose>79.00 29.00 0.25 0 0 0</pose>
-    <link name="link">
-      <visual name="visual">
-        <geometry><sphere><radius>0.25</radius></sphere></geometry>
-        <material><ambient>1.0 0.2 0.2 1</ambient><diffuse>1.0 0.2 0.2 1</diffuse></material>
-      </visual>
-    </link>
-  </model>
-
-  <model name="victim_3">
-    <static>true</static>
-    <pose>31.00 44.00 0.25 0 0 0</pose>
-    <link name="link">
-      <visual name="visual">
-        <geometry><sphere><radius>0.25</radius></sphere></geometry>
-        <material><ambient>1.0 0.2 0.2 1</ambient><diffuse>1.0 0.2 0.2 1</diffuse></material>
-      </visual>
-    </link>
-  </model>
-
-  <model name="victim_4">
-    <static>true</static>
-    <pose>46.00 44.00 0.25 0 0 0</pose>
-    <link name="link">
-      <visual name="visual">
-        <geometry><sphere><radius>0.25</radius></sphere></geometry>
-        <material><ambient>1.0 0.2 0.2 1</ambient><diffuse>1.0 0.2 0.2 1</diffuse></material>
-      </visual>
-    </link>
-  </model>
-
-  <model name="victim_5">
-    <static>true</static>
-    <pose>71.00 44.00 0.25 0 0 0</pose>
-    <link name="link">
-      <visual name="visual">
-        <geometry><sphere><radius>0.25</radius></sphere></geometry>
-        <material><ambient>1.0 0.2 0.2 1</ambient><diffuse>1.0 0.2 0.2 1</diffuse></material>
-      </visual>
-    </link>
-  </model>
-
-  <model name="victim_6">
-    <static>true</static>
-    <pose>22.00 72.00 0.25 0 0 0</pose>
-    <link name="link">
-      <visual name="visual">
-        <geometry><sphere><radius>0.25</radius></sphere></geometry>
-        <material><ambient>1.0 0.2 0.2 1</ambient><diffuse>1.0 0.2 0.2 1</diffuse></material>
-      </visual>
-    </link>
-  </model>
-
-  <model name="park_rubble_2_1">
+  <model name="res_rubble_2">
 
     <static>true</static>
 
     <pose>
       50.00
-      75.00
+      16.00
       0.00
       1.570800
       0.000000
@@ -2370,6 +2348,145 @@
 
     <link name="link">
 
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>16.8500 4.3900 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/brick_rubble_scaniverse_lidar.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="comm_anchor_3">
+
+    <static>true</static>
+
+    <pose>
+      72.34
+      22.86
+      -5.10
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>2.6602 4.1421 10.1000 0 0 0</pose>
+        <geometry>
+          <box><size>21.8900 15.0000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/futuristic_building.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="comm_car_4">
+
+    <static>true</static>
+
+    <pose>
+      69.16
+      17.00
+      2.31
+      1.570800
+      0.000000
+      1.570796
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.8379 2.6900 0 0 0</pose>
+        <geometry>
+          <box><size>4.5000 10.1600 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Cars/small_price_car.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="comm_rubble_5">
+
+    <static>true</static>
+
+    <pose>
+      80.00
+      17.00
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>2.6500 1.5000 10.0</size></box>
+        </geometry>
+      </collision>
 
 
 
@@ -2392,16 +2509,739 @@
 
   </model>
 
-  <model name="victim_8">
+  <model name="park_tower_6">
+
     <static>true</static>
-    <pose>54.00 79.00 0.25 0 0 0</pose>
+
+    <pose>
+      18.00
+      58.00
+      6.71
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
     <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 -1.7100 0 0 0</pose>
+        <geometry>
+          <box><size>4.3300 4.2600 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
       <visual name="visual">
-        <geometry><sphere><radius>0.25</radius></sphere></geometry>
-        <material><ambient>1.0 0.2 0.2 1</ambient><diffuse>1.0 0.2 0.2 1</diffuse></material>
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Towers/40_meter_radiotower.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
       </visual>
+
+
     </link>
+
   </model>
+
+  <model name="park_rubble1_7">
+
+    <static>true</static>
+
+    <pose>
+      30.00
+      45.00
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>2.6500 1.5000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="park_rubble2_8">
+
+    <static>true</static>
+
+    <pose>
+      22.00
+      42.00
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>2.6500 1.5000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="maj_bldg_9">
+
+    <static>true</static>
+
+    <pose>
+      50.00
+      52.00
+      -0.03
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0300 0 0 0</pose>
+        <geometry>
+          <box><size>20.5400 15.0000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/abandoned_building.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="maj_rubble_10">
+
+    <static>true</static>
+
+    <pose>
+      50.00
+      42.00
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>16.8500 4.3900 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/brick_rubble_scaniverse_lidar.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="maj_car_11">
+
+    <static>true</static>
+
+    <pose>
+      45.13
+      42.85
+      4.69
+      1.570800
+      0.000000
+      0.785398
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>0.0090 0.1974 0.3100 0 0 0</pose>
+        <geometry>
+          <box><size>4.5000 5.6500 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Cars/old_rusty_car.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="civ_apt_12">
+
+    <static>true</static>
+
+    <pose>
+      73.99
+      49.99
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-3.9908 0.0070 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>8.9200 21.7000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/low_poly_-_soviet__apartment_building_8k.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="civ_house_13">
+
+    <static>true</static>
+
+    <pose>
+      82.00
+      54.47
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>0.0032 0.5276 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>3.7300 6.0000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Houses/small_house.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="civ_rubble_14">
+
+    <static>true</static>
+
+    <pose>
+      80.00
+      45.00
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>2.6500 1.5000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="ind_bldg_15">
+
+    <static>true</static>
+
+    <pose>
+      17.12
+      82.50
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>7.8786 -7.5000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>15.7600 15.0000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/abandoned_construction_building.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="ind_rubble_16">
+
+    <static>true</static>
+
+    <pose>
+      18.00
+      75.00
+      0.00
+      1.570800
+      0.000000
+      1.570796
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>16.8500 4.3900 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/brick_rubble_scaniverse_lidar.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="mix_bldg_17">
+
+    <static>true</static>
+
+    <pose>
+      50.00
+      75.00
+      -0.03
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0300 0 0 0</pose>
+        <geometry>
+          <box><size>20.5400 15.0000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/abandoned_building.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="mix_rubble_18">
+
+    <static>true</static>
+
+    <pose>
+      45.00
+      82.00
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>2.6500 1.5000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_apt_19">
+
+    <static>true</static>
+
+    <pose>
+      75.01
+      83.99
+      0.00
+      1.570800
+      0.000000
+      1.570796
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-3.9908 0.0070 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>8.9200 21.7000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Buildings/low_poly_-_soviet__apartment_building_8k.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_rubble1_20">
+
+    <static>true</static>
+
+    <pose>
+      75.00
+      68.00
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>16.8500 4.3900 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/brick_rubble_scaniverse_lidar.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <model name="col_rubble2_21">
+
+    <static>true</static>
+
+    <pose>
+      68.00
+      68.00
+      0.00
+      1.570800
+      0.000000
+      0.000000
+    </pose>
+
+    <link name="link">
+
+
+      <collision name="collision">
+        <pose>-0.0000 -0.0000 5.0000 0 0 0</pose>
+        <geometry>
+          <box><size>2.6500 1.5000 10.0</size></box>
+        </geometry>
+      </collision>
+
+
+
+      <visual name="visual">
+
+        <geometry>
+
+          <mesh>
+
+            <uri>file:///home/capstone/capstone_project_antigravity/assets_real/Rubble/construction_rubble.glb</uri>
+
+          </mesh>
+
+        </geometry>
+
+      </visual>
+
+
+    </link>
+
+  </model>
+
+  <include>
+    <name>victim_22</name>
+    <uri>model://rescue_randy_sitting</uri>
+    <pose>54.00 10.00 0.0 0 0 0</pose>
+  </include>
+
+  <include>
+    <name>victim_23</name>
+    <uri>model://rescue_randy_sitting</uri>
+    <pose>26.00 50.00 0.0 0 0 0</pose>
+  </include>
+
+  <include>
+    <name>victim_24</name>
+    <uri>model://rescue_randy_sitting</uri>
+    <pose>38.00 42.00 0.0 0 0 0</pose>
+  </include>
+
+  <include>
+    <name>victim_25</name>
+    <uri>model://rescue_randy_sitting</uri>
+    <pose>26.00 62.00 0.0 0 0 0</pose>
+  </include>
+
+  <include>
+    <name>victim_26</name>
+    <uri>model://rescue_randy_sitting</uri>
+    <pose>58.00 62.00 0.0 0 0 0</pose>
+  </include>
 
 
 </world>

@@ -114,9 +114,6 @@ class AssetLibrary:
 
     # ------------------------------------------------------
 
-    def collision_enabled(self, filename):
-        return False
-
     # ------------------------------------------------------
 
     def mesh_visual(self, mesh):
@@ -166,7 +163,8 @@ class AssetLibrary:
         x,
         y,
         z,
-        yaw=0.0
+        yaw=0.0,
+        collision_xml=""
     ):
 
         mesh = self.random_asset(category)
@@ -176,12 +174,6 @@ class AssetLibrary:
         roll, pitch, _ = self.rotation(filename)
 
         z += self.z_offset(filename)
-
-        collision = ""
-
-        if self.collision_enabled(filename):
-
-            collision = self.mesh_collision(mesh)
 
         return f"""
   <model name="{name}">
@@ -199,7 +191,7 @@ class AssetLibrary:
 
     <link name="link">
 
-{collision}
+{collision_xml}
 
 {self.mesh_visual(mesh)}
 

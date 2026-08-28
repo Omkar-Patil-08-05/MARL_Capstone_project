@@ -14,7 +14,8 @@ def get_args():
     parser.add_argument('--model', type=str, default='models/qmix_sar_v2.pth')
     parser.add_argument('--episodes', type=int, default=20)
     parser.add_argument('--max_seq_length', type=int, default=300)
-    parser.add_argument('--seed', type=int, default=1000) # Deterministic evaluation seed
+    parser.add_argument('--seed', type=int, default=1000)
+    parser.add_argument('--stage', type=int, default=3, choices=[1, 2, 3])
     return parser.parse_args()
 
 def evaluate(env, policy, episodes, n_actions, agent_net=None, device=None):
@@ -24,7 +25,7 @@ def evaluate(env, policy, episodes, n_actions, agent_net=None, device=None):
     }
     
     for _ in range(episodes):
-        env.reset()
+        env.reset(episode_num=5000 if env.curriculum_stage == 3 else (1000 if env.curriculum_stage == 2 else 0))
         local_obs = [env.get_agent_state(i) for i in range(env.num_drones)]
         
         hidden_state = None
@@ -79,57 +80,58 @@ def main():
     torch.manual_seed(args.seed)
     
     env = SARGridEnv(num_drones=2, max_steps=args.max_seq_length, seed=args.seed)
-    env.reset()
+    env.curriculum_stage = args.stage
+    env.reset(episode_num=5000 if args.stage == 3 else (1000 if args.stage == 2 else 0))
     obs_dim = len(env.get_agent_state(0))
     n_actions = env.action_space
     
     print(f"--- SAR Evaluation ({args.episodes} episodes) ---")
     
     # 1. Random Baseline
-    random_metrics = evaluate(env, 'random', args.episodes, n_actions)
-    print_metrics(random_metrics, "RANDOM")
+    # random_metrics = evaluate(env, 'random', args.episodes, n_actions)
+    # print_metrics(random_metrics, "RANDOM")
     
     # 2. Heuristic Feasibility (Imported)
-    print("\n--- HEURISTIC POLICY ---")
-    sys.path.append(os.path.dirname(__file__))
-    try:
-        from utils.feasibility_test import get_nearest_unexplored, get_action_towards
-        heuristic_metrics = {
-            'reward': [], 'coverage': [], 'victims_detected': [], 'collisions': [],
-            'boundary_collisions': [], 'mission_time': [], 'redundant_steps': []
-        }
-        for _ in range(args.episodes):
-            env.reset()
-            done = False
-            ep_reward = 0
-            while not done:
-                actions = []
-                target_mask = set()
-                for d in range(env.num_drones):
-                    pos = env.drone_positions[d]
-                    target = get_nearest_unexplored(env, pos, target_mask)
-                    if target:
-                        for i in range(-env.fov_radius, env.fov_radius + 1):
-                            for j in range(-env.fov_radius, env.fov_radius + 1):
-                                target_mask.add((target[0]+i, target[1]+j))
-                        a = get_action_towards(pos, target, env)
-                        actions.append(a)
-                    else:
-                        actions.append(4)
-                _, _, rewards, done, info = env.step(actions)
-                ep_reward += sum(rewards)
-                
-            heuristic_metrics['reward'].append(ep_reward)
-            heuristic_metrics['coverage'].append(info['coverage'])
-            heuristic_metrics['victims_detected'].append(info['metrics']['victims_detected'])
-            heuristic_metrics['collisions'].append(info['metrics']['collisions'])
-            heuristic_metrics['boundary_collisions'].append(info['metrics'].get('boundary_collisions', 0))
-            heuristic_metrics['mission_time'].append(info['metrics']['mission_time'])
-            heuristic_metrics['redundant_steps'].append(info['metrics']['redundant_steps'])
-        
-        print_metrics(heuristic_metrics, "HEURISTIC FEASIBILITY")
-    except ImportError:
-        print("Could not import feasibility_test heuristic.")
+    # print("\n--- HEURISTIC POLICY ---")
+    # sys.path.append(os.path.dirname(__file__))
+    # try:
+    #     from utils.feasibility_test import get_nearest_unexplored, get_action_towards
+    #     heuristic_metrics = {
+    #         'reward': [], 'coverage': [], 'victims_detected': [], 'collisions': [],
+    #         'boundary_collisions': [], 'mission_time': [], 'redundant_steps': []
+    #     }
+    #     for _ in range(args.episodes):
+    #         env.reset(episode_num=5000 if args.stage == 3 else (1000 if args.stage == 2 else 0))
+    #         done = False
+    #         ep_reward = 0
+    #         while not done:
+    #             actions = []
+    #             target_mask = set()
+    #             for d in range(env.num_drones):
+    #                 pos = env.drone_positions[d]
+    #                 target = get_nearest_unexplored(env, pos, target_mask)
+    #                 if target:
+    #                     for i in range(-env.fov_radius, env.fov_radius + 1):
+    #                         for j in range(-env.fov_radius, env.fov_radius + 1):
+    #                             target_mask.add((target[0]+i, target[1]+j))
+    #                     a = get_action_towards(pos, target, env)
+    #                     actions.append(a)
+    #                 else:
+    #                     actions.append(4)
+    #             _, _, rewards, done, info = env.step(actions)
+    #             ep_reward += sum(rewards)
+    #             
+    #         heuristic_metrics['reward'].append(ep_reward)
+    #         heuristic_metrics['coverage'].append(info['coverage'])
+    #         heuristic_metrics['victims_detected'].append(info['metrics']['victims_detected'])
+    #         heuristic_metrics['collisions'].append(info['metrics']['collisions'])
+    #         heuristic_metrics['boundary_collisions'].append(info['metrics'].get('boundary_collisions', 0))
+    #         heuristic_metrics['mission_time'].append(info['metrics']['mission_time'])
+    #         heuristic_metrics['redundant_steps'].append(info['metrics']['redundant_steps'])
+    #     
+    #     print_metrics(heuristic_metrics, "HEURISTIC FEASIBILITY")
+    # except ImportError:
+    #     print("Could not import feasibility_test heuristic.")
     
     # 3. QMIX Policy
     if os.path.exists(args.model):

@@ -15,11 +15,19 @@ WORLD_METADATA = {
     "drone_base": {}
 }
 OBJ_COUNTER = 0
+VICTIM_INTENTS = []
 
-def add_obstacle_metadata(obj_id, category, aabb):
+def add_obstacle_metadata(obj_id, category, asset, pose, aabb):
+    type_str = "building"
+    if category == "Rubble": type_str = "rubble"
+    elif category == "Cars": type_str = "vehicle"
+    elif category == "Towers": type_str = "tower"
+    
     WORLD_METADATA["obstacles"].append({
         "id": obj_id,
-        "type": category,
+        "type": type_str,
+        "asset": asset,
+        "pose": pose,
         "aabb": {
             "min_x": clamp_bounds(float(aabb[0]), WORLD_MIN_X, WORLD_MAX_X),
             "max_x": clamp_bounds(float(aabb[1]), WORLD_MIN_X, WORLD_MAX_X),
@@ -77,14 +85,14 @@ LAYOUT_3x3 = [
 # ==========================================================
 # Helper Functions
 # ==========================================================
-def spawn_specific(name, filename, category, x, y, yaw=0.0, z=0.0):
+def spawn_specific(name, filename, category, x, y, yaw=0.0, z=0.0, collision_xml=""):
     original_list = assets.assets.get(category, [])
     for path in original_list:
         if os.path.basename(path) == filename:
             assets.assets[category] = [path]
             break
     
-    xml = assets.model_xml(name, category, x, y, z, yaw)
+    xml = assets.model_xml(name, category, x, y, z, yaw, collision_xml)
     assets.assets[category] = original_list
     return xml
 
@@ -145,25 +153,89 @@ def deterministic_spawn(name, category, filename, x, y, yaw_deg=0.0):
     CITY_MANAGER.register(aabb)
     
     OBJ_COUNTER += 1
-    add_obstacle_metadata(f"{name}_{OBJ_COUNTER}", category, aabb)
-    return spawn_specific(name, filename, category, spawn_x, spawn_y, yaw)
+    obj_id = f"{name}_{OBJ_COUNTER}"
+    
+    z_offset = meta.get("z_offset", 0.0)
+    col_z = 5.0 - z_offset
+    collision_xml = f"""
+      <collision name="collision">
+        <pose>{-off_x:.4f} {-off_y:.4f} {col_z:.4f} 0 0 0</pose>
+        <geometry>
+          <box><size>{size_x:.4f} {size_y:.4f} 10.0</size></box>
+        </geometry>
+      </collision>
+"""
+    pose = {"x": spawn_x, "y": spawn_y, "z": z_offset, "yaw": yaw}
+    add_obstacle_metadata(obj_id, category, filename, pose, aabb)
+    return spawn_specific(obj_id, filename, category, spawn_x, spawn_y, yaw, 0.0, collision_xml)
+
+def get_obstacle_cells():
+    cells = set()
+    for obs in WORLD_METADATA["obstacles"]:
+        aabb = obs["aabb"]
+        for gx in range(25):
+            for gy in range(25):
+                cell_min_x = gx * 4.0
+                cell_max_x = (gx + 1) * 4.0
+                cell_min_y = gy * 4.0
+                cell_max_y = (gy + 1) * 4.0
+                
+                intersect_x = (aabb["max_x"] > cell_min_x) and (aabb["min_x"] < cell_max_x)
+                intersect_y = (aabb["max_y"] > cell_min_y) and (aabb["min_y"] < cell_max_y)
+                
+                if intersect_x and intersect_y:
+                    cells.add((gx, gy))
+    # Reserve drone base cells
+    cells.update([(5, 6), (6, 6), (7, 6)])
+    return cells
 
 def spawn_victim(ideal_x, ideal_y):
+    VICTIM_INTENTS.append((ideal_x, ideal_y))
+    return ""
+
+def finalize_victims():
+    xml = ""
     global OBJ_COUNTER
-    OBJ_COUNTER += 1
-    vid = f"victim_{OBJ_COUNTER}"
-    add_victim_metadata(vid, ideal_x, ideal_y)
-    xml = f"""
-  <model name="{vid}">
-    <static>true</static>
-    <pose>{ideal_x:.2f} {ideal_y:.2f} 0.25 0 0 0</pose>
-    <link name="link">
-      <visual name="visual">
-        <geometry><sphere><radius>0.25</radius></sphere></geometry>
-        <material><ambient>1.0 0.2 0.2 1</ambient><diffuse>1.0 0.2 0.2 1</diffuse></material>
-      </visual>
-    </link>
-  </model>
+    obs_cells = get_obstacle_cells()
+    
+    for ideal_x, ideal_y in VICTIM_INTENTS:
+        OBJ_COUNTER += 1
+        vid = f"victim_{OBJ_COUNTER}"
+        
+        gx = int(ideal_x // 4.0)
+        gy = int(ideal_y // 4.0)
+        
+        if (gx, gy) not in obs_cells:
+            valid_x, valid_y = ideal_x, ideal_y
+        else:
+            search_radius = 1
+            found = False
+            while search_radius <= 5 and not found:
+                for dx in range(-search_radius, search_radius + 1):
+                    for dy in range(-search_radius, search_radius + 1):
+                        nx, ny = gx + dx, gy + dy
+                        if 0 <= nx < 25 and 0 <= ny < 25:
+                            if (nx, ny) not in obs_cells:
+                                valid_x, valid_y = nx * 4.0 + 2.0, ny * 4.0 + 2.0
+                                found = True
+                                break
+                    if found: break
+                search_radius += 1
+            if not found:
+                raise RuntimeError(
+                    f"Unable to place victim {vid} in a valid obstacle-free cell near ({ideal_x}, {ideal_y})."
+                )
+                
+        # Reserve this cell for this victim so others don't stack
+        obs_cells.add((int(valid_x // 4.0), int(valid_y // 4.0)))
+        
+        add_victim_metadata(vid, valid_x, valid_y)
+        xml += f"""
+  <include>
+    <name>{vid}</name>
+    <uri>model://rescue_randy_sitting</uri>
+    <pose>{valid_x:.2f} {valid_y:.2f} 0.0 0 0 0</pose>
+  </include>
 """
     return xml
 
@@ -183,7 +255,11 @@ def drone_base():
         "landing_zone_y": cy,
         "spawns": [
             {"id": "drone_0", "x": 21.0, "y": cy},
-            {"id": "drone_1", "x": 29.0, "y": cy}
+            {"id": "drone_1", "x": 29.0, "y": cy},
+            {"id": "drone_2", "x": 25.0, "y": cy - 4.0},
+            {"id": "drone_3", "x": 25.0, "y": cy + 4.0},
+            {"id": "drone_4", "x": 21.0, "y": cy - 4.0},
+            {"id": "drone_5", "x": 29.0, "y": cy + 4.0}
         ]
     }
     
@@ -269,10 +345,11 @@ def collapsed():
 
 def generate_city():
     xml = ""
-    global CITY_MANAGER, WORLD_METADATA, OBJ_COUNTER
+    global CITY_MANAGER, WORLD_METADATA, OBJ_COUNTER, VICTIM_INTENTS
     CITY_MANAGER = PlacementManager()
     WORLD_METADATA = {"obstacles": [], "victims": [], "drone_base": {}}
     OBJ_COUNTER = 0
+    VICTIM_INTENTS = []
     
     xml += drone_base()
     xml += residential()
@@ -283,5 +360,7 @@ def generate_city():
     xml += industrial()
     xml += mixed()
     xml += collapsed()
+    
+    xml += finalize_victims()
     
     return xml, WORLD_METADATA

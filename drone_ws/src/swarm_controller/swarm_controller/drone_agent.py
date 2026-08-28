@@ -36,6 +36,9 @@ class DroneAgent:
         # Temporary offset computed by APF (local frame)
         self.avoidance_offset_local: List[float] = [0.0, 0.0, 0.0]
         
+        # H8 minimum dwell flag for safety-forced hover
+        self.require_min_dwell: bool = False
+        
     def _log_transition(self, new_state: FlightState) -> None:
         if self.state != new_state:
             self.node.get_logger().info(f"[{self.config.drone_id}] Transition: {self.state.name} -> {new_state.name}")
@@ -45,8 +48,9 @@ class DroneAgent:
     def get_state(self) -> FlightState:
         return self.state
 
-    def set_mission_goal_local(self, x: float, y: float, z: float) -> None:
+    def set_mission_goal_local(self, x: float, y: float, z: float, require_min_dwell: bool = False) -> None:
         self.mission_goal_local = [x, y, z]
+        self.require_min_dwell = require_min_dwell
 
     def set_avoidance_offset_local(self, offset_x: float, offset_y: float) -> None:
         self.avoidance_offset_local = [offset_x, offset_y, 0.0]
@@ -119,6 +123,7 @@ class DroneAgent:
                 self._log_transition(FlightState.WAYPOINT_NAVIGATION)
 
         elif self.state == FlightState.WAYPOINT_NAVIGATION:
+            self.state_timer += 1
             # compute temporary target by adding APF offset to mission goal
             control_target_local = [
                 self.mission_goal_local[0] + self.avoidance_offset_local[0],
@@ -135,9 +140,10 @@ class DroneAgent:
             dist_to_goal = math.sqrt(dx*dx + dy*dy)
             
             if dist_to_goal < self.mission.goal_tolerance:
-                # Goal reached
-                self.avoidance_offset_local = [0.0, 0.0, 0.0]
-                self._log_transition(FlightState.HOLD)
+                if not self.require_min_dwell or self.state_timer >= self.mission.min_waypoint_dwell_ticks:
+                    # Goal reached
+                    self.avoidance_offset_local = [0.0, 0.0, 0.0]
+                    self._log_transition(FlightState.HOLD)
 
         elif self.state == FlightState.HOLD:
             self.px4.publish_offboard_control_mode()

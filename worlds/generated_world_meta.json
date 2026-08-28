@@ -1,75 +1,422 @@
 {
     "obstacles": [
         {
-            "id": "park_rubble_2_1_7",
-            "type": "Rubble",
+            "id": "res_house_1",
+            "type": "building",
+            "asset": "house.glb",
+            "pose": {
+                "x": 45.1144,
+                "y": 22.3271,
+                "z": -42.5,
+                "yaw": 0.0
+            },
             "aabb": {
-                "min_x": 48.675,
-                "max_x": 51.325,
-                "min_y": 74.25,
-                "max_y": 75.75
+                "min_x": 39.055,
+                "max_x": 60.945,
+                "min_y": 14.055,
+                "max_y": 35.945
+            }
+        },
+        {
+            "id": "res_rubble_2",
+            "type": "rubble",
+            "asset": "brick_rubble_scaniverse_lidar.glb",
+            "pose": {
+                "x": 50.0,
+                "y": 16.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 41.575,
+                "max_x": 58.425,
+                "min_y": 13.805,
+                "max_y": 18.195
+            }
+        },
+        {
+            "id": "comm_anchor_3",
+            "type": "building",
+            "asset": "futuristic_building.glb",
+            "pose": {
+                "x": 72.3398,
+                "y": 22.8579,
+                "z": -5.1,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 64.055,
+                "max_x": 85.945,
+                "min_y": 19.5,
+                "max_y": 34.5
+            }
+        },
+        {
+            "id": "comm_car_4",
+            "type": "vehicle",
+            "asset": "small_price_car.glb",
+            "pose": {
+                "x": 69.1621,
+                "y": 17.0,
+                "z": 2.31,
+                "yaw": 1.5707963267948966
+            },
+            "aabb": {
+                "min_x": 64.92,
+                "max_x": 75.08,
+                "min_y": 14.75,
+                "max_y": 19.25
+            }
+        },
+        {
+            "id": "comm_rubble_5",
+            "type": "rubble",
+            "asset": "construction_rubble.glb",
+            "pose": {
+                "x": 80.0,
+                "y": 17.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 78.675,
+                "max_x": 81.325,
+                "min_y": 16.25,
+                "max_y": 17.75
+            }
+        },
+        {
+            "id": "park_tower_6",
+            "type": "tower",
+            "asset": "40_meter_radiotower.glb",
+            "pose": {
+                "x": 18.0,
+                "y": 58.0,
+                "z": 6.71,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 15.835,
+                "max_x": 20.165,
+                "min_y": 55.87,
+                "max_y": 60.13
+            }
+        },
+        {
+            "id": "park_rubble1_7",
+            "type": "rubble",
+            "asset": "construction_rubble.glb",
+            "pose": {
+                "x": 30.0,
+                "y": 45.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 28.675,
+                "max_x": 31.325,
+                "min_y": 44.25,
+                "max_y": 45.75
+            }
+        },
+        {
+            "id": "park_rubble2_8",
+            "type": "rubble",
+            "asset": "construction_rubble.glb",
+            "pose": {
+                "x": 22.0,
+                "y": 42.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 20.675,
+                "max_x": 23.325,
+                "min_y": 41.25,
+                "max_y": 42.75
+            }
+        },
+        {
+            "id": "maj_bldg_9",
+            "type": "building",
+            "asset": "abandoned_building.glb",
+            "pose": {
+                "x": 50.0,
+                "y": 52.0,
+                "z": -0.03,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 39.730000000000004,
+                "max_x": 60.269999999999996,
+                "min_y": 44.5,
+                "max_y": 59.5
+            }
+        },
+        {
+            "id": "maj_rubble_10",
+            "type": "rubble",
+            "asset": "brick_rubble_scaniverse_lidar.glb",
+            "pose": {
+                "x": 50.0,
+                "y": 42.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 41.575,
+                "max_x": 58.425,
+                "min_y": 39.805,
+                "max_y": 44.195
+            }
+        },
+        {
+            "id": "maj_car_11",
+            "type": "vehicle",
+            "asset": "old_rusty_car.glb",
+            "pose": {
+                "x": 45.13321891757555,
+                "y": 42.854053160363094,
+                "z": 4.69,
+                "yaw": 0.7853981633974483
+            },
+            "aabb": {
+                "min_x": 41.41143308547827,
+                "max_x": 48.58856691452173,
+                "min_y": 39.41143308547827,
+                "max_y": 46.58856691452173
+            }
+        },
+        {
+            "id": "civ_apt_12",
+            "type": "building",
+            "asset": "low_poly_-_soviet__apartment_building_8k.glb",
+            "pose": {
+                "x": 73.99080000000001,
+                "y": 49.993,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 65.54,
+                "max_x": 74.46,
+                "min_y": 39.15,
+                "max_y": 60.85
+            }
+        },
+        {
+            "id": "civ_house_13",
+            "type": "building",
+            "asset": "small_house.glb",
+            "pose": {
+                "x": 81.9968,
+                "y": 54.4724,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 80.135,
+                "max_x": 83.865,
+                "min_y": 52.0,
+                "max_y": 58.0
+            }
+        },
+        {
+            "id": "civ_rubble_14",
+            "type": "rubble",
+            "asset": "construction_rubble.glb",
+            "pose": {
+                "x": 80.0,
+                "y": 45.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 78.675,
+                "max_x": 81.325,
+                "min_y": 44.25,
+                "max_y": 45.75
+            }
+        },
+        {
+            "id": "ind_bldg_15",
+            "type": "building",
+            "asset": "abandoned_construction_building.glb",
+            "pose": {
+                "x": 17.1214,
+                "y": 82.5,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 17.12,
+                "max_x": 32.88,
+                "min_y": 67.5,
+                "max_y": 82.5
+            }
+        },
+        {
+            "id": "ind_rubble_16",
+            "type": "rubble",
+            "asset": "brick_rubble_scaniverse_lidar.glb",
+            "pose": {
+                "x": 18.0,
+                "y": 75.0,
+                "z": 0.0,
+                "yaw": 1.5707963267948966
+            },
+            "aabb": {
+                "min_x": 15.805,
+                "max_x": 20.195,
+                "min_y": 66.575,
+                "max_y": 83.425
+            }
+        },
+        {
+            "id": "mix_bldg_17",
+            "type": "building",
+            "asset": "abandoned_building.glb",
+            "pose": {
+                "x": 50.0,
+                "y": 75.0,
+                "z": -0.03,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 39.730000000000004,
+                "max_x": 60.269999999999996,
+                "min_y": 67.5,
+                "max_y": 82.5
+            }
+        },
+        {
+            "id": "mix_rubble_18",
+            "type": "rubble",
+            "asset": "construction_rubble.glb",
+            "pose": {
+                "x": 45.0,
+                "y": 82.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 43.675,
+                "max_x": 46.325,
+                "min_y": 81.25,
+                "max_y": 82.75
+            }
+        },
+        {
+            "id": "col_apt_19",
+            "type": "building",
+            "asset": "low_poly_-_soviet__apartment_building_8k.glb",
+            "pose": {
+                "x": 75.007,
+                "y": 83.99080000000001,
+                "z": 0.0,
+                "yaw": 1.5707963267948966
+            },
+            "aabb": {
+                "min_x": 64.15,
+                "max_x": 85.85,
+                "min_y": 75.53999999999999,
+                "max_y": 84.46000000000001
+            }
+        },
+        {
+            "id": "col_rubble1_20",
+            "type": "rubble",
+            "asset": "brick_rubble_scaniverse_lidar.glb",
+            "pose": {
+                "x": 75.0,
+                "y": 68.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 66.575,
+                "max_x": 83.425,
+                "min_y": 65.805,
+                "max_y": 70.195
+            }
+        },
+        {
+            "id": "col_rubble2_21",
+            "type": "rubble",
+            "asset": "construction_rubble.glb",
+            "pose": {
+                "x": 68.0,
+                "y": 68.0,
+                "z": 0.0,
+                "yaw": 0.0
+            },
+            "aabb": {
+                "min_x": 66.675,
+                "max_x": 69.325,
+                "min_y": 67.25,
+                "max_y": 68.75
             }
         }
     ],
     "victims": [
         {
-            "id": "victim_1",
+            "id": "victim_22",
             "world": {
-                "x": 47.0,
-                "y": 28.0,
+                "x": 54.0,
+                "y": 10.0,
                 "z": 0.25
             },
             "grid": {
-                "x": 11,
-                "y": 7
+                "x": 13,
+                "y": 2
             }
         },
         {
-            "id": "victim_2",
+            "id": "victim_23",
             "world": {
-                "x": 79.0,
-                "y": 29.0,
+                "x": 26.0,
+                "y": 50.0,
                 "z": 0.25
             },
             "grid": {
-                "x": 19,
-                "y": 7
+                "x": 6,
+                "y": 12
             }
         },
         {
-            "id": "victim_3",
+            "id": "victim_24",
             "world": {
-                "x": 31.0,
-                "y": 44.0,
+                "x": 38.0,
+                "y": 42.0,
                 "z": 0.25
             },
             "grid": {
-                "x": 7,
-                "y": 11
+                "x": 9,
+                "y": 10
             }
         },
         {
-            "id": "victim_4",
+            "id": "victim_25",
             "world": {
-                "x": 46.0,
-                "y": 44.0,
+                "x": 26.0,
+                "y": 62.0,
                 "z": 0.25
             },
             "grid": {
-                "x": 11,
-                "y": 11
+                "x": 6,
+                "y": 15
             }
         },
         {
-            "id": "victim_5",
+            "id": "victim_26",
             "world": {
-                "x": 71.0,
-                "y": 44.0,
+                "x": 58.0,
+                "y": 62.0,
                 "z": 0.25
             },
             "grid": {
-                "x": 17,
-                "y": 11
+                "x": 14,
+                "y": 15
             }
         }
     ],
@@ -88,6 +435,26 @@
                 "id": "drone_1",
                 "x": 29.0,
                 "y": 25.0
+            },
+            {
+                "id": "drone_2",
+                "x": 25.0,
+                "y": 21.0
+            },
+            {
+                "id": "drone_3",
+                "x": 25.0,
+                "y": 29.0
+            },
+            {
+                "id": "drone_4",
+                "x": 21.0,
+                "y": 21.0
+            },
+            {
+                "id": "drone_5",
+                "x": 29.0,
+                "y": 29.0
             }
         ]
     }

@@ -3,6 +3,8 @@
 set -e
 
 # Cleanup function
+export GZ_IP=127.0.0.1
+export ROS_LOCALHOST_ONLY=1
 cleanup() {
     echo "Stopping all processes..."
     kill $(jobs -p) 2>/dev/null || true
@@ -26,8 +28,17 @@ MicroXRCEAgent udp4 -p 8888 &
 AGENT_PID=$!
 sleep 2
 
-# Read spawn coordinates from metadata
-META_FILE="/home/capstone/capstone_project_antigravity/worlds/generated_world_meta.json"
+# Map parameterization
+MAP_ID=${1:-realistic_sar}
+
+if [ "$MAP_ID" == "realistic_sar" ]; then
+    META_FILE="/home/capstone/capstone_project_antigravity/worlds/generated_world_meta.json"
+    export PX4_GZ_WORLD="realistic_sar"
+else
+    echo "Error: Unsupported map ID: $MAP_ID"
+    exit 1
+fi
+
 if [ ! -f "$META_FILE" ]; then
     echo "Error: Metadata file not found at $META_FILE"
     exit 1
@@ -42,13 +53,13 @@ echo "Drone 1 spawn: ($D1_X, $D1_Y)"
 
 # Setup PX4 Gazebo environment
 source /home/capstone/PX4-Autopilot/build/px4_sitl_default/rootfs/gz_env.sh
-export PX4_GZ_WORLD="realistic_sar"
+# PX4_GZ_WORLD was exported during map selection above
 export PX4_GZ_WORLDS="/home/capstone/capstone_project_antigravity/worlds"
-export GZ_SIM_RESOURCE_PATH="/home/capstone/PX4-Autopilot/Tools/simulation/gz/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds:/home/capstone/capstone_project_antigravity/models"
+export GZ_SIM_RESOURCE_PATH="/home/capstone/PX4-Autopilot/Tools/simulation/gz/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds:/home/capstone/capstone_project_antigravity/models:/home/capstone/capstone_project_antigravity/assets_real/victims"
 
-# 1. Start Gazebo independently
-echo "Starting Gazebo independently..."
-gz sim -r ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf &
+# 1. Start Gazebo Server (Headless)
+echo "Starting Gazebo Server..."
+gz sim -s -r ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf &
 GZ_PID=$!
 
 # 2. Wait for Gazebo process and clock
@@ -73,6 +84,11 @@ export PX4_GZ_STANDALONE=1
 export PX4_PARAM_NAV_DLL_ACT=0
 export PX4_SYS_AUTOSTART=4001
 export PX4_SIMULATOR=gz
+
+# Moderate physical speed enhancements for demonstration
+export PX4_PARAM_MPC_XY_CRUISE=5.0
+export PX4_PARAM_MPC_XY_VEL_MAX=8.0
+export PX4_PARAM_MPC_JERK_AUTO=4.0
 
 PX4_DIR="/home/capstone/PX4-Autopilot"
 BUILD_DIR="${PX4_DIR}/build/px4_sitl_default"

@@ -87,3 +87,11 @@ Thumbs.db
 
 # Blender source/project files are not required for Gazebo runtime
 *.blend
+
+# Node / React
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

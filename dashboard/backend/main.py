@@ -1,0 +1,290 @@
+import asyncio
+import json
+import threading
+import subprocess
+import os
+import signal
+import time
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import uvicorn
+
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+from world import get_world_data, get_map_registry
+
+app = FastAPI(title="Antigravity Live Telemetry")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# In-memory global state
+_LATEST_TELEMETRY = None
+_TELEMETRY_RECEIVED = False
+_LAST_TIMESTAMP = None
+
+# ---------------------------------------------------------
+# WebSocket Manager
+# ---------------------------------------------------------
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        if _LATEST_TELEMETRY:
+            await websocket.send_text(_LATEST_TELEMETRY)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        failed_connections = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+            except Exception:
+                failed_connections.append(connection)
+                
+        for fc in failed_connections:
+            self.disconnect(fc)
+
+manager = ConnectionManager()
+
+# ---------------------------------------------------------
+# Mission Manager
+# ---------------------------------------------------------
+class MissionManager:
+    def __init__(self):
+        self.state = "IDLE"
+        self.active_map_id = None
+        self.process_groups = []
+        self.error_msg = None
+        self.lock = threading.Lock()
+
+    def set_state(self, new_state, error=None):
+        with self.lock:
+            self.state = new_state
+            if error:
+                self.error_msg = error
+            print(f"[MISSION] Transition -> {new_state}")
+
+    def stop_mission(self):
+        with self.lock:
+            if self.state in ["IDLE"]:
+                return
+            self.state = "STOPPING"
+
+        print("[MISSION] Stopping all process groups...")
+        for pgid in self.process_groups:
+            try:
+                os.killpg(pgid, signal.SIGKILL)
+            except Exception as e:
+                print(f"Error killing pgid {pgid}: {e}")
+        self.process_groups = []
+        
+        # Fallback system cleanup just to be completely safe
+        subprocess.run('pkill -9 -f "MicroXRCEAgent" || true', shell=True)
+        subprocess.run('pkill -9 -f "px4" || true', shell=True)
+        subprocess.run('pkill -9 -f "gz sim" || true', shell=True)
+        subprocess.run('pkill -9 -f "ruby.*gz" || true', shell=True)
+        subprocess.run('pkill -9 -f "qmix_drone_test" || true', shell=True)
+        
+        global _LATEST_TELEMETRY, _TELEMETRY_RECEIVED
+        _LATEST_TELEMETRY = None
+        _TELEMETRY_RECEIVED = False
+        
+        with self.lock:
+            self.state = "IDLE"
+            self.active_map_id = None
+
+mission_manager = MissionManager()
+
+async def start_mission_task(map_id: str):
+    try:
+        mission_manager.set_state("STARTING")
+        mission_manager.active_map_id = map_id
+        
+        # 1. Start Simulator Stack
+        launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_two_drones.sh")
+        # Start in new process group
+        sim_proc = subprocess.Popen(["bash", launch_script, map_id], preexec_fn=os.setsid)
+        mission_manager.process_groups.append(os.getpgid(sim_proc.pid))
+        
+        # 2. Wait for Simulator Topics (up to 90s)
+        print("[MISSION] Waiting for /drone_0/fmu/out/vehicle_odometry...")
+        ready = False
+        for _ in range(30):
+            if mission_manager.state != "STARTING":
+                return
+            res = subprocess.run(["bash", "-c", "source /opt/ros/jazzy/setup.bash && ros2 topic list"], capture_output=True, text=True)
+            if "/drone_0/fmu/out/vehicle_odometry" in res.stdout and "/drone_1/fmu/out/vehicle_odometry" in res.stdout:
+                ready = True
+                break
+            await asyncio.sleep(3)
+            
+        if not ready:
+            mission_manager.set_state("ERROR", "Timed out waiting for simulator topics.")
+            mission_manager.stop_mission()
+            return
+            
+        mission_manager.set_state("SIMULATOR_READY")
+        
+        # 3. Wait for EKF2 stabilization
+        print("[MISSION] Waiting 60s for EKF2 stabilization...")
+        for _ in range(60):
+            if mission_manager.state != "SIMULATOR_READY":
+                return
+            await asyncio.sleep(1)
+            
+        mission_manager.set_state("QMIX_STARTING")
+        
+        # 4. Start QMIX Controller
+        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && ros2 run swarm_controller qmix_drone_test --map {map_id}"
+        qmix_proc = subprocess.Popen(["bash", "-c", qmix_cmd], preexec_fn=os.setsid)
+        mission_manager.process_groups.append(os.getpgid(qmix_proc.pid))
+        
+        mission_manager.set_state("RUNNING")
+        
+    except Exception as e:
+        mission_manager.set_state("ERROR", str(e))
+        mission_manager.stop_mission()
+
+
+# ---------------------------------------------------------
+# ROS 2 Node (Runs in background thread)
+# ---------------------------------------------------------
+class TelemetrySubscriber(Node):
+    def __init__(self, loop):
+        super().__init__('telemetry_subscriber_backend')
+        self.loop = loop
+        self.subscription = self.create_subscription(String, '/swarm/telemetry', self.listener_callback, 10)
+
+    def listener_callback(self, msg):
+        global _LATEST_TELEMETRY, _TELEMETRY_RECEIVED, _LAST_TIMESTAMP
+        try:
+            data = json.loads(msg.data)
+            if data.get("type") == "telemetry":
+                # Enforce monotonic telemetry (ignore stale publishers)
+                msg_timestamp = data.get("timestamp", 0)
+                if _LAST_TIMESTAMP is not None and msg_timestamp < _LAST_TIMESTAMP:
+                    return
+                
+                # Inject active map into telemetry
+                data["active_map_id"] = mission_manager.active_map_id
+                data["backend_status"] = mission_manager.state
+                
+                # Check for mission complete
+                if data.get("mission", {}).get("status") == "COMPLETE":
+                    if mission_manager.state == "RUNNING":
+                        mission_manager.set_state("COMPLETE")
+                        
+                out_msg = json.dumps(data)
+                _LATEST_TELEMETRY = out_msg
+                _TELEMETRY_RECEIVED = True
+                _LAST_TIMESTAMP = msg_timestamp
+                
+                asyncio.run_coroutine_threadsafe(manager.broadcast(out_msg), self.loop)
+        except json.JSONDecodeError:
+            pass
+            
+def ros_spin_thread(loop):
+    rclpy.init(args=None)
+    node = TelemetrySubscriber(loop)
+    try:
+        rclpy.spin(node)
+    except Exception as e:
+        print(f"ROS 2 subscriber thread exception: {e}")
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+# ---------------------------------------------------------
+# FastAPI App Lifecycle & Endpoints
+# ---------------------------------------------------------
+@app.on_event("startup")
+async def startup_event():
+    loop = asyncio.get_running_loop()
+    threading.Thread(target=ros_spin_thread, args=(loop,), daemon=True).start()
+
+@app.get("/api/health")
+def health_check():
+    return {
+        "status": "ok",
+        "ros_connected": rclpy.ok(),
+        "telemetry_received": _TELEMETRY_RECEIVED,
+        "connected_clients": len(manager.active_connections)
+    }
+
+@app.get("/api/maps")
+def get_maps():
+    return get_map_registry()
+
+@app.get("/api/maps/{map_id}")
+def get_world(map_id: str):
+    return get_world_data(map_id)
+    
+class StartRequest(BaseModel):
+    map_id: str
+    drone_count: int = 2
+
+@app.post("/api/mission/start")
+async def start_mission(req: StartRequest):
+    if req.map_id not in get_map_registry():
+        raise HTTPException(status_code=400, detail="Invalid map_id")
+    if req.drone_count < 2 or req.drone_count > 6:
+        raise HTTPException(status_code=400, detail="drone_count must be 2–6")
+        
+    with mission_manager.lock:
+        if mission_manager.state not in ["IDLE", "COMPLETE", "ERROR"]:
+            raise HTTPException(status_code=400, detail="Mission already active or starting")
+    
+    # Fully clean up any previous completed/crashed mission state
+    mission_manager.stop_mission()
+    global _LAST_TIMESTAMP
+    _LAST_TIMESTAMP = None
+            
+    asyncio.create_task(start_mission_task(req.map_id))
+    return {"status": "starting", "map_id": req.map_id, "drone_count": req.drone_count}
+
+@app.post("/api/mission/stop")
+async def stop_mission():
+    mission_manager.stop_mission()
+    global _LAST_TIMESTAMP
+    _LAST_TIMESTAMP = None
+    return {"status": "stopped"}
+
+@app.post("/api/mission/reset")
+async def reset_mission():
+    mission_manager.stop_mission()
+    return {"status": "reset"}
+
+@app.get("/api/mission/status")
+def get_mission_status():
+    return {
+        "state": mission_manager.state,
+        "active_map_id": mission_manager.active_map_id,
+        "error": mission_manager.error_msg
+    }
+
+@app.websocket("/ws/telemetry")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

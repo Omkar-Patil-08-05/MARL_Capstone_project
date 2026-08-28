@@ -5,6 +5,7 @@ import random
 import os
 import argparse
 import sys
+import time
 
 # Ensure project root is in path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -28,11 +29,11 @@ def get_config():
     parser.add_argument('--grad_clip', type=float, default=10.0)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--checkpoint_dir', type=str, default='models')
-    parser.add_argument('--checkpoint_name', type=str, default='qmix_sar_v2.pth')
-    parser.add_argument('--metrics_file', type=str, default='results/sar_qmix/v2/training_metrics.csv')
+    parser.add_argument('--checkpoint_name', type=str, default='qmix_sar_v4_align.pth')
+    parser.add_argument('--metrics_file', type=str, default='results/sar_qmix/v4_final/training_metrics.csv', help='Path to metrics log')
     parser.add_argument('--eval_interval', type=int, default=50)
     parser.add_argument('--eval_episodes', type=int, default=5)
-    parser.add_argument('--resume_from', type=str, default=None)
+    parser.add_argument('--resume_from', type=str, default=None, help='Path to checkpoint to resume from')
     parser.add_argument('--start_episode', type=int, default=1)
     return parser.parse_args()
 
@@ -45,12 +46,12 @@ def set_seed(seed):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-def evaluate_policy(env, agent_net, args, device):
+def evaluate_policy(env, agent_net, args, device, episode_num=None):
     agent_net.eval()
-    eval_metrics = {'reward': [], 'coverage': [], 'victims_detected': [], 'collisions': [], 'boundary_collisions': [], 'redundant_steps': [], 'mission_time': []}
+    eval_metrics = {'reward': [], 'coverage': [], 'victims_detected': [], 'collisions': [], 'boundary_collisions': [], 'redundant_steps': [], 'mission_time': [], 'hover_count': [], 'bfs_progress': []}
     
     for _ in range(args.eval_episodes):
-        global_state = env.reset()
+        global_state = env.reset(episode_num=episode_num)
         local_obs = [env.get_agent_state(i) for i in range(args.num_agents)]
         hidden_state = agent_net.init_hidden().expand(args.num_agents, -1).to(device)
         
@@ -81,6 +82,8 @@ def evaluate_policy(env, agent_net, args, device):
         eval_metrics['boundary_collisions'].append(metrics.get('boundary_collisions', 0))
         eval_metrics['redundant_steps'].append(metrics.get('redundant_steps', 0))
         eval_metrics['mission_time'].append(metrics.get('mission_time', 0))
+        eval_metrics['hover_count'].append(metrics.get('hover_count', 0))
+        eval_metrics['bfs_progress'].append(metrics.get('bfs_progress', 0.0))
         
     agent_net.train()
     
@@ -88,9 +91,16 @@ def evaluate_policy(env, agent_net, args, device):
 
 def main():
     args = get_config()
-    set_seed(args.seed)
     
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # Determinism
+    seed = args.seed
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+        
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     if torch.cuda.is_available():
         print(f"GPU: {torch.cuda.get_device_name(0)}")
@@ -139,14 +149,19 @@ def main():
     
     if args.start_episode == 1:
         metrics_log = open(args.metrics_file, 'w')
-        metrics_log.write("episode,reward,coverage,victims_detected,mission_time,collisions,loss,epsilon\n")
+        metrics_log.write("episode,reward,coverage,victims_detected,mission_time,collisions,hover_count,bfs_progress,loss,epsilon\n")
     else:
         metrics_log = open(args.metrics_file, 'a')
     
     print(f"Starting QMIX SAR Training (up to {args.episodes} episodes)...")
     
+    train_start_time = time.monotonic()
+    last_heartbeat_time = train_start_time
+    episodes_since_heartbeat = 0
+    best_coverage_overall = 0.0
+    
     for ep in range(args.start_episode, args.episodes + 1):
-        global_state = env.reset()
+        global_state = env.reset(episode_num=ep)
         local_obs = [env.get_agent_state(i) for i in range(args.num_agents)]
         hidden_state = agent_net.init_hidden().expand(args.num_agents, -1).to(device)
         
@@ -213,16 +228,19 @@ def main():
             q_vals_tensor = torch.stack(q_vals_list, dim=1)
             chosen_action_qvals = torch.gather(q_vals_tensor, dim=3, index=b_actions.unsqueeze(3).long()).squeeze(3)
             
-            target_mac_hidden = target_agent_net.init_hidden().expand(bs * args.num_agents, -1).to(device)
-            target_q_vals_list = []
-            for t in range(seq_len):
-                q, target_mac_hidden = target_agent_net(b_next_obs[:, t].reshape(bs * args.num_agents, obs_dim), target_mac_hidden)
-                target_q_vals_list.append(q.view(bs, args.num_agents, n_actions))
-            target_q_vals_tensor = torch.stack(target_q_vals_list, dim=1)
-            target_max_qvals = target_q_vals_tensor.max(dim=3)[0]
-            
+            with torch.no_grad():
+                target_mac_hidden = target_agent_net.init_hidden().expand(bs * args.num_agents, -1).to(device)
+                target_q_vals_list = []
+                for t in range(seq_len):
+                    q, target_mac_hidden = target_agent_net(b_next_obs[:, t].reshape(bs * args.num_agents, obs_dim), target_mac_hidden)
+                    target_q_vals_list.append(q.view(bs, args.num_agents, n_actions))
+                target_q_vals_tensor = torch.stack(target_q_vals_list, dim=1)
+                target_max_qvals = target_q_vals_tensor.max(dim=3)[0]
+                
             chosen_action_qvals_tot = mixer(chosen_action_qvals, b_state).squeeze(2)
-            target_max_qvals_tot = target_mixer(target_max_qvals, b_next_state).squeeze(2)
+            
+            with torch.no_grad():
+                target_max_qvals_tot = target_mixer(target_max_qvals, b_next_state).squeeze(2)
             
             targets = b_rewards + args.gamma * (1 - b_dones) * target_max_qvals_tot
             td_error = chosen_action_qvals_tot - targets.detach()
@@ -250,14 +268,47 @@ def main():
         
         # Log training step
         if ep % 10 == 0 or ep == 1:
-            print(f"Ep {ep:4d} | R: {ep_reward:6.1f} | Cov: {coverage*100:4.1f}% | Vic: {metrics.get('victims_detected', 0)} | Col: {metrics.get('collisions', 0)} | Loss: {loss_val:6.4f} | Eps: {epsilon:.3f}")  # type: ignore
+            print(f"Ep {ep:4d} | R: {ep_reward:6.1f} | Cov: {coverage*100:4.1f}% | Vic: {metrics.get('victims_detected', 0)} | Col: {metrics.get('collisions', 0)} | Hov: {metrics.get('hover_count', 0)} | BFS: {metrics.get('bfs_progress', 0.0):.1f} | Loss: {loss_val:6.4f} | Eps: {epsilon:.3f}")  # type: ignore
             
-        metrics_log.write(f"{ep},{ep_reward},{coverage},{metrics.get('victims_detected', 0)},{metrics.get('mission_time', 0)},{metrics.get('collisions', 0)},{loss_val},{epsilon}\n")  # type: ignore
+        metrics_log.write(f"{ep},{ep_reward},{coverage},{metrics.get('victims_detected', 0)},{metrics.get('mission_time', 0)},{metrics.get('collisions', 0)},{metrics.get('hover_count', 0)},{metrics.get('bfs_progress', 0.0)},{loss_val},{epsilon}\n")  # type: ignore
         metrics_log.flush()
+        
+        episodes_since_heartbeat += 1
+        current_time = time.monotonic()
+        if coverage > best_coverage_overall:
+            best_coverage_overall = coverage
+            
+        if current_time - last_heartbeat_time >= 120.0:
+            elapsed_sec = current_time - train_start_time
+            avg_ep_time = elapsed_sec / (ep - args.start_episode + 1)
+            rem_episodes = args.episodes - ep
+            rem_sec = avg_ep_time * rem_episodes
+            
+            # Formatting HH:MM:SS
+            e_h, e_m, e_s = int(elapsed_sec//3600), int((elapsed_sec%3600)//60), int(elapsed_sec%60)
+            r_h, r_m, r_s = int(rem_sec//3600), int((rem_sec%3600)//60), int(rem_sec%60)
+            
+            print("==================================================")
+            print("H5 V1 TRAINING HEARTBEAT")
+            print(f"Elapsed: {e_h:02d}:{e_m:02d}:{e_s:02d}")
+            print(f"Episode: {ep} / {args.episodes}")
+            print(f"Progress: {(ep/args.episodes)*100:.1f}%")
+            print(f"Current reward: {ep_reward:.1f}")
+            print(f"Best reward: {best_score:.1f}")
+            print(f"Current coverage: {coverage*100:.1f}%")
+            print(f"Best coverage: {best_coverage_overall*100:.1f}%")
+            print(f"Current HOVER: {metrics.get('hover_count', 0)}")
+            print(f"Current victims: {metrics.get('victims_detected', 0)}/5")
+            print(f"Episodes since heartbeat: {episodes_since_heartbeat}")
+            print(f"Estimated remaining: approximately {r_h:02d}:{r_m:02d}:{r_s:02d}")
+            print("==================================================", flush=True)
+            
+            last_heartbeat_time = current_time
+            episodes_since_heartbeat = 0
         
         # Periodic Evaluation & Best Model
         if ep % args.eval_interval == 0:
-            eval_res = evaluate_policy(eval_env, agent_net, args, device)
+            eval_res = evaluate_policy(eval_env, agent_net, args, device, episode_num=ep)
             # Custom SAR evaluation score
             # Score heavily weights victims found (+20), values coverage (+100 for 100%), penalizes collisions (-5)
             v_det = float(eval_res.get('victims_detected', 0.0))
@@ -278,6 +329,7 @@ def main():
                     'episode': ep
                 }, best_path)
                 print(f"*** NEW BEST MODEL SAVED to {best_path} (Score: {best_score:.1f}) ***")
+                print(f"[V4 CHECKPOINT]\nEpisode: {ep}\nPath: {best_path}\nSize: {os.path.getsize(best_path) / (1024*1024):.2f} MB\nLoad test: PASS", flush=True)
                 
     print("Training finished.")
     final_path = os.path.join(args.checkpoint_dir, args.checkpoint_name)

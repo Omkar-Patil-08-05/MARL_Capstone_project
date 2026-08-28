@@ -14,10 +14,13 @@ class DroneConfig:
 @dataclass
 class MissionConfig:
     control_rate_hz: int = 20
-    takeoff_altitude: float = 10.0
-    hold_duration: int = 100  # ticks at 20Hz -> 5s
+    takeoff_altitude: float = 15.0
+    hold_duration: int = 300  # ticks at 20Hz -> 15s
+    waypoint_timeout: int = 300 # ticks at 20Hz -> 15s
     landing_timeout: int = 400
     estimator_timeout: int = 200
+    min_waypoint_dwell_ticks: int = 40
+
     
     # APF & Waypoint parameters
     enable_apf: bool = False
