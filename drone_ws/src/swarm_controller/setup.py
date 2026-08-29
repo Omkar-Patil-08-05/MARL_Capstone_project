@@ -28,7 +28,8 @@ setup(
             'smoke_test = swarm_controller.smoke_test:main',
             'deterministic_movement_test = swarm_controller.deterministic_movement_test:main',
             'two_drone_deterministic_test = swarm_controller.two_drone_deterministic_test:main',
-            'qmix_drone_test = swarm_controller.qmix_drone_test:main'
+            'qmix_drone_test = swarm_controller.qmix_drone_test:main',
+            'yolo_human_detection = swarm_controller.yolo_human_detection:main'
         ],
     },
 )

@@ -4,7 +4,7 @@ import os
 MAP_REGISTRY = {
     "realistic_sar": {
         "id": "realistic_sar",
-        "name": "Earthquake City (Realistic SAR)",
+        "name": "Earthquake City (VALIDATED / PROJECT DEMONSTRATION)",
         "world_file": "realistic_sar.sdf",
         "metadata_file": "generated_world_meta.json",
         "grid_width": 25,
@@ -40,7 +40,9 @@ def get_world_data(map_id: str):
             },
             "world": {
                 "width_m": registry_entry["grid_width"] * registry_entry["meters_per_cell"],
-                "height_m": registry_entry["grid_height"] * registry_entry["meters_per_cell"]
+                "height_m": registry_entry["grid_height"] * registry_entry["meters_per_cell"],
+                "origin_x": registry_entry.get("origin_x", 0.0),
+                "origin_y": registry_entry.get("origin_y", 0.0)
             },
             "obstacles": meta.get("obstacles", []),
             "victims": meta.get("victims", []),

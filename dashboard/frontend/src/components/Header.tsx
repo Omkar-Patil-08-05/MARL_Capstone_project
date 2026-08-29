@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Radio, Wifi, WifiOff, Square, RefreshCcw } from 'lucide-react';
+import { Activity, Radio, Wifi, WifiOff, Square, RefreshCcw, Map } from 'lucide-react';
 import type { MissionTelemetry, BackendMissionStatus } from '../types/telemetry';
 
 interface HeaderProps {
@@ -54,6 +54,19 @@ export function Header({ isConnected, telemetry, backendStatus, onStop, onReset 
                             style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: '#d97706', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                         >
                             <RefreshCcw size={14} /> RESET
+                        </button>
+                        <button 
+                            onClick={async () => {
+                                try {
+                                    const res = await fetch('http://localhost:8000/api/mission/view_simulation', { method: 'POST' });
+                                    if (!res.ok) alert("Failed to launch Gazebo GUI. Alternatively, run: gz sim -g");
+                                } catch (e) {
+                                    alert("Failed to connect to backend. Run manually: gz sim -g");
+                                }
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: 'transparent', color: 'var(--accent-cyan)', border: '1px solid var(--accent-cyan)', borderRadius: '4px', cursor: 'pointer', marginLeft: '12px' }}
+                        >
+                            <Map size={14} /> VIEW SIMULATION
                         </button>
                     </div>
                 )}

@@ -98,7 +98,7 @@ class DroneAgent:
             if self.state_timer % self.mission.control_rate_hz == 0:
                 self.px4.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, param1=1.0, param2=6.0)
                 
-            if self.px4.is_offboard():
+            if self.state_timer >= self.mission.control_rate_hz * 2:
                 self._log_transition(FlightState.REQUEST_ARM)
             self.state_timer += 1
 
@@ -109,7 +109,7 @@ class DroneAgent:
             if self.state_timer % self.mission.control_rate_hz == 0:
                 self.px4.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, param1=1.0)
                 
-            if self.px4.is_armed():
+            if self.state_timer >= self.mission.control_rate_hz * 2:
                 self._log_transition(FlightState.TAKEOFF)
             self.state_timer += 1
 

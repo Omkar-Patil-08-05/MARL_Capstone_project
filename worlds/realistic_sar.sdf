@@ -3,6 +3,26 @@
 <sdf version="1.9">
 
 <world name="realistic_sar">
+
+  <!-- ============================================================
+       WORLD-LEVEL SYSTEM PLUGINS
+       Equivalent to PX4 server.config — embedded for self-contained
+       operation regardless of GZ_SIM_SERVER_CONFIG_PATH.
+  ============================================================ -->
+  <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
+  <plugin filename="gz-sim-user-commands-system"     name="gz::sim::systems::UserCommands"/>
+  <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+  <plugin filename="gz-sim-contact-system"           name="gz::sim::systems::Contact"/>
+  <plugin filename="gz-sim-imu-system"               name="gz::sim::systems::Imu"/>
+  <plugin filename="gz-sim-air-pressure-system"      name="gz::sim::systems::AirPressure"/>
+  <plugin filename="gz-sim-air-speed-system"         name="gz::sim::systems::AirSpeed"/>
+  <plugin filename="gz-sim-apply-link-wrench-system" name="gz::sim::systems::ApplyLinkWrench"/>
+  <plugin filename="gz-sim-navsat-system"            name="gz::sim::systems::NavSat"/>
+  <plugin filename="gz-sim-magnetometer-system"      name="gz::sim::systems::Magnetometer"/>
+  <plugin filename="gz-sim-sensors-system"           name="gz::sim::systems::Sensors">
+    <render_engine>ogre</render_engine>
+  </plugin>
+
 <physics type="ode">
 <max_step_size>0.004</max_step_size>
 <real_time_factor>1.0</real_time_factor>
@@ -3213,35 +3233,15 @@
 
   </model>
 
-  <include>
-    <name>victim_22</name>
-    <uri>model://rescue_randy_sitting</uri>
-    <pose>54.00 10.00 0.0 0 0 0</pose>
-  </include>
+  
 
-  <include>
-    <name>victim_23</name>
-    <uri>model://rescue_randy_sitting</uri>
-    <pose>26.00 50.00 0.0 0 0 0</pose>
-  </include>
+  
 
-  <include>
-    <name>victim_24</name>
-    <uri>model://rescue_randy_sitting</uri>
-    <pose>38.00 42.00 0.0 0 0 0</pose>
-  </include>
+  
 
-  <include>
-    <name>victim_25</name>
-    <uri>model://rescue_randy_sitting</uri>
-    <pose>26.00 62.00 0.0 0 0 0</pose>
-  </include>
+  
 
-  <include>
-    <name>victim_26</name>
-    <uri>model://rescue_randy_sitting</uri>
-    <pose>58.00 62.00 0.0 0 0 0</pose>
-  </include>
+  
 
 
 </world>

@@ -14,6 +14,14 @@ class GridWorldTransform:
     GRID_SIZE_Y = 25
 
     @classmethod
+    def set_bounds(cls, width: int, height: int, meters_per_cell: float = 4.0, origin_x: float = 0.0, origin_y: float = 0.0):
+        cls.GRID_SIZE_X = width
+        cls.GRID_SIZE_Y = height
+        cls.METERS_PER_CELL = meters_per_cell
+        cls.GRID_ORIGIN_X = origin_x
+        cls.GRID_ORIGIN_Y = origin_y
+
+    @classmethod
     def grid_to_world_center(cls, grid_x: int, grid_y: int) -> Tuple[float, float]:
         """Returns the world coordinates for the center of the specified grid cell."""
         world_x = cls.GRID_ORIGIN_X + (grid_x + 0.5) * cls.METERS_PER_CELL

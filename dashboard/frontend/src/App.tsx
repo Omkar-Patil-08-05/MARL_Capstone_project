@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTelemetry } from './hooks/useTelemetry';
 import { Header } from './components/Header';
 import { MissionOverview } from './components/MissionOverview';
@@ -7,9 +7,12 @@ import { DroneCard } from './components/DroneCard';
 import { AlertsFeed } from './components/AlertsFeed';
 import { MissionProgress } from './components/MissionProgress';
 import { MapSelection } from './components/MapSelection';
+import { VictimDetectionPanel } from './components/VictimDetectionPanel';
+import { CameraStreamPanel } from './components/CameraStreamPanel';
 
 function App() {
     const { telemetry, worldData, mapRegistry, backendStatus, isConnected, alerts, droneHistory, startMission, stopMission, resetMission } = useTelemetry();
+    const [activeView, setActiveView] = useState<'MAP' | 'CAMERA'>('MAP');
 
     const isMissionActive = backendStatus.state !== 'IDLE' && backendStatus.state !== 'ERROR';
 
@@ -50,15 +53,23 @@ function App() {
                 </div>
                 
                 <div className="layout-right">
+                    <CameraStreamPanel drones={telemetry ? telemetry.drones : []} />
+                    
                     {telemetry?.drones.map(drone => (
-                        <DroneCard key={drone.id} drone={drone} />
+                        <DroneCard 
+                            key={drone.id} 
+                            drone={drone} 
+                            activeView={activeView}
+                            onToggleCamera={() => {}} 
+                        />
                     ))}
+                    <VictimDetectionPanel victims={telemetry ? (telemetry.tracked_victims || []) : []} />
                     <AlertsFeed alerts={alerts} />
                 </div>
             </div>
 
-                    <MissionProgress telemetry={telemetry ? telemetry.mission : null} />
-                </>
+            <MissionProgress telemetry={telemetry ? telemetry.mission : null} />
+        </>
             )}
             
             {backendStatus.error && (

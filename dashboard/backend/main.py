@@ -197,16 +197,47 @@ class TelemetrySubscriber(Node):
                 asyncio.run_coroutine_threadsafe(manager.broadcast(out_msg), self.loop)
         except json.JSONDecodeError:
             pass
+
+import cv2
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image as RosImage
+
+# Shared global buffers for camera streams
+LATEST_FRAMES = {0: b"", 1: b""}
+frame_lock = threading.Lock()
+
+class CameraSubscriber(Node):
+    def __init__(self, loop):
+        super().__init__('camera_subscriber_backend')
+        self.loop = loop
+        self.bridge = CvBridge()
+        self.create_subscription(RosImage, '/drone_0/camera/detection_image', lambda msg: self.img_callback(0, msg), 1)
+        self.create_subscription(RosImage, '/drone_1/camera/detection_image', lambda msg: self.img_callback(1, msg), 1)
+
+    def img_callback(self, drone_id, msg):
+        try:
+            cv_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+            ret, buffer = cv2.imencode('.jpg', cv_img, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            if ret:
+                with frame_lock:
+                    LATEST_FRAMES[drone_id] = buffer.tobytes()
+        except Exception as e:
+            pass
             
 def ros_spin_thread(loop):
     rclpy.init(args=None)
-    node = TelemetrySubscriber(loop)
+    telemetry_node = TelemetrySubscriber(loop)
+    camera_node = CameraSubscriber(loop)
+    executor = rclpy.executors.MultiThreadedExecutor()
+    executor.add_node(telemetry_node)
+    executor.add_node(camera_node)
     try:
-        rclpy.spin(node)
+        executor.spin()
     except Exception as e:
         print(f"ROS 2 subscriber thread exception: {e}")
     finally:
-        node.destroy_node()
+        telemetry_node.destroy_node()
+        camera_node.destroy_node()
         rclpy.shutdown()
 
 # ---------------------------------------------------------
@@ -276,6 +307,40 @@ def get_mission_status():
         "active_map_id": mission_manager.active_map_id,
         "error": mission_manager.error_msg
     }
+
+@app.post("/api/mission/view_simulation")
+async def view_simulation():
+    if mission_manager.state not in ["SIMULATOR_READY", "QMIX_STARTING", "RUNNING", "COMPLETE"]:
+        raise HTTPException(status_code=400, detail="Simulation is not currently running")
+    
+    try:
+        # Launch Gazebo GUI in the background attached to the running server session
+        # We redirect output to /dev/null to prevent blocking
+        subprocess.Popen(
+            "export GZ_IP=127.0.0.1 && gz sim -g > /dev/null 2>&1",
+            shell=True,
+            preexec_fn=os.setsid
+        )
+        return {"status": "success", "message": "Gazebo GUI launched"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def mjpeg_generator(drone_id: int):
+    while True:
+        with frame_lock:
+            frame = LATEST_FRAMES.get(drone_id)
+        if frame:
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        await asyncio.sleep(0.05)  # 20 FPS max
+
+from fastapi.responses import StreamingResponse
+
+@app.get("/api/camera/stream")
+async def camera_stream(drone_id: int):
+    if drone_id not in [0, 1]:
+        raise HTTPException(status_code=400, detail="Invalid drone ID")
+    return StreamingResponse(mjpeg_generator(drone_id), media_type="multipart/x-mixed-replace; boundary=frame")
 
 @app.websocket("/ws/telemetry")
 async def websocket_endpoint(websocket: WebSocket):

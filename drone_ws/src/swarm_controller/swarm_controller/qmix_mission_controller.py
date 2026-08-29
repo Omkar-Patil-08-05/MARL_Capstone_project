@@ -10,6 +10,8 @@ import json
 from swarm_controller.drone_agent import DroneAgent, FlightState
 from swarm_controller.grid_world_transform import GridWorldTransform
 from swarm_controller.qmix_ros2_adapter import QMIXAdapter
+from swarm_controller.victim_manager import VictimManager
+from swarm_controller.victim_localizer import VictimLocalizer
 
 sys.path.append('/home/capstone/capstone_project_antigravity')
 from marl_drone_project.env.sar_env import SARGridEnv
@@ -21,11 +23,18 @@ class QMIXMissionController(Node):
         self.drone_configs = drone_configs
         self.max_decisions = max_decisions
         
+        self.localizer = VictimLocalizer()
+        
         # Instantiate drones
         self.agents = [DroneAgent(self, config, mission_config) for config in drone_configs]
         
         # Initialize internal SARGridEnv to track deployment grid state and observations
-        self.env = SARGridEnv(num_drones=len(self.agents), max_steps=1000)
+        self.env = SARGridEnv(
+            num_drones=len(self.agents),
+            max_steps=1000,
+            x_size=GridWorldTransform.GRID_SIZE_X,
+            y_size=GridWorldTransform.GRID_SIZE_Y
+        )
         self.env.reset()
         
         # Override initial grid with small_sar.sdf buildings
@@ -76,8 +85,92 @@ class QMIXMissionController(Node):
         self.start_time = time.time()
         self.global_step_state = "INITIALIZING" 
         
+        self.setup_telemetry()
+        self.setup_perception_subscribers()
+        
         # Create control loop timer
-        self.timer = self.create_timer(1.0 / self.mission_config.control_rate_hz, self.tick)
+        timer_period = 0.05
+        self.timer = self.create_timer(timer_period, self.tick)
+        
+    def setup_perception_subscribers(self):
+        """Creates subscribers for the JSON detection stream from the YOLO node."""
+        self.detection_subs = []
+        for agent in self.agents:
+            topic = f'/drone_{agent.config.drone_id}/camera/detection_data'
+            # Using default argument binding in lambda to capture the correct drone_id
+            sub = self.create_subscription(
+                String, 
+                topic, 
+                lambda msg, d_id=agent.config.drone_id: self.detection_callback(msg, d_id), 
+                10
+            )
+            self.detection_subs.append(sub)
+            
+    def detection_callback(self, msg, drone_id):
+        """Processes incoming detection JSON via VictimLocalizer and VictimManager."""
+        try:
+            data = json.loads(msg.data)
+            source = data.get('source', 'UNKNOWN')
+            img_w = data.get('image_width', 640)
+            img_h = data.get('image_height', 480)
+            detections = data.get('detections', [])
+            
+            if not detections:
+                return
+                
+            # Get drone state
+            agent = next((a for a in self.agents if a.config.drone_id == drone_id), None)
+            if not agent:
+                return
+                
+            lx, ly, wz = agent.px4.current_position
+            wx = lx + agent.config.world_spawn_x
+            wy = ly + agent.config.world_spawn_y
+            
+            # Simplified yaw assumption (drone looks where it's going, or 0 if hovering)
+            # For exact yaw we would need quaternion from vehicle_odometry.
+            # For N8 mock, we assume 0 rad (North) for simplicity in flat-ground estimation.
+            drone_yaw = 0.0 
+            
+            for det in detections:
+                bbox = det.get('bbox')
+                conf = det.get('confidence', 0.0)
+                
+                # Localize to world coordinates
+                loc_res = self.localizer.localize(
+                    drone_world_x=wx,
+                    drone_world_y=wy,
+                    drone_world_z=-wz, # NED down is positive, so altitude is -wz
+                    drone_yaw=drone_yaw,
+                    img_w=img_w,
+                    img_h=img_h,
+                    bbox=bbox
+                )
+                
+                # Update tracks
+                self.victim_manager.process_visual_detection(
+                    world_x=loc_res['world_x'],
+                    world_y=loc_res['world_y'],
+                    source=source,
+                    confidence=conf,
+                    drone_id=drone_id
+                )
+        except Exception as e:
+            self.get_logger().error(f"Detection callback error: {e}")
+
+    def sync_victims_to_env(self):
+        """Synchronizes dynamic victims from VictimManager to SARGridEnv for FOV detection."""
+        self.env.victims.clear()
+        for v_id, v_obj in self.victim_manager.victims.items():
+            gx = v_obj.grid_x
+            gy = v_obj.grid_y
+            
+            # Bound check gracefully
+            if 0 <= gx < self.env.x_size and 0 <= gy < self.env.y_size:
+                status = 1 if v_obj.state.value == "DETECTED" or v_obj.state.value == "RESCUED" else 0
+                self.env.victims[(gx, gy)] = status
+
+    def setup_telemetry(self):
         
         # Telemetry
         self.telemetry_pub = self.create_publisher(String, '/swarm/telemetry', 10)
@@ -128,19 +221,15 @@ class QMIXMissionController(Node):
                         self.env.grid[gx, gy] = -1
                         break
         
-        # 2. Populate and strictly validate victims
-        self.env.victims = {}
-        for v in victims_meta:
-            gx = v["grid"]["x"]
-            gy = v["grid"]["y"]
-            
-            if not (0 <= gx < self.env.x_size and 0 <= gy < self.env.y_size):
-                raise RuntimeError(f"CRITICAL: Victim {v.get('id')} is out of grid bounds at ({gx}, {gy})!")
-                
-            if self.env.grid[gx, gy] == -1:
-                raise RuntimeError(f"CRITICAL: Victim {v.get('id')} occupies an obstacle cell at ({gx}, {gy})!")
-                
-            self.env.victims[(gx, gy)] = 0
+        # 2. Populate and strictly validate victims using VictimManager
+        map_id = os.environ.get("PX4_GZ_WORLD", "realistic_sar")
+        victim_seed = int(os.environ.get("VICTIM_SEED", "42"))
+        self.victim_manager = VictimManager(self, meta, map_id, self.env, seed=victim_seed)
+        
+        self.sync_victims_to_env()
+        
+        # Spawn the victims into Gazebo
+        self.victim_manager.spawn_all()
             
         # 3. Synchronize drone spawn metadata
         for agent in self.agents:
@@ -155,6 +244,7 @@ class QMIXMissionController(Node):
 
     def tick(self):
         current_time = time.time()
+        self.get_logger().info(f"D0 connected: {self.agents[0].px4.is_connected()}")
         if self.mission_active and not self.land_commanded:
             if current_time - self.last_heartbeat_time >= 60.0:
                 self.last_heartbeat_time = current_time
@@ -264,15 +354,12 @@ class QMIXMissionController(Node):
                     if self.env.grid[gx, gy] == 1:
                         explored_cells.append({"x": int(gx), "y": int(gy)})
             
-            # Build victim state list
-            victims_state = []
-            for idx, ((vx, vy), status) in enumerate(self.env.victims.items()):
-                victims_state.append({
-                    "id": f"V{idx}",
-                    "x": int(vx),
-                    "y": int(vy),
-                    "detected": bool(status == 1)
-                })
+            # Build victim state list from VictimManager
+            victims_state = [v.get_dict() for v in self.victim_manager.victims.values()]
+            tracked_victims_state = [t.get_dict() for t in self.victim_manager.tracked_victims.values()]
+            
+            # Recalculate unique ground truth victims detected
+            unique_detected = sum(1 for v in self.victim_manager.victims.values() if v.state.value == "DETECTED")
             
             msg_dict = {
                 "type": "telemetry",
@@ -283,15 +370,16 @@ class QMIXMissionController(Node):
                     "max_decisions": self.max_decisions,
                     "global_step_state": getattr(self, 'global_step_state', "UNKNOWN"),
                     "coverage": round(float(coverage), 2),
-                    "victims_detected": len(self.detected_victims),
-                    "total_victims": len(self.env.victims),
+                    "victims_detected": unique_detected,
+                    "total_victims": len(self.victim_manager.victims),
                     "explored_count": int(explored),
                     "valid_count": int(valid_cells),
                     "safety_overrides": self.safety_overrides_count
                 },
                 "drones": drones_data,
                 "explored_cells": explored_cells,
-                "victims": victims_state
+                "victims": victims_state,
+                "tracked_victims": tracked_victims_state
             }
             
             msg = String()
@@ -299,19 +387,6 @@ class QMIXMissionController(Node):
             self.telemetry_pub.publish(msg)
         except Exception as e:
             self.get_logger().error(f"Telemetry error: {e}")
-
-    def spawn_victim(self, gx, gy):
-        wx, wy = GridWorldTransform.grid_to_world_center(gx, gy)
-        self.get_logger().warn(f"DYNAMIC VICTIM MANAGER: Spawning victim at Grid ({gx}, {gy}) -> World ({wx:.1f}, {wy:.1f})")
-        cmd = (
-            f'gz service -s /world/realistic_sar/create '
-            f'--reqtype gz.msgs.EntityFactory '
-            f'--reptype gz.msgs.Boolean '
-            f'--req "sdf_filename: \"/home/capstone/capstone_project_antigravity/assets_real/victims/victim_1/model.sdf\", '
-            f'pose: {{position: {{x: {wx}, y: {wy}, z: 0.0}}}}"'
-        )
-        import subprocess
-        subprocess.Popen(cmd, shell=True)
 
     def sync_env_state(self):
         """Synchronizes continuous telemetry with the discrete SARGridEnv internal state."""
@@ -330,20 +405,20 @@ class QMIXMissionController(Node):
     def execute_global_step(self):
         """Executes a fully synchronous RL step for all active agents simultaneously."""
         self.sync_env_state()
+        
+        # Phase N5: Update moving victims
+        self.victim_manager.update()
+        self.sync_victims_to_env()
+        
         new_cells, _ = self.env._update_fov_and_victims()
         
         # PHASE 1: BFS SEMANTIC FIX
         if sum(new_cells) > 0:
             self.env._update_global_bfs()
             
-        # Dynamic Victim Manager
         valid_cells = (self.env.grid != -1).sum()
         explored = (self.env.grid == 1).sum()
         coverage = (explored / valid_cells) * 100 if valid_cells > 0 else 0
-        if coverage > (5 - len(self.unspawned_victims)) * 20:
-            if self.unspawned_victims:
-                vgx, vgy = self.unspawned_victims.pop(0)
-                self.spawn_victim(vgx, vgy)
                 
         # 1. Collect all observations synchronously
         t_start = time.time()
@@ -445,6 +520,7 @@ class QMIXMissionController(Node):
         for v_pos, status in self.env.victims.items():
             if status == 1 and v_pos not in self.detected_victims:
                 self.detected_victims.add(v_pos)
+                self.victim_manager.mark_detected_by_grid(v_pos[0], v_pos[1])
                 self.victim_writer.writerow([t, self.decisions_made, v_pos[0], v_pos[1], drone_id_str])
                 self.victim_file.flush()
 

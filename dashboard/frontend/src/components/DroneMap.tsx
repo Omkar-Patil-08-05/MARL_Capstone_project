@@ -108,12 +108,21 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims }:
                         width: '100%', 
                         height: '100%', 
                         maxHeight: '100%',
-                        maxWidth: '100%',
-                        background: 'rgba(0,0,0,0.3)',
-                        border: '1px solid var(--border-light)',
-                        borderRadius: '4px'
+                        maxWidth: '100%'
                     }}
                 >
+                    {/* Map Background Box */}
+                    <rect 
+                        x="0" 
+                        y="0" 
+                        width={world.width_m} 
+                        height={world.height_m} 
+                        fill="rgba(0,0,0,0.3)" 
+                        stroke="rgba(255,255,255,0.1)" 
+                        strokeWidth="1" 
+                        rx="4" 
+                    />
+
                     {/* Grid Background */}
                     <g className="grid-layer">
                         {gridLines}
@@ -132,8 +141,8 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims }:
                             return (
                                 <rect 
                                     key={obs.id}
-                                    x={obs.aabb.min_x}
-                                    y={obs.aabb.min_y}
+                                    x={obs.aabb.min_x - world.origin_x}
+                                    y={obs.aabb.min_y - world.origin_y}
                                     width={w}
                                     height={h}
                                     fill="rgba(255, 255, 255, 0.12)"

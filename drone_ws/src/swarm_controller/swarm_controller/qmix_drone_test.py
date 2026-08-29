@@ -6,6 +6,7 @@ import json
 import sys
 from swarm_controller.configs import DroneConfig, MissionConfig
 from swarm_controller.qmix_mission_controller import QMIXMissionController
+from swarm_controller.grid_world_transform import GridWorldTransform
 
 def main(args=None):
     parser = argparse.ArgumentParser()
@@ -25,6 +26,10 @@ def main(args=None):
     
     if map_id == "realistic_sar":
         meta_filename = "generated_world_meta.json"
+        GridWorldTransform.set_bounds(25, 25, 4.0, 0.0, 0.0)
+    elif map_id == "earthquake_world":
+        meta_filename = "earthquake_world_meta.json"
+        GridWorldTransform.set_bounds(100, 100, 4.0, -200.0, -200.0)
     else:
         raise ValueError(f"Unsupported map ID for simulation: {map_id}")
         
@@ -75,6 +80,8 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"Test exited: {e}")
     finally:
         node.destroy_node()

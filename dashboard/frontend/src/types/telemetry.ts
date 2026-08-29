@@ -27,7 +27,14 @@ export interface VictimState {
     id: string;
     x: number;
     y: number;
+    world_x?: number;
+    world_y?: number;
     detected: boolean;
+    state?: string;
+    source?: string;
+    confidence?: number;
+    detected_by?: string;
+    last_seen_sec_ago?: number;
 }
 
 export interface ExploredCell {
@@ -42,6 +49,7 @@ export interface TelemetryPayload {
     drones: DroneTelemetry[];
     explored_cells: ExploredCell[];
     victims: VictimState[];
+    tracked_victims?: VictimState[];
     active_map_id?: string;
     backend_status?: string;
 }
