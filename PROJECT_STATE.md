@@ -29,7 +29,15 @@ You MUST read this document before making architectural changes. Do NOT assume o
 
 ## 2. CURRENT ARCHITECTURE
 
-The current pipeline forms a complete loop from high-level RL decision making to physical Gazebo simulation, culminating in a live React telemetry dashboard.
+## Current Phase: Complete Integration & Polishing
+The final multi-agent reinforcement learning (MARL) Search and Rescue (SAR) architecture is now fully integrated. The project successfully runs the trained QMIX policy (`qmix_sar_v4_align_best.pth`) controlling two PX4 drones in Gazebo Harmonic SITL.
+
+### Recent Achievements:
+- **Perception Architecture Overhaul:** Ground-truth victim coordinates have been completely decoupled from the RL environment's state. 
+- **MOCK Perception Mode:** Introduced a simulated perception layer within `qmix_mission_controller.py` that emulates visual detections based on drone FOV and distance to hidden GT victims, injecting these as bounding boxes into the localization pipeline.
+- **Victim Presentation:** The victim model has been switched to a standing `rescue_randy` asset for better visual realism in Gazebo.
+- **Dashboard Enhancements:** Tracked victims are now distinguished from ground truth. The telemetry exposes the source (`MOCK`), detection confidence, detecting drone, and localization error (distance to GT).
+- **Headless Mode Fix:** Fixed headless `-s` rendering bugs in Gazebo by defaulting to the standard `x500` model since camera rendering with `merge="true"` caused Mesa EGL deadlocks. The `VIEW SIMULATION` button correctly attaches the GUI without interfering with the backend.
 
 1. **QMIX Policy (`qmix_sar_v4_align_best.pth`)**: Evaluates the multi-agent observation state.
 2. **ROS 2 Mission Controller (`qmix_mission_controller.py`)**: Manages the agent state machine and coordinates the execution loop.

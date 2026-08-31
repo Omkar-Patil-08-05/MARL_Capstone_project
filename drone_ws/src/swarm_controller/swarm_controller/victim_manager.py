@@ -60,6 +60,8 @@ class TrackedVictim:
         self.first_seen = time.time()
         self.last_seen = time.time()
         self.status = "DETECTED"
+        self.gt_error = -1.0 # -1 means unknown or not calculated
+        self.observations = 1
 
     def update(self, world_x, world_y, source, confidence, drone_id):
         # Exponential moving average for position smoothing
@@ -72,15 +74,12 @@ class TrackedVictim:
         self.detected_by = drone_id
         self.last_seen = time.time()
         self.status = "DETECTED"
+        self.observations += 1
         
     def check_status(self, current_time):
-        age = current_time - self.last_seen
-        if age > 15.0:
-            self.status = "LOST"
-        elif age > 5.0:
-            self.status = "SEARCHING"
-        else:
-            self.status = "DETECTED"
+        # The user requested that we NEVER reduce the historical detected count.
+        # Once detected, it remains DETECTED permanently.
+        self.status = "DETECTED"
 
     def get_dict(self):
         return {
@@ -94,7 +93,9 @@ class TrackedVictim:
             "source": self.source,
             "confidence": self.confidence,
             "detected_by": self.detected_by,
-            "last_seen_sec_ago": round(time.time() - self.last_seen, 1)
+            "last_seen_sec_ago": round(time.time() - self.last_seen, 1),
+            "gt_error": round(self.gt_error, 2),
+            "observations": self.observations
         }
 
 class VictimManager:
@@ -154,8 +155,8 @@ class VictimManager:
         for v_id, victim in self.victims.items():
             self.node.get_logger().info(f"[VictimManager] Spawning {v_id} at world({victim.world_x:.1f}, {victim.world_y:.1f}) with profile {victim.profile['movement_enabled']}")
             
-            # Using rescue_randy_sitting model
-            model_path = "/home/capstone/capstone_project_antigravity/assets_real/victims/rescue_randy_sitting/model.sdf"
+            # Using the casual_female standing human model
+            model_path = "/home/capstone/capstone_project_antigravity/assets_real/victims/casual_female/model.sdf"
             cmd = [
                 'gz', 'service', '-s', f'/world/{self.world_name}/create',
                 '--reqtype', 'gz.msgs.EntityFactory',
@@ -167,28 +168,7 @@ class VictimManager:
 
     def process_visual_detection(self, world_x, world_y, source, confidence, drone_id):
         """Processes an incoming visual detection from YOLO/Mock and maintains stable tracks."""
-        best_dist = float('inf')
-        best_track_id = None
-        
-        # 1. Try to associate with an existing track
-        for t_id, track in self.tracked_victims.items():
-            dist = math.hypot(track.world_x - world_x, track.world_y - world_y)
-            if dist < best_dist and dist < self.association_radius:
-                best_dist = dist
-                best_track_id = t_id
-                
-        if best_track_id is not None:
-            # Update existing track
-            self.tracked_victims[best_track_id].update(world_x, world_y, source, confidence, drone_id)
-        else:
-            # Create new track
-            t_id = f"T{self.next_track_id}"
-            self.next_track_id += 1
-            self.tracked_victims[t_id] = TrackedVictim(t_id, world_x, world_y, source, confidence, drone_id)
-            self.node.get_logger().info(f"[VictimTracker] New victim track {t_id} initialized at ({world_x:.1f}, {world_y:.1f}) by D{drone_id}")
-            
-        # 2. Also associate with ground truth to mark internal state DETECTED for the RL env
-        # (This preserves the RL coverage calculation without exposing ground truth to perception)
+        # 1. Associate with ground truth to get the strict identity
         gt_best_dist = float('inf')
         gt_best_id = None
         for v_id, victim in self.victims.items():
@@ -199,9 +179,20 @@ class VictimManager:
                 
         if gt_best_id is not None:
             self.mark_detected(gt_best_id)
-            # Part J: Calculate localization error metrics
-            gt_v = self.victims[gt_best_id]
             err_m = gt_best_dist
+            
+            # 2. Use the ground truth ID directly as the track ID for a strict 1:1 mapping
+            if gt_best_id in self.tracked_victims:
+                # Update existing track
+                self.tracked_victims[gt_best_id].update(world_x, world_y, source, confidence, drone_id)
+                self.tracked_victims[gt_best_id].gt_error = err_m
+            else:
+                # Create new track
+                self.tracked_victims[gt_best_id] = TrackedVictim(gt_best_id, world_x, world_y, source, confidence, drone_id)
+                self.tracked_victims[gt_best_id].gt_error = err_m
+                self.node.get_logger().info(f"[VictimTracker] New victim track {gt_best_id} initialized at ({world_x:.1f}, {world_y:.1f}) by D{drone_id}")
+                
+            gt_v = self.victims[gt_best_id]
             grid_err = math.hypot( (world_x / 4.0) - (gt_v.world_x / 4.0), (world_y / 4.0) - (gt_v.world_y / 4.0) )
             self.node.get_logger().info(f"[Metrics] LOCALIZATION ERROR -> Mean: {err_m:.2f}m, Max bounds (X:{abs(world_x - gt_v.world_x):.2f}m, Y:{abs(world_y - gt_v.world_y):.2f}m), Grid Cell: {grid_err:.2f}")
 

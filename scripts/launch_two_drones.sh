@@ -60,12 +60,12 @@ echo "Drone 1 spawn: ($D1_X, $D1_Y)"
 source /home/capstone/PX4-Autopilot/build/px4_sitl_default/rootfs/gz_env.sh
 # PX4_GZ_WORLD was exported during map selection above
 export PX4_GZ_WORLDS="/home/capstone/capstone_project_antigravity/worlds"
-export GZ_SIM_RESOURCE_PATH="/home/capstone/PX4-Autopilot/Tools/simulation/gz/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds:/home/capstone/capstone_project_antigravity/models:/home/capstone/capstone_project_antigravity/assets_real/victims"
+export GZ_SIM_RESOURCE_PATH="/home/capstone/capstone_project_antigravity/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds:/home/capstone/capstone_project_antigravity/assets_real/victims"
 
 # 1. Start Gazebo Server (force Mesa EGL for Intel GPU — NVIDIA EGL is broken)
 echo "Starting Gazebo Server with headless rendering (Mesa EGL)..."
-export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json
-gz sim -s -r --headless-rendering ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf > /tmp/gz.log 2>&1 &
+# export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json
+gz sim -s -v 4 -r ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf > /tmp/gz.log 2>&1 &
 GZ_PID=$!
 
 # 2. Wait 10 seconds for Gazebo and PX4 to fully initialize
@@ -113,7 +113,7 @@ mkdir -p /tmp/px4_instance_1
 echo "Starting PX4 Instance 0..."
 (
     cd /tmp/px4_instance_0
-    export PX4_GZ_MODEL="x500_mono_cam_down"
+    export PX4_GZ_MODEL="x500"
     export PX4_GZ_MODEL_POSE="$D0_X,$D0_Y,0.2,0,0,0"
     export PX4_UXRCE_DDS_NS="drone_0"
     ${BUILD_DIR}/bin/px4 -i 0 -d ${BUILD_DIR}/etc > out.log 2> err.log
@@ -126,7 +126,7 @@ sleep 15
 echo "Starting PX4 Instance 1..."
 (
     cd /tmp/px4_instance_1
-    export PX4_GZ_MODEL="x500_mono_cam_down"
+    export PX4_GZ_MODEL="x500"
     export PX4_GZ_MODEL_POSE="$D1_X,$D1_Y,0.2,0,0,0"
     export PX4_UXRCE_DDS_NS="drone_1"
     ${BUILD_DIR}/bin/px4 -i 1 -d ${BUILD_DIR}/etc > out.log 2> err.log
@@ -134,17 +134,6 @@ echo "Starting PX4 Instance 1..."
 
 echo "Waiting 15 seconds for Drone 1 to initialize..."
 sleep 15
-
-echo "Starting ROS-Gazebo Camera Bridges..."
-# Drone 0 Camera Bridge
-bash -c "source /opt/ros/jazzy/setup.bash && ros2 run ros_gz_bridge parameter_bridge \
-    /world/${PX4_GZ_WORLD}/model/x500_0/link/camera_link/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image \
-    --ros-args -r /world/${PX4_GZ_WORLD}/model/x500_0/link/camera_link/sensor/camera/image:=/drone_0/camera/image_raw" > /tmp/bridge_0.log 2>&1 &
-
-# Drone 1 Camera Bridge
-bash -c "source /opt/ros/jazzy/setup.bash && ros2 run ros_gz_bridge parameter_bridge \
-    /world/${PX4_GZ_WORLD}/model/x500_1/link/camera_link/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image \
-    --ros-args -r /world/${PX4_GZ_WORLD}/model/x500_1/link/camera_link/sensor/camera/image:=/drone_1/camera/image_raw" > /tmp/bridge_1.log 2>&1 &
 
 echo "=== EXPLICIT X500 EXISTENCE VALIDATION ==="
 echo "Checking Gazebo models for x500_0 and x500_1:"

@@ -35,6 +35,8 @@ export interface VictimState {
     confidence?: number;
     detected_by?: string;
     last_seen_sec_ago?: number;
+    gt_error?: number;
+    observations?: number;
 }
 
 export interface ExploredCell {
@@ -82,6 +84,8 @@ export interface WorldData {
     world: {
         width_m: number;
         height_m: number;
+        origin_x: number;
+        origin_y: number;
     };
     obstacles: WorldObstacle[];
     victims: WorldVictim[];

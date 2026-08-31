@@ -8,7 +8,7 @@ import { AlertsFeed } from './components/AlertsFeed';
 import { MissionProgress } from './components/MissionProgress';
 import { MapSelection } from './components/MapSelection';
 import { VictimDetectionPanel } from './components/VictimDetectionPanel';
-import { CameraStreamPanel } from './components/CameraStreamPanel';
+
 
 function App() {
     const { telemetry, worldData, mapRegistry, backendStatus, isConnected, alerts, droneHistory, startMission, stopMission, resetMission } = useTelemetry();
@@ -49,11 +49,12 @@ function App() {
                         history={droneHistory}
                         exploredCells={telemetry ? telemetry.explored_cells : []}
                         victims={telemetry ? telemetry.victims : []}
+                        trackedVictims={telemetry ? (telemetry.tracked_victims || []) : []}
                     />
                 </div>
                 
                 <div className="layout-right">
-                    <CameraStreamPanel drones={telemetry ? telemetry.drones : []} />
+
                     
                     {telemetry?.drones.map(drone => (
                         <DroneCard 

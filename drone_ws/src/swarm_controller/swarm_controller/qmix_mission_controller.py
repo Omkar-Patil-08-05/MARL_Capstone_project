@@ -1,6 +1,7 @@
 import os
 import csv
 import time
+import math
 import rclpy
 from rclpy.node import Node
 import sys
@@ -408,6 +409,68 @@ class QMIXMissionController(Node):
         
         # Phase N5: Update moving victims
         self.victim_manager.update()
+        
+        # Phase N6: MOCK PERCEPTION
+        # Instead of SARGridEnv automatically detecting victims, the MOCK perception emulates it
+        # without exposing ground truth directly to RL environment state.
+        for idx, agent in enumerate(self.agents):
+            lx, ly, wz = agent.px4.current_position
+            wx = lx + agent.config.world_spawn_x
+            wy = ly + agent.config.world_spawn_y
+            
+            # Check all ground-truth victims
+            for v_id, v_obj in self.victim_manager.victims.items():
+                # Emulate FOV bounding box (drone camera sees roughly 8m x 6m from 15m altitude)
+                dx = v_obj.world_x - wx
+                dy = v_obj.world_y - wy
+                dist = math.hypot(dx, dy)
+                
+                # Debug logging to trace the MOCK chain
+                if dist < 12.0:  # Only log when somewhat close to avoid spam
+                    self.get_logger().info(f"[MOCK DEBUG] D{agent.config.drone_id} at ({wx:.1f}, {wy:.1f}) | {v_id} at ({v_obj.world_x:.1f}, {v_obj.world_y:.1f}) | Dist: {dist:.1f}m")
+                
+                # If within simulated FOV, generate a mock bounding box
+                if dist < 6.0:
+                    # Calculate exactly where the victim would appear in the camera image
+                    # Assuming camera alt=15m, yaw=0, fov_h=60deg, fov_v=45deg
+                    alt = 15.0
+                    fov_h = math.radians(60.0)
+                    fov_v = math.radians(45.0)
+                    
+                    offset_x_local = dx
+                    offset_y_local = dy
+                    
+                    nx = offset_y_local / (alt * math.tan(fov_h / 2.0))
+                    ny = -offset_x_local / (alt * math.tan(fov_v / 2.0))
+                    
+                    cx = nx * 320.0 + 320.0
+                    cy = ny * 240.0 + 240.0
+                    
+                    # Mock bounding box generation (100x100 box around center)
+                    bbox = [int(cx - 50), int(cy - 50), int(cx + 50), int(cy + 50)]
+                    
+                    self.get_logger().info(f"[MOCK DEBUG] D{agent.config.drone_id} generated bbox {bbox} for {v_id} at dist {dist:.1f}m")
+                    
+                    loc_res = self.localizer.localize(
+                        drone_world_x=wx,
+                        drone_world_y=wy,
+                        drone_world_z=15.0, # Pass positive altitude directly for MOCK
+                        drone_yaw=0.0,
+                        img_w=640,
+                        img_h=480,
+                        bbox=bbox
+                    )
+                    
+                    self.get_logger().info(f"[MOCK DEBUG] Localizer output: world_x={loc_res['world_x']:.1f}, world_y={loc_res['world_y']:.1f}")
+                    
+                    self.victim_manager.process_visual_detection(
+                        world_x=loc_res['world_x'],
+                        world_y=loc_res['world_y'],
+                        source="MOCK",
+                        confidence=0.99,
+                        drone_id=agent.config.drone_id
+                    )
+
         self.sync_victims_to_env()
         
         new_cells, _ = self.env._update_fov_and_victims()

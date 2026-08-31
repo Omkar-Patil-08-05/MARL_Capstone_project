@@ -10,9 +10,10 @@ interface DroneMapProps {
     history: Record<string, {x: number, y: number}[]>;
     exploredCells: ExploredCell[];
     victims: VictimState[];
+    trackedVictims: VictimState[];
 }
 
-export function DroneMap({ worldData, drones, history, exploredCells, victims }: DroneMapProps) {
+export function DroneMap({ worldData, drones, history, exploredCells, victims, trackedVictims }: DroneMapProps) {
     if (!worldData) {
         return (
             <div className="panel flex-col items-center" style={{ flex: 1, justifyContent: 'center' }}>
@@ -153,31 +154,30 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims }:
                         })}
                     </g>
 
-                    {/* Victims */}
-                    <g className="victims-layer">
+                    {/* Ground Truth Victims (Hidden / Evaluation) */}
+                    <g className="victims-gt-layer">
                         {victims.map(v => {
                             const cx = (v.x * mpc) + (mpc / 2);
                             const cy = (v.y * mpc) + (mpc / 2);
                             return (
+                                <g key={`gt-${v.id}`} transform={`translate(${cx}, ${cy})`}>
+                                    <circle r={1.5} fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" strokeWidth={0.5} />
+                                </g>
+                            );
+                        })}
+                    </g>
+
+                    {/* Tracked Victims (Estimated / Detected) */}
+                    <g className="victims-layer">
+                        {trackedVictims && trackedVictims.map(v => {
+                            const cx = (v.x * mpc) + (mpc / 2);
+                            const cy = (v.y * mpc) + (mpc / 2);
+                            return (
                                 <g key={v.id} transform={`translate(${cx}, ${cy})`}>
-                                    {v.detected ? (
-                                        <>
-                                            {/* Detected: green with check */}
-                                            <circle r={2.5} fill="rgba(0,255,135,0.25)" stroke="#00ff87" strokeWidth={0.6} />
-                                            <circle r={1.2} fill="#00ff87" />
-                                            <text y={0.6} fill="#000" fontSize={1.6} fontWeight={900} textAnchor="middle" style={{ fontFamily: 'sans-serif' }}>✓</text>
-                                            <text y={-4} fill="#00ff87" fontSize={2.2} fontWeight={700} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)' }}>{v.id}</text>
-                                        </>
-                                    ) : (
-                                        <>
-                                            {/* Undetected: red/orange pulsing */}
-                                            <circle r={2.5} fill="rgba(255,85,51,0.3)" stroke="#ff5533" strokeWidth={0.6}>
-                                                <animate attributeName="r" values="2.5;3.2;2.5" dur="2s" repeatCount="indefinite" />
-                                            </circle>
-                                            <circle r={1} fill="#ff5533" />
-                                            <text y={-4} fill="#ff9966" fontSize={2.2} fontWeight={600} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)' }}>{v.id}</text>
-                                        </>
-                                    )}
+                                    <circle r={2.5} fill="rgba(0,255,135,0.25)" stroke="#00ff87" strokeWidth={0.6} />
+                                    <circle r={1.2} fill="#00ff87" />
+                                    <text y={0.6} fill="#000" fontSize={1.6} fontWeight={900} textAnchor="middle" style={{ fontFamily: 'sans-serif' }}>✓</text>
+                                    <text y={-4} fill="#00ff87" fontSize={2.2} fontWeight={700} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)' }}>{v.id}</text>
                                 </g>
                             );
                         })}

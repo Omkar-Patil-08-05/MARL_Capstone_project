@@ -21,7 +21,7 @@ export function VictimDetectionPanel({ victims }: { victims: VictimState[] }) {
                         padding: '0.75rem', 
                         background: 'rgba(255,255,255,0.03)', 
                         borderRadius: '0.5rem',
-                        borderLeft: `4px solid ${v.state === 'DETECTED' ? 'var(--accent-green)' : (v.state === 'SEARCHING' ? 'var(--accent-yellow)' : 'var(--text-muted)')}`
+                        borderLeft: `4px solid var(--accent-green)`
                     }}>
                         <div className="flex-row justify-between items-center" style={{ marginBottom: '0.5rem' }}>
                             <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{v.id}</strong>
@@ -30,10 +30,10 @@ export function VictimDetectionPanel({ victims }: { victims: VictimState[] }) {
                                 borderRadius: '4px',
                                 fontSize: '0.75rem',
                                 fontWeight: 'bold',
-                                background: v.state === 'DETECTED' ? 'rgba(0,255,100,0.1)' : 'rgba(255,255,255,0.1)',
-                                color: v.state === 'DETECTED' ? 'var(--accent-green)' : 'var(--text-muted)'
+                                background: 'rgba(0,255,100,0.1)',
+                                color: 'var(--accent-green)'
                             }}>
-                                STATUS: {v.state || "UNKNOWN"}
+                                STATUS: {v.state || "DETECTED"}
                             </span>
                         </div>
                         
@@ -56,9 +56,21 @@ export function VictimDetectionPanel({ victims }: { victims: VictimState[] }) {
                                 <span>Position: </span>
                                 <strong>Grid ({v.x}, {v.y})</strong>
                             </div>
-                            <div style={{ gridColumn: '1 / -1', marginTop: '0.25rem' }}>
-                                <span>Last seen: </span>
-                                <strong>{v.last_seen_sec_ago !== undefined ? `${v.last_seen_sec_ago.toFixed(1)} sec ago` : 'N/A'}</strong>
+                            <div>
+                                <span>Loc Error (GT): </span>
+                                <strong>
+                                    {v.gt_error !== undefined && v.gt_error >= 0 ? `${v.gt_error.toFixed(1)}m` : 'N/A'}
+                                </strong>
+                            </div>
+                            <div style={{ gridColumn: '1 / -1', marginTop: '0.25rem', display: 'flex', justifyContent: 'space-between' }}>
+                                <div>
+                                    <span style={{ color: 'var(--text-muted)' }}>Last seen: </span>
+                                    <strong style={{ color: 'var(--text-main)' }}>{v.last_seen_sec_ago !== undefined ? `${v.last_seen_sec_ago.toFixed(1)} sec ago` : 'N/A'}</strong>
+                                </div>
+                                <div>
+                                    <span style={{ color: 'var(--text-muted)' }}>Observations: </span>
+                                    <strong style={{ color: 'var(--text-main)' }}>{v.observations !== undefined ? v.observations : 1}</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
