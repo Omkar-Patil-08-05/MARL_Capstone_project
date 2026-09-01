@@ -20,8 +20,8 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
     const isRunning = backendStatus.state === 'RUNNING';
     const isError = backendStatus.state === 'ERROR';
     
-    // Current checkpoint is strictly 2-agent
-    const policyCompatible = droneCount === 2 && (selectedMap?.policy_compatible ?? false);
+    // Map compatibility check (QMIX + Deterministic mixed architecture)
+    const policyCompatible = (selectedMap?.policy_compatible ?? false);
     const canStart = policyCompatible && !isStarting && !isRunning;
 
     const getButtonLabel = () => {
@@ -110,9 +110,8 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                 <div>
                     <div className="value-label" style={{ marginBottom: '8px' }}>NUMBER OF DRONES</div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                        {[2, 3, 4, 5, 6].map(n => {
+                        {[1, 2, 3, 4].map(n => {
                             const isActive = droneCount === n;
-                            const isSupported = n === 2;
                             return (
                                 <button
                                     key={n}
@@ -123,7 +122,7 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                                         border: isActive ? '2px solid var(--accent-cyan)' : '1px solid var(--border-light)',
                                         borderRadius: '6px',
                                         background: isActive ? 'rgba(0, 242, 254, 0.12)' : 'rgba(255,255,255,0.03)',
-                                        color: isActive ? 'var(--accent-cyan)' : (isSupported ? 'var(--text-main)' : 'var(--text-muted)'),
+                                        color: isActive ? 'var(--accent-cyan)' : 'var(--text-main)',
                                         cursor: 'pointer',
                                         fontFamily: 'var(--font-mono)',
                                         fontWeight: isActive ? 700 : 400,
@@ -133,7 +132,6 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                                     }}
                                 >
                                     {n}
-                                    {!isSupported && <Lock size={10} style={{ marginLeft: '4px', opacity: 0.5 }} />}
                                 </button>
                             );
                         })}
@@ -157,7 +155,7 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                     }}>
                         {policyCompatible
                             ? <><CheckCircle2 size={16} className="text-green" /><span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-green)' }}>READY</span></>
-                            : <><AlertTriangle size={16} style={{ color: 'var(--accent-yellow)' }} /><span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-yellow)' }}>REQUIRES {droneCount}-AGENT CHECKPOINT</span></>
+                            : <><AlertTriangle size={16} style={{ color: 'var(--accent-yellow)' }} /><span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-yellow)' }}>UNSUPPORTED MAP</span></>
                         }
                     </div>
                 </div>

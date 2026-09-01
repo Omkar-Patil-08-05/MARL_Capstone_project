@@ -55,7 +55,7 @@ class ConnectionManager:
                 await connection.send_text(message)
             except Exception:
                 failed_connections.append(connection)
-                
+
         for fc in failed_connections:
             self.disconnect(fc)
 
@@ -79,9 +79,9 @@ class MissionManager:
                 self.error_msg = error
             print(f"[MISSION] Transition -> {new_state}")
 
-    def stop_mission(self):
+    async def stop_mission(self):
         with self.lock:
-            if self.state in ["IDLE"]:
+            if self.state == "STOPPING":
                 return
             self.state = "STOPPING"
 
@@ -92,35 +92,47 @@ class MissionManager:
             except Exception as e:
                 print(f"Error killing pgid {pgid}: {e}")
         self.process_groups = []
-        
+
         # Fallback system cleanup just to be completely safe
         subprocess.run('pkill -9 -f "MicroXRCEAgent" || true', shell=True)
         subprocess.run('pkill -9 -f "px4" || true', shell=True)
         subprocess.run('pkill -9 -f "gz sim" || true', shell=True)
         subprocess.run('pkill -9 -f "ruby.*gz" || true', shell=True)
         subprocess.run('pkill -9 -f "qmix_drone_test" || true', shell=True)
-        
+        subprocess.run('pkill -9 -f "swarm_runner" || true', shell=True)
+        subprocess.run('pkill -9 -f "yolo_human_detection" || true', shell=True)
+
+        # Stop ros2 daemon to clear phantom topic caches
+        subprocess.run('source /opt/ros/jazzy/setup.bash && ros2 daemon stop || true', shell=True, executable='/bin/bash')
+
+        # Wait for processes to genuinely terminate
+        for _ in range(15):
+            res = subprocess.run('pgrep -f "gz sim|px4|MicroXRCEAgent|swarm_runner|yolo_human_detection"', shell=True, capture_output=True, text=True)
+            if not res.stdout.strip():
+                break
+            await asyncio.sleep(1)
+
         global _LATEST_TELEMETRY, _TELEMETRY_RECEIVED
         _LATEST_TELEMETRY = None
         _TELEMETRY_RECEIVED = False
-        
+
         with self.lock:
             self.state = "IDLE"
             self.active_map_id = None
 
 mission_manager = MissionManager()
 
-async def start_mission_task(map_id: str):
+async def start_mission_task(map_id: str, drone_count: int):
     try:
         mission_manager.set_state("STARTING")
         mission_manager.active_map_id = map_id
-        
+
         # 1. Start Simulator Stack
-        launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_two_drones.sh")
+        launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_swarm.sh")
         # Start in new process group
-        sim_proc = subprocess.Popen(["bash", launch_script, map_id], preexec_fn=os.setsid)
+        sim_proc = subprocess.Popen(["bash", launch_script, map_id, str(drone_count)], preexec_fn=os.setsid)
         mission_manager.process_groups.append(os.getpgid(sim_proc.pid))
-        
+
         # 2. Wait for Simulator Topics (up to 90s)
         print("[MISSION] Waiting for /drone_0/fmu/out/vehicle_odometry...")
         ready = False
@@ -128,37 +140,37 @@ async def start_mission_task(map_id: str):
             if mission_manager.state != "STARTING":
                 return
             res = subprocess.run(["bash", "-c", "source /opt/ros/jazzy/setup.bash && ros2 topic list"], capture_output=True, text=True)
-            if "/drone_0/fmu/out/vehicle_odometry" in res.stdout and "/drone_1/fmu/out/vehicle_odometry" in res.stdout:
+            if all(f"/drone_{i}/fmu/out/vehicle_odometry" in res.stdout for i in range(drone_count)):
                 ready = True
                 break
             await asyncio.sleep(3)
-            
+
         if not ready:
             mission_manager.set_state("ERROR", "Timed out waiting for simulator topics.")
-            mission_manager.stop_mission()
+            await mission_manager.stop_mission()
             return
-            
+
         mission_manager.set_state("SIMULATOR_READY")
-        
+
         # 3. Wait for EKF2 stabilization
         print("[MISSION] Waiting 60s for EKF2 stabilization...")
         for _ in range(60):
             if mission_manager.state != "SIMULATOR_READY":
                 return
             await asyncio.sleep(1)
-            
+
         mission_manager.set_state("QMIX_STARTING")
-        
+
         # 4. Start QMIX Controller
-        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && ros2 run swarm_controller qmix_drone_test --map {map_id}"
+        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && ros2 run swarm_controller swarm_runner --map {map_id} --drones {drone_count}"
         qmix_proc = subprocess.Popen(["bash", "-c", qmix_cmd], preexec_fn=os.setsid)
         mission_manager.process_groups.append(os.getpgid(qmix_proc.pid))
-        
+
         mission_manager.set_state("RUNNING")
-        
+
     except Exception as e:
         mission_manager.set_state("ERROR", str(e))
-        mission_manager.stop_mission()
+        await mission_manager.stop_mission()
 
 
 # ---------------------------------------------------------
@@ -179,26 +191,26 @@ class TelemetrySubscriber(Node):
                 msg_timestamp = data.get("timestamp", 0)
                 if _LAST_TIMESTAMP is not None and msg_timestamp < _LAST_TIMESTAMP:
                     return
-                
+
                 # Inject active map into telemetry
                 data["active_map_id"] = mission_manager.active_map_id
                 data["backend_status"] = mission_manager.state
-                
+
                 # Check for mission complete
                 if data.get("mission", {}).get("status") == "COMPLETE":
                     if mission_manager.state == "RUNNING":
                         mission_manager.set_state("COMPLETE")
-                        
+
                 out_msg = json.dumps(data)
                 _LATEST_TELEMETRY = out_msg
                 _TELEMETRY_RECEIVED = True
                 _LAST_TIMESTAMP = msg_timestamp
-                
+
                 asyncio.run_coroutine_threadsafe(manager.broadcast(out_msg), self.loop)
         except json.JSONDecodeError:
             pass
 
-import cv2
+import cv2  # type: ignore
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image as RosImage
 
@@ -223,7 +235,7 @@ class CameraSubscriber(Node):
                     LATEST_FRAMES[drone_id] = buffer.tobytes()
         except Exception as e:
             pass
-            
+
 def ros_spin_thread(loop):
     rclpy.init(args=None)
     telemetry_node = TelemetrySubscriber(loop)
@@ -264,7 +276,7 @@ def get_maps():
 @app.get("/api/maps/{map_id}")
 def get_world(map_id: str):
     return get_world_data(map_id)
-    
+
 class StartRequest(BaseModel):
     map_id: str
     drone_count: int = 2
@@ -273,31 +285,31 @@ class StartRequest(BaseModel):
 async def start_mission(req: StartRequest):
     if req.map_id not in get_map_registry():
         raise HTTPException(status_code=400, detail="Invalid map_id")
-    if req.drone_count < 2 or req.drone_count > 6:
-        raise HTTPException(status_code=400, detail="drone_count must be 2–6")
-        
+    if req.drone_count < 1 or req.drone_count > 4:
+        raise HTTPException(status_code=400, detail="drone_count must be 1–4")
+
     with mission_manager.lock:
         if mission_manager.state not in ["IDLE", "COMPLETE", "ERROR"]:
             raise HTTPException(status_code=400, detail="Mission already active or starting")
-    
+
     # Fully clean up any previous completed/crashed mission state
-    mission_manager.stop_mission()
+    await mission_manager.stop_mission()
     global _LAST_TIMESTAMP
     _LAST_TIMESTAMP = None
-            
-    asyncio.create_task(start_mission_task(req.map_id))
+
+    asyncio.create_task(start_mission_task(req.map_id, req.drone_count))
     return {"status": "starting", "map_id": req.map_id, "drone_count": req.drone_count}
 
 @app.post("/api/mission/stop")
 async def stop_mission():
-    mission_manager.stop_mission()
+    await mission_manager.stop_mission()
     global _LAST_TIMESTAMP
     _LAST_TIMESTAMP = None
     return {"status": "stopped"}
 
 @app.post("/api/mission/reset")
 async def reset_mission():
-    mission_manager.stop_mission()
+    await mission_manager.stop_mission()
     return {"status": "reset"}
 
 @app.get("/api/mission/status")
@@ -312,7 +324,7 @@ def get_mission_status():
 async def view_simulation():
     if mission_manager.state not in ["SIMULATOR_READY", "QMIX_STARTING", "RUNNING", "COMPLETE"]:
         raise HTTPException(status_code=400, detail="Simulation is not currently running")
-    
+
     try:
         # Launch Gazebo GUI in the background attached to the running server session
         # We redirect output to /dev/null to prevent blocking
@@ -350,6 +362,6 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

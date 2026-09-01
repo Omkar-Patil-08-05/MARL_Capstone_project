@@ -186,10 +186,12 @@ class VictimManager:
                 # Update existing track
                 self.tracked_victims[gt_best_id].update(world_x, world_y, source, confidence, drone_id)
                 self.tracked_victims[gt_best_id].gt_error = err_m
+                self.node.get_logger().info(f"[PERCEPTION] drone_{drone_id} detection accepted {gt_best_id}")
             else:
                 # Create new track
                 self.tracked_victims[gt_best_id] = TrackedVictim(gt_best_id, world_x, world_y, source, confidence, drone_id)
                 self.tracked_victims[gt_best_id].gt_error = err_m
+                self.node.get_logger().info(f"[PERCEPTION] drone_{drone_id} detection accepted {gt_best_id}")
                 self.node.get_logger().info(f"[VictimTracker] New victim track {gt_best_id} initialized at ({world_x:.1f}, {world_y:.1f}) by D{drone_id}")
                 
             gt_v = self.victims[gt_best_id]

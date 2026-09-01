@@ -23,12 +23,12 @@ class QMIXMissionController(Node):
         self.mission_config = mission_config
         self.drone_configs = drone_configs
         self.max_decisions = max_decisions
-        
+
         self.localizer = VictimLocalizer()
-        
+
         # Instantiate drones
         self.agents = [DroneAgent(self, config, mission_config) for config in drone_configs]
-        
+
         # Initialize internal SARGridEnv to track deployment grid state and observations
         self.env = SARGridEnv(
             num_drones=len(self.agents),
@@ -37,42 +37,42 @@ class QMIXMissionController(Node):
             y_size=GridWorldTransform.GRID_SIZE_Y
         )
         self.env.reset()
-        
+
         # Override initial grid with small_sar.sdf buildings
         self._initialize_grid_obstacles()
-        
+
         self.unspawned_victims = list(self.env.victims.keys())
-        
+
         # QMIX inference bridge
         self.qmix = QMIXAdapter(checkpoint_path, num_agents=len(self.agents))
-        
+
         # Logging
         self.results_dir = os.path.join(os.getcwd(), "results", "h8_v4_physical_final")
         os.makedirs(self.results_dir, exist_ok=True)
         self.log_file = open(os.path.join(self.results_dir, "qmix_decisions.csv"), "w", newline='')
         self.csv_writer = csv.writer(self.log_file)
         self.csv_writer.writerow([
-            "timestamp", "episode_step", "drone_id", 
-            "grid_x", "grid_y", "current_world_x", "current_world_y", "world_z", 
-            "action", "action_name", 
-            "target_grid_x", "target_grid_y", 
-            "target_world_x", "target_world_y", 
+            "timestamp", "episode_step", "drone_id",
+            "grid_x", "grid_y", "current_world_x", "current_world_y", "world_z",
+            "action", "action_name",
+            "target_grid_x", "target_grid_y",
+            "target_world_x", "target_world_y",
             "distance_to_target", "coverage", "victims_detected", "inference_latency_ms",
             "safety_override"
         ])
-        
+
         self.traj0_file = open(os.path.join(self.results_dir, "trajectory_drone_0.csv"), "w", newline='')
         self.traj0_writer = csv.writer(self.traj0_file)
         self.traj0_writer.writerow(["timestamp", "world_x", "world_y", "world_z", "grid_x", "grid_y"])
-        
+
         self.traj1_file = open(os.path.join(self.results_dir, "trajectory_drone_1.csv"), "w", newline='')
         self.traj1_writer = csv.writer(self.traj1_file)
         self.traj1_writer.writerow(["timestamp", "world_x", "world_y", "world_z", "grid_x", "grid_y"])
-        
+
         self.victim_file = open(os.path.join(self.results_dir, "victim_detection.csv"), "w", newline='')
         self.victim_writer = csv.writer(self.victim_file)
         self.victim_writer.writerow(["timestamp", "decision_step", "victim_grid_x", "victim_grid_y", "detected_by"])
-        
+
         # State tracking
         self.decisions_made = 0
         self.mission_active = False
@@ -84,15 +84,15 @@ class QMIXMissionController(Node):
         self.safety_forced_hover_count = 0
         self.safety_overrides_count = 0
         self.start_time = time.time()
-        self.global_step_state = "INITIALIZING" 
-        
+        self.global_step_state = "INITIALIZING"
+
         self.setup_telemetry()
         self.setup_perception_subscribers()
-        
+
         # Create control loop timer
         timer_period = 0.05
         self.timer = self.create_timer(timer_period, self.tick)
-        
+
     def setup_perception_subscribers(self):
         """Creates subscribers for the JSON detection stream from the YOLO node."""
         self.detection_subs = []
@@ -100,13 +100,13 @@ class QMIXMissionController(Node):
             topic = f'/drone_{agent.config.drone_id}/camera/detection_data'
             # Using default argument binding in lambda to capture the correct drone_id
             sub = self.create_subscription(
-                String, 
-                topic, 
-                lambda msg, d_id=agent.config.drone_id: self.detection_callback(msg, d_id), 
+                String,
+                topic,
+                lambda msg, d_id=agent.config.drone_id: self.detection_callback(msg, d_id),
                 10
             )
             self.detection_subs.append(sub)
-            
+
     def detection_callback(self, msg, drone_id):
         """Processes incoming detection JSON via VictimLocalizer and VictimManager."""
         try:
@@ -115,28 +115,32 @@ class QMIXMissionController(Node):
             img_w = data.get('image_width', 640)
             img_h = data.get('image_height', 480)
             detections = data.get('detections', [])
-            
+
             if not detections:
                 return
-                
-            # Get drone state
-            agent = next((a for a in self.agents if a.config.drone_id == drone_id), None)
+
+            # Get drone state from either QMIX agents or Deterministic agents
+            all_possible_agents = list(self.agents)
+            if hasattr(self, 'det_agents'):
+                all_possible_agents.extend(self.det_agents)
+
+            agent = next((a for a in all_possible_agents if a.config.drone_id == drone_id), None)
             if not agent:
                 return
-                
+
             lx, ly, wz = agent.px4.current_position
             wx = lx + agent.config.world_spawn_x
             wy = ly + agent.config.world_spawn_y
-            
+
             # Simplified yaw assumption (drone looks where it's going, or 0 if hovering)
             # For exact yaw we would need quaternion from vehicle_odometry.
             # For N8 mock, we assume 0 rad (North) for simplicity in flat-ground estimation.
-            drone_yaw = 0.0 
-            
+            drone_yaw = 0.0
+
             for det in detections:
                 bbox = det.get('bbox')
                 conf = det.get('confidence', 0.0)
-                
+
                 # Localize to world coordinates
                 loc_res = self.localizer.localize(
                     drone_world_x=wx,
@@ -147,7 +151,7 @@ class QMIXMissionController(Node):
                     img_h=img_h,
                     bbox=bbox
                 )
-                
+
                 # Update tracks
                 self.victim_manager.process_visual_detection(
                     world_x=loc_res['world_x'],
@@ -165,45 +169,45 @@ class QMIXMissionController(Node):
         for v_id, v_obj in self.victim_manager.victims.items():
             gx = v_obj.grid_x
             gy = v_obj.grid_y
-            
+
             # Bound check gracefully
             if 0 <= gx < self.env.x_size and 0 <= gy < self.env.y_size:
                 status = 1 if v_obj.state.value == "DETECTED" or v_obj.state.value == "RESCUED" else 0
                 self.env.victims[(gx, gy)] = status
 
     def setup_telemetry(self):
-        
+
         # Telemetry
         self.telemetry_pub = self.create_publisher(String, '/swarm/telemetry', 10)
         self.telemetry_tick_counter = 0
         self.last_actions = {a.config.drone_id: "None" for a in self.agents}
         self.last_safety_overrides = {a.config.drone_id: False for a in self.agents}
-        
+
         self.get_logger().info("QMIX Mission Controller initialized.")
 
     def _initialize_grid_obstacles(self):
         """Populates the grid with static buildings from generated_world_meta.json."""
         import json
-        
+
         # Robust project-relative resolution
         project_root = os.path.expanduser('~/capstone_project_antigravity')
         meta_path = os.path.join(project_root, 'worlds', 'generated_world_meta.json')
-        
+
         if not os.path.exists(meta_path):
             raise RuntimeError(f"CRITICAL: Metadata file not found at {meta_path}. Run generate_world.py first.")
-            
+
         try:
             with open(meta_path, 'r') as f:
                 meta = json.load(f)
         except json.JSONDecodeError:
             raise RuntimeError(f"CRITICAL: Metadata file {meta_path} is malformed.")
-            
+
         obstacles = meta.get("obstacles", [])
         victims_meta = meta.get("victims", [])
         drone_spawns = meta.get("drone_base", {}).get("spawns", [])
-        
+
         METERS_PER_CELL = GridWorldTransform.METERS_PER_CELL
-        
+
         # 1. Clear training obstacles and project geometric AABBs
         self.env.grid.fill(0)
         for gx in range(self.env.x_size):
@@ -212,26 +216,26 @@ class QMIXMissionController(Node):
                 cell_max_x = (gx + 1) * METERS_PER_CELL
                 cell_min_y = gy * METERS_PER_CELL
                 cell_max_y = (gy + 1) * METERS_PER_CELL
-                
+
                 for obs in obstacles:
                     aabb = obs["aabb"]
                     intersect_x = (aabb["max_x"] > cell_min_x) and (aabb["min_x"] < cell_max_x)
                     intersect_y = (aabb["max_y"] > cell_min_y) and (aabb["min_y"] < cell_max_y)
-                    
+
                     if intersect_x and intersect_y:
                         self.env.grid[gx, gy] = -1
                         break
-        
+
         # 2. Populate and strictly validate victims using VictimManager
         map_id = os.environ.get("PX4_GZ_WORLD", "realistic_sar")
         victim_seed = int(os.environ.get("VICTIM_SEED", "42"))
         self.victim_manager = VictimManager(self, meta, map_id, self.env, seed=victim_seed)
-        
+
         self.sync_victims_to_env()
-        
+
         # Spawn the victims into Gazebo
         self.victim_manager.spawn_all()
-            
+
         # 3. Synchronize drone spawn metadata
         for agent in self.agents:
             drone_id_str = str(agent.config.drone_id)
@@ -264,18 +268,18 @@ class QMIXMissionController(Node):
                     f"Last decision: {self.last_decision_time:.2f} | Time since prev: {current_time - self.last_decision_time:.2f}s\n"
                     f"=================================================="
                 )
-            
+
             if current_time - self.last_decision_time >= 120.0:
                 self.get_logger().error("H6 WARNING: NO DECISION PROGRESS FOR 120 SECONDS")
                 self.last_decision_time = current_time
-                
+
         for agent in self.agents:
             agent.tick()
-            
+
         self.telemetry_tick_counter += 1
         if self.telemetry_tick_counter % 2 == 0:
             self._publish_telemetry(current_time)
-            
+
         if not self.mission_active:
             if all(a.state == FlightState.HOLD for a in self.agents):
                 self.get_logger().info("All drones airborne. Starting QMIX inference.")
@@ -293,7 +297,7 @@ class QMIXMissionController(Node):
                     agent.px4.publish_vehicle_command(21)
                     agent._log_transition(FlightState.LAND)
             return
-            
+
         # Synchronization block
         all_ready = True
         for agent in self.agents:
@@ -303,7 +307,7 @@ class QMIXMissionController(Node):
                     agent._log_transition(FlightState.HOLD)
             if agent.state != FlightState.HOLD:
                 all_ready = False
-                
+
         if all_ready:
             self.global_step_state = "READY_FOR_NEXT_STEP"
             self.execute_global_step()
@@ -320,12 +324,12 @@ class QMIXMissionController(Node):
                 mission_status = "LANDING"
             if all(a.state == FlightState.COMPLETE for a in self.agents):
                 mission_status = "COMPLETE"
-                
+
             elapsed = current_time - self.start_time
             valid_cells = (self.env.grid != -1).sum()
             explored = (self.env.grid == 1).sum()
             coverage = (explored / valid_cells) * 100 if valid_cells > 0 else 0
-            
+
             drones_data = []
             for i, agent in enumerate(self.agents):
                 lx, ly, lz = agent.px4.current_position
@@ -333,9 +337,9 @@ class QMIXMissionController(Node):
                 wy = ly + agent.config.world_spawn_y
                 wz = lz
                 gx, gy = GridWorldTransform.world_to_grid(wx, wy)
-                
+
                 drone_id = agent.config.drone_id
-                
+
                 drones_data.append({
                     "id": str(drone_id),
                     "state": agent.state.name,
@@ -347,21 +351,21 @@ class QMIXMissionController(Node):
                     "action": self.last_actions.get(drone_id, "None"),
                     "safety_override": self.last_safety_overrides.get(drone_id, False)
                 })
-                
+
             # Build explored cells list from authoritative SARGridEnv
             explored_cells = []
             for gx in range(self.env.x_size):
                 for gy in range(self.env.y_size):
                     if self.env.grid[gx, gy] == 1:
                         explored_cells.append({"x": int(gx), "y": int(gy)})
-            
+
             # Build victim state list from VictimManager
             victims_state = [v.get_dict() for v in self.victim_manager.victims.values()]
             tracked_victims_state = [t.get_dict() for t in self.victim_manager.tracked_victims.values()]
-            
+
             # Recalculate unique ground truth victims detected
             unique_detected = sum(1 for v in self.victim_manager.victims.values() if v.state.value == "DETECTED")
-            
+
             msg_dict = {
                 "type": "telemetry",
                 "timestamp": current_time,
@@ -382,7 +386,7 @@ class QMIXMissionController(Node):
                 "victims": victims_state,
                 "tracked_victims": tracked_victims_state
             }
-            
+
             msg = String()
             msg.data = json.dumps(msg_dict)
             self.telemetry_pub.publish(msg)
@@ -395,62 +399,64 @@ class QMIXMissionController(Node):
             lx, ly, _ = agent.px4.current_position
             wx = lx + agent.config.world_spawn_x
             wy = ly + agent.config.world_spawn_y
-            
+
             gx, gy = GridWorldTransform.world_to_grid(wx, wy)
-            
+
             gx = max(0, min(gx, self.env.x_size - 1))
             gy = max(0, min(gy, self.env.y_size - 1))
-            
+
             self.env.drone_positions[i] = [gx, gy]
 
     def execute_global_step(self):
         """Executes a fully synchronous RL step for all active agents simultaneously."""
         self.sync_env_state()
-        
+
         # Phase N5: Update moving victims
         self.victim_manager.update()
-        
+
         # Phase N6: MOCK PERCEPTION
         # Instead of SARGridEnv automatically detecting victims, the MOCK perception emulates it
         # without exposing ground truth directly to RL environment state.
-        for idx, agent in enumerate(self.agents):
+        all_possible_agents = list(self.agents)
+        if hasattr(self, 'det_agents'):
+            all_possible_agents.extend(self.det_agents)
+
+        for idx, agent in enumerate(all_possible_agents):
             lx, ly, wz = agent.px4.current_position
             wx = lx + agent.config.world_spawn_x
             wy = ly + agent.config.world_spawn_y
-            
+
             # Check all ground-truth victims
             for v_id, v_obj in self.victim_manager.victims.items():
                 # Emulate FOV bounding box (drone camera sees roughly 8m x 6m from 15m altitude)
                 dx = v_obj.world_x - wx
                 dy = v_obj.world_y - wy
                 dist = math.hypot(dx, dy)
-                
-                # Debug logging to trace the MOCK chain
-                if dist < 12.0:  # Only log when somewhat close to avoid spam
-                    self.get_logger().info(f"[MOCK DEBUG] D{agent.config.drone_id} at ({wx:.1f}, {wy:.1f}) | {v_id} at ({v_obj.world_x:.1f}, {v_obj.world_y:.1f}) | Dist: {dist:.1f}m")
-                
+
                 # If within simulated FOV, generate a mock bounding box
                 if dist < 6.0:
+                    self.get_logger().info(f"[PERCEPTION] drone_{agent.config.drone_id} candidate {v_id}")
+
                     # Calculate exactly where the victim would appear in the camera image
                     # Assuming camera alt=15m, yaw=0, fov_h=60deg, fov_v=45deg
                     alt = 15.0
                     fov_h = math.radians(60.0)
                     fov_v = math.radians(45.0)
-                    
+
                     offset_x_local = dx
                     offset_y_local = dy
-                    
+
                     nx = offset_y_local / (alt * math.tan(fov_h / 2.0))
                     ny = -offset_x_local / (alt * math.tan(fov_v / 2.0))
-                    
+
                     cx = nx * 320.0 + 320.0
                     cy = ny * 240.0 + 240.0
-                    
+
                     # Mock bounding box generation (100x100 box around center)
                     bbox = [int(cx - 50), int(cy - 50), int(cx + 50), int(cy + 50)]
-                    
-                    self.get_logger().info(f"[MOCK DEBUG] D{agent.config.drone_id} generated bbox {bbox} for {v_id} at dist {dist:.1f}m")
-                    
+
+                    self.get_logger().info(f"[PERCEPTION] drone_{agent.config.drone_id} bbox={bbox}")
+
                     loc_res = self.localizer.localize(
                         drone_world_x=wx,
                         drone_world_y=wy,
@@ -460,9 +466,9 @@ class QMIXMissionController(Node):
                         img_h=480,
                         bbox=bbox
                     )
-                    
-                    self.get_logger().info(f"[MOCK DEBUG] Localizer output: world_x={loc_res['world_x']:.1f}, world_y={loc_res['world_y']:.1f}")
-                    
+
+                    self.get_logger().info(f"[PERCEPTION] drone_{agent.config.drone_id} localized=({loc_res['world_x']:.1f}, {loc_res['world_y']:.1f})")
+
                     self.victim_manager.process_visual_detection(
                         world_x=loc_res['world_x'],
                         world_y=loc_res['world_y'],
@@ -472,17 +478,17 @@ class QMIXMissionController(Node):
                     )
 
         self.sync_victims_to_env()
-        
+
         new_cells, _ = self.env._update_fov_and_victims()
-        
+
         # PHASE 1: BFS SEMANTIC FIX
         if sum(new_cells) > 0:
             self.env._update_global_bfs()
-            
+
         valid_cells = (self.env.grid != -1).sum()
         explored = (self.env.grid == 1).sum()
         coverage = (explored / valid_cells) * 100 if valid_cells > 0 else 0
-                
+
         # 1. Collect all observations synchronously
         t_start = time.time()
         actions = []
@@ -492,35 +498,35 @@ class QMIXMissionController(Node):
             action = self.qmix.select_action(idx, obs)
             actions.append(action)
             latencies.append((time.time() - t_start) * 1000.0)
-            
+
         self.decisions_made += 1
         self.last_decision_time = time.time()
-        
+
         action_names = {0: "+X", 1: "-X", 2: "+Y", 3: "-Y", 4: "Hover"}
-        
+
         # 2. Dispatch all actions
         for idx, agent in enumerate(self.agents):
             action = actions[idx]
             curr_gx, curr_gy = self.env.drone_positions[idx]
             target_gx, target_gy = curr_gx, curr_gy
-            
+
             if action == 0: target_gx += 1
             elif action == 1: target_gx -= 1
             elif action == 2: target_gy += 1
             elif action == 3: target_gy -= 1
-            
+
             safety_override = False
             safe_gx, safe_gy, is_valid = GridWorldTransform.clamp_grid(target_gx, target_gy)
             if not is_valid:
                 self.get_logger().warn(f"[{agent.config.drone_id}] Boundary violation prevented!")
                 safety_override = True
-                
+
             if self.env.grid[safe_gx, safe_gy] == -1:
                 self.get_logger().warn(f"[{agent.config.drone_id}] Obstacle collision prevented! Falling back to hover.")
                 safe_gx, safe_gy = curr_gx, curr_gy
                 action = 4
                 safety_override = True
-                
+
             if safety_override:
                 self.safety_overrides_count += 1
                 if action == 4:
@@ -528,20 +534,20 @@ class QMIXMissionController(Node):
             else:
                 if action == 4:
                     self.natural_hover_count += 1
-                    
+
             target_wx, target_wy = GridWorldTransform.grid_to_world_center(safe_gx, safe_gy)
             lx = target_wx - agent.config.world_spawn_x
             ly = target_wy - agent.config.world_spawn_y
             lz = agent.initial_pos[2] - agent.mission.takeoff_altitude
-            
+
             is_hover = (action == 4)
             agent.set_mission_goal_local(lx, ly, lz, require_min_dwell=is_hover)
             agent.state_timer = 0
             agent._log_transition(FlightState.WAYPOINT_NAVIGATION)
-            
+
             self.last_actions[agent.config.drone_id] = action_names[action]
             self.last_safety_overrides[agent.config.drone_id] = safety_override
-            
+
             self.log_decision(agent, curr_gx, curr_gy, action, action_names[action], target_gx, target_gy, target_wx, target_wy, latencies[idx], safety_override)
             self.get_logger().info(f"[{agent.config.drone_id}] Action: {action_names[action]} -> Grid ({safe_gx},{safe_gy}) -> World ({target_wx:.1f}, {target_wy:.1f})")
 
@@ -549,18 +555,18 @@ class QMIXMissionController(Node):
         lx, ly, wz = agent.px4.current_position
         curr_wx = lx + agent.config.world_spawn_x
         curr_wy = ly + agent.config.world_spawn_y
-        
+
         valid_cells = (self.env.grid != -1).sum()
         explored = (self.env.grid == 1).sum()
         coverage = explored / valid_cells if valid_cells > 0 else 0
         victims = sum(self.env.victims.values())
-        
+
         dx = curr_wx - tgt_wx
         dy = curr_wy - tgt_wy
         dist = (dx**2 + dy**2)**0.5
-        
+
         t = self.get_clock().now().nanoseconds / 1e9
-        
+
         self.csv_writer.writerow([
             t, self.decisions_made, agent.config.drone_id,
             gx, gy, curr_wx, curr_wy, wz,
@@ -578,7 +584,7 @@ class QMIXMissionController(Node):
         elif "drone_1" in drone_id_str:
             self.traj1_writer.writerow([t, curr_wx, curr_wy, wz, gx, gy])
             self.traj1_file.flush()
-            
+
         # Check newly detected victims
         for v_pos, status in self.env.victims.items():
             if status == 1 and v_pos not in self.detected_victims:
