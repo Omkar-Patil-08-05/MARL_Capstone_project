@@ -11,10 +11,12 @@ export function useTelemetry() {
     const [backendStatus, setBackendStatus] = useState<BackendMissionStatus>({ state: 'IDLE', active_map_id: null, error: null });
     const [isConnected, setIsConnected] = useState(false);
     const [alerts, setAlerts] = useState<AlertEvent[]>([]);
-    
+
     // We keep track of history for the map
     const [droneHistory, setDroneHistory] = useState<Record<string, {x: number, y: number}[]>>({});
-    
+    const [coverageHistory, setCoverageHistory] = useState<{time: number, coverage: number}[]>([]);
+    const missionStartTime = useRef<number | null>(null);
+
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<number | null>(null);
     const prevTelemetry = useRef<TelemetryPayload | null>(null);
@@ -25,19 +27,19 @@ export function useTelemetry() {
             .then(res => res.json())
             .then(data => setMapRegistry(data))
             .catch(err => console.error("Failed to load map registry", err));
-            
+
         const pollStatus = () => {
             fetch(`${API_URL}/mission/status`)
                 .then(res => res.json())
                 .then(data => setBackendStatus(data))
                 .catch(err => console.error("Failed to fetch mission status", err));
         };
-        
+
         pollStatus();
         const interval = setInterval(pollStatus, 1000);
         return () => clearInterval(interval);
     }, []);
-    
+
     // Auto-fetch world data when an active map ID is set
     useEffect(() => {
         if (backendStatus.active_map_id) {
@@ -52,6 +54,8 @@ export function useTelemetry() {
             setWorldData(null);
             setTelemetry(null);
             setDroneHistory({});
+            setCoverageHistory([]);
+            missionStartTime.current = null;
             setAlerts([]);
         }
     }, [backendStatus.active_map_id]);
@@ -73,7 +77,7 @@ export function useTelemetry() {
     const connect = () => {
         try {
             const ws = new WebSocket(WS_URL);
-            
+
             ws.onopen = () => {
                 setIsConnected(true);
             };
@@ -104,7 +108,13 @@ export function useTelemetry() {
 
     const processTelemetryUpdate = (current: TelemetryPayload) => {
         const prev = prevTelemetry.current;
-        
+
+        if (current.mission.status === 'RUNNING' || current.mission.status === 'QMIX_STARTING') {
+            if (!missionStartTime.current) {
+                missionStartTime.current = current.timestamp;
+            }
+        }
+
         // Apply EMA Smoothing to coordinates (alpha = 0.3)
         if (prev) {
             const alpha = 0.3;
@@ -117,7 +127,7 @@ export function useTelemetry() {
                 }
             });
         }
-        
+
         // 1. Update Trajectory History
         setDroneHistory(oldHistory => {
             const newHistory = { ...oldHistory };
@@ -132,10 +142,22 @@ export function useTelemetry() {
             return newHistory;
         });
 
+        // 1b. Update Coverage History
+        if (missionStartTime.current) {
+            const timeSec = current.timestamp - missionStartTime.current;
+            setCoverageHistory(old => {
+                const last = old[old.length - 1];
+                if (!last || timeSec - last.time >= 1.0) {
+                    return [...old, { time: timeSec, coverage: current.mission.coverage }];
+                }
+                return old;
+            });
+        }
+
         // 2. Generate Events
         if (prev) {
             const newAlerts: AlertEvent[] = [];
-            
+
             // Mission status change
             if (prev.mission.status !== current.mission.status) {
                 newAlerts.push({
@@ -215,7 +237,7 @@ export function useTelemetry() {
 
         prevTelemetry.current = current;
     };
-    
+
     const startMission = async (mapId: string, droneCount: number = 2) => {
         try {
             await fetch(`${API_URL}/mission/start`, {
@@ -227,7 +249,7 @@ export function useTelemetry() {
             console.error(e);
         }
     };
-    
+
     const stopMission = async () => {
         try {
             await fetch(`${API_URL}/mission/stop`, { method: 'POST' });
@@ -235,7 +257,7 @@ export function useTelemetry() {
             console.error(e);
         }
     };
-    
+
     const resetMission = async () => {
         try {
             await fetch(`${API_URL}/mission/reset`, { method: 'POST' });
@@ -252,6 +274,7 @@ export function useTelemetry() {
         isConnected,
         alerts,
         droneHistory,
+        coverageHistory,
         startMission,
         stopMission,
         resetMission

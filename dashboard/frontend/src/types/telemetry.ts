@@ -54,6 +54,25 @@ export interface TelemetryPayload {
     tracked_victims?: VictimState[];
     active_map_id?: string;
     backend_status?: string;
+    coordination?: {
+        active_frontiers: Record<string, [number, number]>;
+        safety_holds: Record<string, string>;
+        qmix_drones: number;
+        coord_drones: number;
+    };
+}
+
+export interface MissionResult {
+    drone_count: number;
+    mission_duration: number;
+    final_coverage: number;
+    searched_cells: number;
+    total_valid_cells: number;
+    victims_detected: number;
+    total_victim_observations: number;
+    safety_interventions: number;
+    timestamp: string;
+    status: string;
 }
 
 export interface WorldObstacle {

@@ -50,9 +50,27 @@ class SwarmOrchestratorNode(QMIXMissionController):
         # Temporarily append deterministic agents to self.agents so super() logs them cleanly
         original_agents = list(self.agents)
         self.agents.extend(self.det_agents)
+
+        # Intercept publisher to inject coordination data safely
+        original_publish = self.telemetry_pub.publish
+        def intercept_publish(msg):
+            data = json.loads(msg.data)
+            data["coordination"] = {
+                "active_frontiers": {str(k): list(v["target_cell"]) for k, v in self.coordination_manager.reserved_targets.items()},
+                "safety_holds": {str(k): str(v) for k, v in self.coordination_manager.safety_holds.items()},
+                "qmix_drones": len([a for a in original_agents]),
+                "coord_drones": len([a for a in self.det_agents])
+            }
+            # Inject safety overrides count into mission
+            data["mission"]["safety_overrides"] = len(self.coordination_manager.safety_holds)
+            msg.data = json.dumps(data)
+            original_publish(msg)
+
+        self.telemetry_pub.publish = intercept_publish
         try:
             super()._publish_telemetry(current_time)
         finally:
+            self.telemetry_pub.publish = original_publish
             self.agents = original_agents
 
 class StandaloneDeterministicNode(Node):

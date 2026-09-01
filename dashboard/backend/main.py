@@ -71,6 +71,13 @@ class MissionManager:
         self.process_groups = []
         self.error_msg = None
         self.lock = threading.Lock()
+        self.mission_start_time = None
+        self.drone_count = 0
+        self.results_file = os.path.join(os.path.dirname(__file__), "results", "mission_history.json")
+        os.makedirs(os.path.dirname(self.results_file), exist_ok=True)
+        if not os.path.exists(self.results_file):
+            with open(self.results_file, "w") as f:
+                json.dump([], f)
 
     def set_state(self, new_state, error=None):
         with self.lock:
@@ -79,11 +86,57 @@ class MissionManager:
                 self.error_msg = error
             print(f"[MISSION] Transition -> {new_state}")
 
+    def log_result(self, final_status):
+        global _LATEST_TELEMETRY
+        if not _LATEST_TELEMETRY or not self.mission_start_time:
+            return
+
+        try:
+            data = json.loads(_LATEST_TELEMETRY)
+            mission_data = data.get("mission", {})
+
+            # Count total observations
+            tracked_victims = data.get("tracked_victims", [])
+            total_observations = sum(v.get("observations", 0) for v in tracked_victims)
+
+            result = {
+                "drone_count": self.drone_count,
+                "mission_duration": round(time.time() - self.mission_start_time, 1),
+                "final_coverage": mission_data.get("coverage", 0),
+                "searched_cells": mission_data.get("explored_count", 0),
+                "total_valid_cells": mission_data.get("valid_count", 0),
+                "victims_detected": mission_data.get("victims_detected", 0),
+                "total_victim_observations": total_observations,
+                "safety_interventions": mission_data.get("safety_overrides", 0),
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "status": final_status
+            }
+
+            history = []
+            if os.path.exists(self.results_file):
+                with open(self.results_file, "r") as f:
+                    history = json.load(f)
+            history.append(result)
+            with open(self.results_file, "w") as f:
+                json.dump(history, f, indent=2)
+
+            print(f"[MISSION] Logged result: {final_status}")
+        except Exception as e:
+            print(f"[MISSION] Failed to log result: {e}")
+
     async def stop_mission(self):
+        prev_state = self.state
         with self.lock:
             if self.state == "STOPPING":
                 return
             self.state = "STOPPING"
+
+        if prev_state == "COMPLETE":
+            self.log_result("COMPLETE")
+        elif prev_state == "ERROR":
+            self.log_result("FAILED")
+        elif prev_state in ["RUNNING", "QMIX_STARTING", "SIMULATOR_READY"]:
+            self.log_result("STOPPED")
 
         print("[MISSION] Stopping all process groups...")
         for pgid in self.process_groups:
@@ -119,6 +172,7 @@ class MissionManager:
         with self.lock:
             self.state = "IDLE"
             self.active_map_id = None
+            self.mission_start_time = None
 
 mission_manager = MissionManager()
 
@@ -126,6 +180,8 @@ async def start_mission_task(map_id: str, drone_count: int):
     try:
         mission_manager.set_state("STARTING")
         mission_manager.active_map_id = map_id
+        mission_manager.drone_count = drone_count
+        mission_manager.mission_start_time = time.time()
 
         # 1. Start Simulator Stack
         launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_swarm.sh")
@@ -276,6 +332,16 @@ def get_maps():
 @app.get("/api/maps/{map_id}")
 def get_world(map_id: str):
     return get_world_data(map_id)
+
+@app.get("/api/results")
+def get_results():
+    if os.path.exists(mission_manager.results_file):
+        try:
+            with open(mission_manager.results_file, "r") as f:
+                return json.load(f)
+        except:
+            return []
+    return []
 
 class StartRequest(BaseModel):
     map_id: str

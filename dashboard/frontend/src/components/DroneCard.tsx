@@ -12,41 +12,25 @@ export function DroneCard({ drone, activeView, onToggleCamera }: { drone: DroneT
     
     return (
         <div className="panel flex-col gap-4">
-            <div className="flex-row justify-between items-center" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="flex-row justify-between items-center" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '12px', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                     <h3 className="text-xl" style={{ margin: 0, color, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, boxShadow: `0 0 6px ${color}` }} />
                         {drone.id.replace('_', ' ').toUpperCase()}
                     </h3>
-                    {onToggleCamera && (
-                        <button 
-                            onClick={onToggleCamera}
-                            style={{
-                                background: activeView === 'CAMERA' ? 'rgba(0,242,254,0.2)' : 'rgba(255,255,255,0.05)',
-                                border: `1px solid ${activeView === 'CAMERA' ? 'var(--accent-cyan)' : 'transparent'}`,
-                                color: activeView === 'CAMERA' ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                                borderRadius: '4px',
-                                padding: '4px 8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                fontSize: '0.75rem',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            <Camera size={14} /> 
-                            {activeView === 'CAMERA' ? 'SHOW MAP' : 'VIEW CAMERA'}
-                        </button>
-                    )}
                 </div>
                 <span style={{ 
                     fontSize: '0.75rem', 
                     padding: '4px 8px', 
                     borderRadius: '4px',
                     background: 'rgba(255,255,255,0.1)',
-                    fontFamily: 'var(--font-mono)'
-                }}>
+                    fontFamily: 'var(--font-mono)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '120px',
+                    textAlign: 'right'
+                }} title={drone.state}>
                     {drone.state}
                 </span>
             </div>
