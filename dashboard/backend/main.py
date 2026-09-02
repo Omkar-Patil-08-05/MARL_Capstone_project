@@ -5,6 +5,7 @@ import subprocess
 import os
 import signal
 import time
+import secrets
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -124,7 +125,7 @@ class MissionManager:
         except Exception as e:
             print(f"[MISSION] Failed to log result: {e}")
 
-    async def stop_mission(self):
+    async def stop_mission(self, final_state="STOPPED"):
         prev_state = self.state
         with self.lock:
             if self.state == "STOPPING":
@@ -170,18 +171,44 @@ class MissionManager:
         _TELEMETRY_RECEIVED = False
 
         with self.lock:
-            self.state = "IDLE"
-            self.active_map_id = None
-            self.mission_start_time = None
+            self.state = final_state
+            if final_state in ["IDLE", "STOPPED"]:
+                self.active_map_id = None
+                self.mission_start_time = None
 
 mission_manager = MissionManager()
 
-async def start_mission_task(map_id: str, drone_count: int):
+async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 5):
     try:
         mission_manager.set_state("STARTING")
         mission_manager.active_map_id = map_id
         mission_manager.drone_count = drone_count
         mission_manager.mission_start_time = time.time()
+
+        # 0. Generate world with requested victim count
+        gen_seed = secrets.randbelow(1_000_000)
+        gen_script = os.path.expanduser("~/capstone_project_antigravity/world_generator/generate_world.py")
+        gen_cmd = ["python3", gen_script, "--victims", str(victim_count), "--seed", str(gen_seed)]
+        print(f"[MISSION] Generating world: victims={victim_count}, seed={gen_seed}")
+
+        gen_result = subprocess.run(
+            gen_cmd,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        if gen_result.returncode != 0:
+            error_msg = f"World generation failed (exit {gen_result.returncode}): {gen_result.stderr.strip()}"
+            print(f"[MISSION] {error_msg}")
+            mission_manager.set_state("ERROR", error_msg)
+            with mission_manager.lock:
+                mission_manager.state = "IDLE"
+                mission_manager.active_map_id = None
+                mission_manager.mission_start_time = None
+            return
+
+        print(f"[MISSION] World generated successfully: {gen_result.stdout.strip()}")
 
         # 1. Start Simulator Stack
         launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_swarm.sh")
@@ -219,6 +246,8 @@ async def start_mission_task(map_id: str, drone_count: int):
 
         # 4. Start QMIX Controller
         qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && ros2 run swarm_controller swarm_runner --map {map_id} --drones {drone_count}"
+        if drone_count == 6:
+            qmix_cmd += " --controller qmix"
         qmix_proc = subprocess.Popen(["bash", "-c", qmix_cmd], preexec_fn=os.setsid)
         mission_manager.process_groups.append(os.getpgid(qmix_proc.pid))
 
@@ -271,7 +300,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image as RosImage
 
 # Shared global buffers for camera streams
-LATEST_FRAMES = {0: b"", 1: b""}
+LATEST_FRAMES = {i: b"" for i in range(6)}
 frame_lock = threading.Lock()
 
 class CameraSubscriber(Node):
@@ -279,8 +308,8 @@ class CameraSubscriber(Node):
         super().__init__('camera_subscriber_backend')
         self.loop = loop
         self.bridge = CvBridge()
-        self.create_subscription(RosImage, '/drone_0/camera/detection_image', lambda msg: self.img_callback(0, msg), 1)
-        self.create_subscription(RosImage, '/drone_1/camera/detection_image', lambda msg: self.img_callback(1, msg), 1)
+        for i in range(6):
+            self.create_subscription(RosImage, f'/drone_{i}/camera/detection_image', lambda msg, d_id=i: self.img_callback(d_id, msg), 1)
 
     def img_callback(self, drone_id, msg):
         try:
@@ -346,13 +375,16 @@ def get_results():
 class StartRequest(BaseModel):
     map_id: str
     drone_count: int = 2
+    victim_count: int = 5
 
 @app.post("/api/mission/start")
 async def start_mission(req: StartRequest):
     if req.map_id not in get_map_registry():
         raise HTTPException(status_code=400, detail="Invalid map_id")
-    if req.drone_count < 1 or req.drone_count > 4:
-        raise HTTPException(status_code=400, detail="drone_count must be 1–4")
+    if req.drone_count < 1 or req.drone_count > 6:
+        raise HTTPException(status_code=400, detail="drone_count must be 1–6")
+    if req.victim_count < 1 or req.victim_count > 10:
+        raise HTTPException(status_code=400, detail="victim_count must be 1–10")
 
     with mission_manager.lock:
         if mission_manager.state not in ["IDLE", "COMPLETE", "ERROR"]:
@@ -363,15 +395,23 @@ async def start_mission(req: StartRequest):
     global _LAST_TIMESTAMP
     _LAST_TIMESTAMP = None
 
-    asyncio.create_task(start_mission_task(req.map_id, req.drone_count))
-    return {"status": "starting", "map_id": req.map_id, "drone_count": req.drone_count}
+    asyncio.create_task(start_mission_task(req.map_id, req.drone_count, req.victim_count))
+    return {"status": "starting", "map_id": req.map_id, "drone_count": req.drone_count, "victim_count": req.victim_count}
 
 @app.post("/api/mission/stop")
-async def stop_mission():
+async def api_mission_stop():
     await mission_manager.stop_mission()
     global _LAST_TIMESTAMP
     _LAST_TIMESTAMP = None
-    return {"status": "stopped"}
+    return {"status": "success"}
+
+@app.post("/api/mission/complete")
+async def api_mission_complete():
+    """Manually completes the active mission, preserving final stats."""
+    await mission_manager.stop_mission(final_state="STOPPED")
+    global _LAST_TIMESTAMP
+    _LAST_TIMESTAMP = None
+    return {"status": "success"}
 
 @app.post("/api/mission/reset")
 async def reset_mission():
@@ -416,7 +456,7 @@ from fastapi.responses import StreamingResponse
 
 @app.get("/api/camera/stream")
 async def camera_stream(drone_id: int):
-    if drone_id not in [0, 1]:
+    if drone_id < 0 or drone_id > 5:
         raise HTTPException(status_code=400, detail="Invalid drone ID")
     return StreamingResponse(mjpeg_generator(drone_id), media_type="multipart/x-mixed-replace; boundary=frame")
 

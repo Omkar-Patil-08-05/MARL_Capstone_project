@@ -33,8 +33,8 @@ sleep 2
 MAP_ID=${1:-realistic_sar}
 DRONE_COUNT=${2:-2}
 
-if [ "$DRONE_COUNT" -lt 1 ] || [ "$DRONE_COUNT" -gt 4 ]; then
-    echo "Error: Unsupported drone count: $DRONE_COUNT. Must be 1-4."
+if [ "$DRONE_COUNT" -lt 1 ] || [ "$DRONE_COUNT" -gt 6 ]; then
+    echo "Error: Unsupported drone count: $DRONE_COUNT. Must be 1-6."
     exit 1
 fi
 

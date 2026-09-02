@@ -14,11 +14,11 @@ import { MissionResults } from './components/MissionResults';
 import { MissionSummary } from './components/MissionSummary';
 
 function App() {
-    const { telemetry, worldData, mapRegistry, backendStatus, isConnected, alerts, droneHistory, coverageHistory, startMission, stopMission, resetMission } = useTelemetry();
+    const { telemetry, worldData, mapRegistry, backendStatus, isConnected, alerts, droneHistory, coverageHistory, startMission, stopMission, completeMission, resetMission } = useTelemetry();
     const [activeView, setActiveView] = useState<'MAP' | 'CAMERA'>('MAP');
     const [showSummary, setShowSummary] = useState(true);
 
-    const isMissionActive = backendStatus.state !== 'IDLE' && backendStatus.state !== 'ERROR';
+    const isMissionActive = backendStatus.state !== 'IDLE' && backendStatus.state !== 'STOPPED' && backendStatus.state !== 'ERROR';
 
     return (
         <div className="dashboard-container">
@@ -27,6 +27,7 @@ function App() {
                 telemetry={telemetry ? telemetry.mission : null}
                 backendStatus={backendStatus}
                 onStop={stopMission}
+                onComplete={completeMission}
                 onReset={resetMission}
             />
 
@@ -75,23 +76,20 @@ function App() {
                         victims={telemetry?.victims || []}
                         trackedVictims={telemetry?.tracked_victims || []}
                         activeFrontiers={telemetry?.coordination?.active_frontiers}
+                        coverage={telemetry?.mission.coverage || 0}
                     />
                 </div>
 
-                {/* Top Right: Victims */}
-                <div style={{ gridColumn: '3', gridRow: '1', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+                {/* Right Column: Victims, Coordination, Alerts */}
+                <div style={{ gridColumn: '3', gridRow: '1 / 3', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
                     <VictimDetectionPanel victims={telemetry ? (telemetry.tracked_victims || []) : []} />
-                </div>
-
-                {/* Middle Left+Center: Coverage Graph */}
-                <div style={{ gridColumn: '1 / 3', gridRow: '2', display: 'flex' }}>
-                    <CoverageGraph history={coverageHistory} />
-                </div>
-
-                {/* Middle Right: Coordination & Alerts */}
-                <div style={{ gridColumn: '3', gridRow: '2', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
                     <SwarmCoordinationStats telemetry={telemetry} />
                     <AlertsFeed alerts={alerts} />
+                </div>
+
+                {/* Bottom Left+Center: Coverage Graph */}
+                <div style={{ gridColumn: '1 / 3', gridRow: '2', display: 'flex' }}>
+                    <CoverageGraph history={coverageHistory} />
                 </div>
 
                 {/* Bottom: Results */}

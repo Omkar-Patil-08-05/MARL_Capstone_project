@@ -17,12 +17,25 @@ WORLD_METADATA = {
 OBJ_COUNTER = 0
 VICTIM_INTENTS = []
 
+# ==========================================================
+# Configurable Victim Placement
+# ==========================================================
+_VICTIM_COUNT = 5
+_VICTIM_SEED = 42
+
+def set_victim_config(victim_count=5, seed=42):
+    """Set victim count and seed before calling generate_city().
+    Called from generate_world.py with CLI arguments."""
+    global _VICTIM_COUNT, _VICTIM_SEED
+    _VICTIM_COUNT = victim_count
+    _VICTIM_SEED = seed
+
 def add_obstacle_metadata(obj_id, category, asset, pose, aabb):
     type_str = "building"
     if category == "Rubble": type_str = "rubble"
     elif category == "Cars": type_str = "vehicle"
     elif category == "Towers": type_str = "tower"
-    
+
     WORLD_METADATA["obstacles"].append({
         "id": obj_id,
         "type": type_str,
@@ -91,7 +104,7 @@ def spawn_specific(name, filename, category, x, y, yaw=0.0, z=0.0, collision_xml
         if os.path.basename(path) == filename:
             assets.assets[category] = [path]
             break
-    
+
     xml = assets.model_xml(name, category, x, y, z, yaw, collision_xml)
     assets.assets[category] = original_list
     return xml
@@ -104,16 +117,16 @@ class PlacementManager:
     def __init__(self):
         self.forbidden_zones = []
         self.occupied_zones = []
-        
+
         sidewalk_w = SIDEWALK
         half_road = ROAD_WIDTH / 2
         forbidden_half = half_road + sidewalk_w
-        
+
         # Horizontal roads
         for r in range(ROWS + 1):
             y = START_Y - SPACING/2 + r * SPACING
             self.forbidden_zones.append((-9999, 9999, y - forbidden_half, y + forbidden_half))
-            
+
         # Vertical roads
         for c in range(COLS + 1):
             x = START_X - SPACING/2 + c * SPACING
@@ -136,25 +149,25 @@ def deterministic_spawn(name, category, filename, x, y, yaw_deg=0.0):
     meta = ASSET_METADATA.get(filename)
     if not meta:
         return ""
-        
+
     yaw = math.radians(yaw_deg)
-    
+
     size_x = meta["size_x"]
     size_y = meta["size_y"]
-    
+
     off_x, off_y = XY_OFFSETS.get(filename, (0.0, 0.0))
     rot_off_x = off_x * math.cos(yaw) - off_y * math.sin(yaw)
     rot_off_y = off_x * math.sin(yaw) + off_y * math.cos(yaw)
-    
+
     spawn_x = x + rot_off_x
     spawn_y = y + rot_off_y
-    
+
     aabb = CITY_MANAGER.calculate_aabb(x, y, size_x, size_y, yaw)
     CITY_MANAGER.register(aabb)
-    
+
     OBJ_COUNTER += 1
     obj_id = f"{name}_{OBJ_COUNTER}"
-    
+
     z_offset = meta.get("z_offset", 0.0)
     col_z = 5.0 - z_offset
     collision_xml = f"""
@@ -179,13 +192,18 @@ def get_obstacle_cells():
                 cell_max_x = (gx + 1) * 4.0
                 cell_min_y = gy * 4.0
                 cell_max_y = (gy + 1) * 4.0
-                
+
                 intersect_x = (aabb["max_x"] > cell_min_x) and (aabb["min_x"] < cell_max_x)
                 intersect_y = (aabb["max_y"] > cell_min_y) and (aabb["min_y"] < cell_max_y)
-                
+
                 if intersect_x and intersect_y:
                     cells.add((gx, gy))
-    # Reserve drone base cells
+    # Reserve drone base cells (all 6 spawn positions)
+    for spawn in WORLD_METADATA.get("drone_base", {}).get("spawns", []):
+        sx = int(spawn["x"] // 4.0)
+        sy = int(spawn["y"] // 4.0)
+        cells.add((sx, sy))
+    # Also reserve the drone base center and adjacent cells
     cells.update([(5, 6), (6, 6), (7, 6)])
     return cells
 
@@ -193,47 +211,98 @@ def spawn_victim(ideal_x, ideal_y):
     VICTIM_INTENTS.append((ideal_x, ideal_y))
     return ""
 
+def _farthest_point_sampling(valid_cells_list, count, rng):
+    """Randomized Farthest-Point Sampling for spatially dispersed victim placement.
+
+    Algorithm:
+    1. Select a seeded random initial cell.
+    2. For each subsequent selection, compute the minimum Chebyshev distance from
+       each candidate to all already-selected cells.
+    3. Among candidates within 90% of the maximum min-distance, randomly select one.
+       This introduces controlled randomness while preserving spatial dispersion.
+    4. Continue until 'count' cells are selected.
+
+    This guarantees reproducibility with a given seed and produces well-dispersed
+    placements across the valid search area.
+    """
+    if count >= len(valid_cells_list):
+        return valid_cells_list[:count]
+
+    selected = []
+    candidates = list(valid_cells_list)
+
+    # Step 1: Random initial seed point
+    first = rng.choice(candidates)
+    selected.append(first)
+    candidates.remove(first)
+
+    # Steps 2-4: Iterative farthest-point selection with controlled randomness
+    for _ in range(count - 1):
+        # Compute minimum distance from each candidate to any selected point
+        scored = []
+        for c in candidates:
+            min_dist = min(
+                max(abs(c[0] - s[0]), abs(c[1] - s[1]))  # Chebyshev distance
+                for s in selected
+            )
+            scored.append((c, min_dist))
+
+        # Find the maximum min-distance
+        max_min_dist = max(d for _, d in scored)
+
+        # Select randomly among candidates within 90% of the max min-distance
+        # This prevents deterministic tie-breaking while maintaining dispersion
+        threshold = max_min_dist * 0.9
+        top_candidates = [c for c, d in scored if d >= threshold]
+
+        choice = rng.choice(top_candidates)
+        selected.append(choice)
+        candidates.remove(choice)
+
+    return selected
+
 def finalize_victims():
+    """Places victims using Randomized Farthest-Point Sampling over valid free cells.
+
+    Victim count and seed are controlled by set_victim_config() called from
+    generate_world.py's CLI arguments (--victims, --seed).
+    """
     xml = ""
     global OBJ_COUNTER
     obs_cells = get_obstacle_cells()
-    
-    for ideal_x, ideal_y in VICTIM_INTENTS:
+
+    # Build the set of all valid free cells (not obstacles, not drone spawns)
+    all_cells = set()
+    for gx in range(25):
+        for gy in range(25):
+            if (gx, gy) not in obs_cells:
+                all_cells.add((gx, gy))
+
+    valid_cells_list = sorted(all_cells)  # Sorted for determinism before RNG
+
+    victim_count = _VICTIM_COUNT
+    victim_rng = random.Random(_VICTIM_SEED)
+
+    if victim_count > len(valid_cells_list):
+        raise RuntimeError(
+            f"Requested {victim_count} victims but only {len(valid_cells_list)} valid free cells exist."
+        )
+
+    # Use Randomized Farthest-Point Sampling for spatial dispersion
+    selected_cells = _farthest_point_sampling(valid_cells_list, victim_count, victim_rng)
+
+    for cell in selected_cells:
         OBJ_COUNTER += 1
         vid = f"victim_{OBJ_COUNTER}"
-        
-        gx = int(ideal_x // 4.0)
-        gy = int(ideal_y // 4.0)
-        
-        if (gx, gy) not in obs_cells:
-            valid_x, valid_y = ideal_x, ideal_y
-        else:
-            search_radius = 1
-            found = False
-            while search_radius <= 5 and not found:
-                for dx in range(-search_radius, search_radius + 1):
-                    for dy in range(-search_radius, search_radius + 1):
-                        nx, ny = gx + dx, gy + dy
-                        if 0 <= nx < 25 and 0 <= ny < 25:
-                            if (nx, ny) not in obs_cells:
-                                valid_x, valid_y = nx * 4.0 + 2.0, ny * 4.0 + 2.0
-                                found = True
-                                break
-                    if found: break
-                search_radius += 1
-            if not found:
-                raise RuntimeError(
-                    f"Unable to place victim {vid} in a valid obstacle-free cell near ({ideal_x}, {ideal_y})."
-                )
-                
-        # Reserve this cell for this victim so others don't stack
-        obs_cells.add((int(valid_x // 4.0), int(valid_y // 4.0)))
-        
+        # Place at center of the selected grid cell
+        valid_x = cell[0] * 4.0 + 2.0
+        valid_y = cell[1] * 4.0 + 2.0
+
         add_victim_metadata(vid, valid_x, valid_y)
         xml += f"""
   <include>
     <name>{vid}</name>
-    <uri>model://rescue_randy_sitting</uri>
+    <uri>model://rescue_randy_standing</uri>
     <pose>{valid_x:.2f} {valid_y:.2f} 0.0 0 0 0</pose>
   </include>
 """
@@ -247,7 +316,7 @@ def drone_base():
     cx, cy = 25.0, 25.0
     aabb = CITY_MANAGER.calculate_aabb(cx, cy, 14, 14, 0)
     CITY_MANAGER.register(aabb)
-    
+
     WORLD_METADATA["drone_base"] = {
         "center_x": cx,
         "center_y": cy,
@@ -262,7 +331,7 @@ def drone_base():
             {"id": "drone_5", "x": 29.0, "y": cy + 4.0}
         ]
     }
-    
+
     return f"""
   <model name="landing_pad_0_0">
     <static>true</static>
@@ -280,8 +349,6 @@ def residential():
     xml = ""
     xml += deterministic_spawn("res_house", "Houses", "house.glb", 50, 25, 0)
     xml += deterministic_spawn("res_rubble", "Rubble", "brick_rubble_scaniverse_lidar.glb", 50, 16, 0)
-    # Victim safe placement outside the rubble AABB
-    xml += spawn_victim(62.0, 18.0)
     return xml
 
 def commercial():
@@ -296,8 +363,6 @@ def park():
     xml += deterministic_spawn("park_tower", "Towers", "40_meter_radiotower.glb", 18, 58, 0)
     xml += deterministic_spawn("park_rubble1", "Rubble", "construction_rubble.glb", 30, 45, 0)
     xml += deterministic_spawn("park_rubble2", "Rubble", "construction_rubble.glb", 22, 42, 0)
-    # Victim safe placement in open space
-    xml += spawn_victim(26.0, 50.0)
     return xml
 
 def major_damage():
@@ -305,8 +370,6 @@ def major_damage():
     xml += deterministic_spawn("maj_bldg", "Buildings", "abandoned_building.glb", 50, 52, 0)
     xml += deterministic_spawn("maj_rubble", "Rubble", "brick_rubble_scaniverse_lidar.glb", 50, 42, 0)
     xml += deterministic_spawn("maj_car", "Cars", "old_rusty_car.glb", 45, 43, 45)
-    # Victim safe placement adjacent to rubble
-    xml += spawn_victim(38.0, 42.0)
     return xml
 
 def civic():
@@ -320,8 +383,6 @@ def industrial():
     xml = ""
     xml += deterministic_spawn("ind_bldg", "Buildings", "abandoned_construction_building.glb", 25, 75, 0)
     xml += deterministic_spawn("ind_rubble", "Rubble", "brick_rubble_scaniverse_lidar.glb", 18, 75, 90)
-    # Victim safe placement outside building/rubble bounds
-    xml += spawn_victim(26.0, 62.0)
     return xml
 
 def mixed():
@@ -335,8 +396,6 @@ def collapsed():
     xml += deterministic_spawn("col_apt", "Buildings", "low_poly_-_soviet__apartment_building_8k.glb", 75, 80, 90)
     xml += deterministic_spawn("col_rubble1", "Rubble", "brick_rubble_scaniverse_lidar.glb", 75, 68, 0)
     xml += deterministic_spawn("col_rubble2", "Rubble", "construction_rubble.glb", 68, 68, 0)
-    # Victim safe placement adjacent to major rubble
-    xml += spawn_victim(62.0, 66.0)
     return xml
 
 # ==========================================================
@@ -350,7 +409,7 @@ def generate_city():
     WORLD_METADATA = {"obstacles": [], "victims": [], "drone_base": {}}
     OBJ_COUNTER = 0
     VICTIM_INTENTS = []
-    
+
     xml += drone_base()
     xml += residential()
     xml += commercial()
@@ -360,7 +419,7 @@ def generate_city():
     xml += industrial()
     xml += mixed()
     xml += collapsed()
-    
+
     xml += finalize_victims()
-    
+
     return xml, WORLD_METADATA

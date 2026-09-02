@@ -1,25 +1,26 @@
 import React, { useState } from 'react';
 import type { MapRegistry, BackendMissionStatus } from '../types/telemetry';
-import { Map, Play, Loader, AlertTriangle, RotateCcw, Cpu, CheckCircle2, Lock } from 'lucide-react';
+import { Map, Play, Loader, AlertTriangle, RotateCcw, Cpu, CheckCircle2, Lock, Users } from 'lucide-react';
 
 interface MapSelectionProps {
     registry: MapRegistry;
     backendStatus: BackendMissionStatus;
-    onStart: (mapId: string, droneCount: number) => void;
+    onStart: (mapId: string, droneCount: number, victimCount: number) => void;
 }
 
-const DRONE_PALETTE = ['#00f2fe', '#4facfe', '#a78bfa', '#f472b6', '#fb923c', '#facc15'];
+const DRONE_PALETTE = ['#00f2fe', '#4facfe', '#a78bfa', '#f472b6', '#fb923c', '#facc15', '#4ade80', '#2dd4bf'];
 
 export function MapSelection({ registry, backendStatus, onStart }: MapSelectionProps) {
     const maps = Object.values(registry);
     const [selectedMapId, setSelectedMapId] = useState<string>(maps.length > 0 ? maps[0].id : '');
     const [droneCount, setDroneCount] = useState<number>(2);
+    const [victimCount, setVictimCount] = useState<number>(5);
 
     const selectedMap = registry[selectedMapId];
     const isStarting = ['STARTING', 'SIMULATOR_READY', 'QMIX_STARTING'].includes(backendStatus.state);
     const isRunning = backendStatus.state === 'RUNNING';
     const isError = backendStatus.state === 'ERROR';
-    
+
     // Map compatibility check (QMIX + Deterministic mixed architecture)
     const policyCompatible = (selectedMap?.policy_compatible ?? false);
     const canStart = policyCompatible && !isStarting && !isRunning;
@@ -101,7 +102,7 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                         </div>
                         <div className="value-display">
                             <span className="value-label">Victims</span>
-                            <span className="value-text" style={{ fontSize: '1rem' }}>{selectedMap.victim_count}</span>
+                            <span className="value-text" style={{ fontSize: '1rem', color: '#ff5533' }}>{victimCount}</span>
                         </div>
                     </div>
                 )}
@@ -110,7 +111,7 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                 <div>
                     <div className="value-label" style={{ marginBottom: '8px' }}>NUMBER OF DRONES</div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                        {[1, 2, 3, 4].map(n => {
+                        {[1, 2, 3, 4, 5, 6].map(n => {
                             const isActive = droneCount === n;
                             return (
                                 <button
@@ -127,6 +128,40 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                                         fontFamily: 'var(--font-mono)',
                                         fontWeight: isActive ? 700 : 400,
                                         fontSize: '1rem',
+                                        transition: 'all 0.15s',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    {n}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Victim Count Selector */}
+                <div>
+                    <div className="value-label" style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Users size={14} /> NUMBER OF VICTIMS
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => {
+                            const isActive = victimCount === n;
+                            return (
+                                <button
+                                    key={n}
+                                    onClick={() => setVictimCount(n)}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px 0',
+                                        border: isActive ? '2px solid #ff5533' : '1px solid var(--border-light)',
+                                        borderRadius: '6px',
+                                        background: isActive ? 'rgba(255, 85, 51, 0.12)' : 'rgba(255,255,255,0.03)',
+                                        color: isActive ? '#ff5533' : 'var(--text-main)',
+                                        cursor: 'pointer',
+                                        fontFamily: 'var(--font-mono)',
+                                        fontWeight: isActive ? 700 : 400,
+                                        fontSize: '0.9rem',
                                         transition: 'all 0.15s',
                                         position: 'relative'
                                     }}
@@ -173,7 +208,7 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                 {/* START BUTTON */}
                 <button
                     disabled={!canStart}
-                    onClick={() => canStart && onStart(selectedMapId, droneCount)}
+                    onClick={() => canStart && onStart(selectedMapId, droneCount, victimCount)}
                     style={{
                         marginTop: '4px',
                         padding: '14px 24px',

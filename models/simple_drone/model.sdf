@@ -1,12 +1,29 @@
 <sdf version="1.7">
   <model name="simple_drone">
-    <static>true</static>
+    <static>false</static>
 
     <link name="base_link">
+      <gravity>false</gravity>
 
       <inertial>
         <mass>1.0</mass>
+        <inertia>
+          <ixx>0.01</ixx>
+          <iyy>0.01</iyy>
+          <izz>0.01</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
       </inertial>
+
+      <collision name="body_collision">
+        <geometry>
+          <box>
+            <size>0.8 0.8 0.12</size>
+          </box>
+        </geometry>
+      </collision>
 
       <!-- BODY (BRIGHT CYAN, TILTED) -->
       <visual name="body">
@@ -108,5 +125,14 @@
 
     </link>
 
+    <plugin filename="gz-sim-velocity-control-system" name="gz::sim::systems::VelocityControl">
+      <link_name>base_link</link_name>
+    </plugin>
+
+    <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
+      <publish_link_pose>false</publish_link_pose>
+      <publish_nested_model_pose>false</publish_nested_model_pose>
+      <publish_model_pose>true</publish_model_pose>
+    </plugin>
   </model>
 </sdf>

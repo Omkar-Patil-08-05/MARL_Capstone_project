@@ -133,7 +133,7 @@ export interface MapRegistryEntry {
 export type MapRegistry = Record<string, MapRegistryEntry>;
 
 export interface BackendMissionStatus {
-    state: 'IDLE' | 'STARTING' | 'SIMULATOR_READY' | 'QMIX_STARTING' | 'RUNNING' | 'COMPLETE' | 'STOPPING' | 'ERROR';
+    state: 'IDLE' | 'STARTING' | 'SIMULATOR_READY' | 'QMIX_STARTING' | 'RUNNING' | 'COMPLETE' | 'STOPPING' | 'STOPPED' | 'ERROR';
     active_map_id: string | null;
     error: string | null;
 }

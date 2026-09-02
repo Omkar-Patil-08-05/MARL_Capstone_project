@@ -12,9 +12,10 @@ interface DroneMapProps {
     victims: VictimState[];
     trackedVictims: VictimState[];
     activeFrontiers?: Record<string, [number, number]>;
+    coverage?: number;
 }
 
-export function DroneMap({ worldData, drones, history, exploredCells, victims, trackedVictims, activeFrontiers }: DroneMapProps) {
+export function DroneMap({ worldData, drones, history, exploredCells, victims, trackedVictims, activeFrontiers, coverage = 0 }: DroneMapProps) {
     const [isExpanded, setIsExpanded] = React.useState(false);
 
     // If modal is active, listen for escape key
@@ -33,13 +34,37 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
         const lines = [];
         for (let i = 0; i <= grid.width; i++) {
             const x = i * mpc;
-            lines.push(<line key={`vx-${i}`} x1={x} y1={0} x2={x} y2={world.height_m} stroke="rgba(255,255,255,0.02)" strokeWidth={0.2} />);
+            lines.push(<line key={`vx-${i}`} x1={x} y1={0} x2={x} y2={world.height_m} stroke="rgba(255,255,255,0.03)" strokeWidth={0.2} />);
         }
         for (let i = 0; i <= grid.height; i++) {
             const y = i * mpc;
-            lines.push(<line key={`vy-${i}`} x1={0} y1={y} x2={world.width_m} y2={y} stroke="rgba(255,255,255,0.02)" strokeWidth={0.2} />);
+            lines.push(<line key={`vy-${i}`} x1={0} y1={y} x2={world.width_m} y2={y} stroke="rgba(255,255,255,0.03)" strokeWidth={0.2} />);
         }
         return lines;
+    }, [worldData]);
+
+    const unsearchedRects = useMemo(() => {
+        if (!worldData) return [];
+        const { grid } = worldData;
+        const mpc = grid.meters_per_cell;
+        const rects = [];
+
+        // Render a subtle base background for all cells to make them look distinct from the raw SVG background
+        for (let x = 0; x < grid.width; x++) {
+            for (let y = 0; y < grid.height; y++) {
+                rects.push(
+                    <rect
+                        key={`un-${x}-${y}`}
+                        x={x * mpc}
+                        y={y * mpc}
+                        width={mpc}
+                        height={mpc}
+                        fill="rgba(255, 255, 255, 0.015)"
+                    />
+                );
+            }
+        }
+        return rects;
     }, [worldData]);
 
     const exploredRects = useMemo(() => {
@@ -52,7 +77,7 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
                 y={c.y * mpc}
                 width={mpc}
                 height={mpc}
-                fill="rgba(0, 242, 254, 0.6)"
+                fill="rgba(0, 242, 254, 0.5)"
                 stroke="rgba(0, 242, 254, 0.8)"
                 strokeWidth={0.2}
             />
@@ -74,7 +99,7 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
 
     const getDroneColor = (droneId: string): string => {
         const idx = parseInt(droneId.replace('drone_', ''), 10);
-        return DRONE_PALETTE[idx % DRONE_PALETTE.length];
+        return DRONE_PALETTE[idx % DRONE_PALETTE.length] || '#ffffff';
     };
 
     // The inner map rendering is identical for both views
@@ -89,6 +114,8 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
             }}
         >
             <rect x="0" y="0" width={world.width_m} height={world.height_m} fill="#090a0f" stroke="rgba(255,255,255,0.1)" strokeWidth="1" rx="4" />
+
+            <g className="unsearched-layer">{unsearchedRects}</g>
             <g className="grid-layer">{gridLines}</g>
             <g className="explored-layer">{exploredRects}</g>
 
@@ -103,8 +130,8 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
                             y={obs.aabb.min_y - world.origin_y}
                             width={w}
                             height={h}
-                            fill="rgba(255, 255, 255, 0.15)"
-                            stroke="rgba(255, 255, 255, 0.3)"
+                            fill="rgba(50, 50, 55, 0.8)"
+                            stroke="rgba(100, 100, 110, 0.8)"
                             strokeWidth={0.5}
                         />
                     );
@@ -117,7 +144,7 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
                     const cy = (v.y * mpc) + (mpc / 2);
                     return (
                         <g key={`gt-${v.id}`} transform={`translate(${cx}, ${cy})`}>
-                            <circle r={1.5} fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" strokeWidth={0.5} />
+                            <circle r={2.0} fill="rgba(255, 85, 51, 0.6)" stroke="#ff5533" strokeWidth={0.5} />
                         </g>
                     );
                 })}
@@ -149,24 +176,36 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
                             d={pathData}
                             fill="none"
                             stroke={color}
-                            strokeWidth={0.8}
-                            opacity={0.5}
+                            strokeWidth={0.6}
+                            opacity={0.6}
                         />
                     );
                 })}
             </g>
 
-
+            <g className="start-positions-layer">
+                {Object.entries(history).map(([droneId, pts]) => {
+                    if (pts.length === 0) return null;
+                    const color = getDroneColor(droneId);
+                    return (
+                        <g key={`start-${droneId}`} transform={`translate(${pts[0].x}, ${pts[0].y})`}>
+                            <circle r={1.2} fill="transparent" stroke={color} strokeWidth={0.3} strokeDasharray="0.5,0.5" />
+                            <circle r={0.3} fill={color} />
+                            <text y={-1.5} fill={color} fontSize={1.5} textAnchor="middle" fontFamily="var(--font-mono)" opacity={0.8}>S</text>
+                        </g>
+                    );
+                })}
+            </g>
 
             <g className="drones-layer">
                 {drones.map(d => {
                     const color = getDroneColor(d.id);
                     return (
                         <g key={d.id} transform={`translate(${d.x}, ${d.y})`} style={{ transition: 'transform 0.5s linear' }}>
-                            <circle r={8} fill={color} opacity={0.08} />
-                            <circle r={2.5} fill={color} stroke="#fff" strokeWidth={0.5} />
+                            <circle r={6} fill={color} opacity={0.15} />
+                            <circle r={2.0} fill={color} stroke="#fff" strokeWidth={0.5} />
                             <text
-                                y={-5} fill="#fff" fontSize={3} textAnchor="middle" fontFamily="var(--font-mono)" fontWeight={700}
+                                y={-4} fill="#fff" fontSize={2.5} textAnchor="middle" fontFamily="var(--font-mono)" fontWeight={700}
                                 style={{ textShadow: '0px 1px 3px rgba(0,0,0,0.9)' }}
                             >
                                 {d.id.replace('drone_', 'D')}
@@ -185,15 +224,19 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
             display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.65rem', letterSpacing: '0.5px'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: 10, height: 10, background: 'rgba(0,242,254,0.6)', border: '1px solid rgba(0,242,254,0.8)' }} />
+                <div style={{ width: 10, height: 10, background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.03)' }} />
+                <span>UNSEARCHED</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: 10, height: 10, background: 'rgba(0,242,254,0.5)', border: '1px solid rgba(0,242,254,0.8)' }} />
                 <span>SEARCHED</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: 10, height: 10, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }} />
+                <div style={{ width: 10, height: 10, background: 'rgba(50, 50, 55, 0.8)', border: '1px solid rgba(100, 100, 110, 0.8)' }} />
                 <span>OBSTACLE</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff5533' }} />
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(255, 85, 51, 0.6)', border: '1px solid #ff5533' }} />
                 <span>VICTIM</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -234,13 +277,18 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
             {isExpanded && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.9)', zIndex: 9999,
+                    background: 'rgba(0,0,0,0.95)', zIndex: 9999,
                     display: 'flex', flexDirection: 'column', padding: '2rem'
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h2 style={{ margin: 0, color: 'var(--accent-cyan)', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Map size={24} /> SAR COVERAGE HEATMAP
-                        </h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <h2 style={{ margin: 0, color: 'var(--accent-cyan)', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Map size={24} /> SAR COVERAGE HEATMAP
+                            </h2>
+                            <div style={{ background: 'rgba(0, 242, 254, 0.15)', border: '1px solid var(--accent-cyan)', color: 'var(--accent-cyan)', padding: '4px 12px', borderRadius: '4px', fontSize: '1rem', fontWeight: 'bold', fontFamily: 'var(--font-mono)' }}>
+                                COVERAGE: {coverage.toFixed(1)}%
+                            </div>
+                        </div>
                         <button
                             onClick={() => setIsExpanded(false)}
                             style={{ background: 'transparent', border: '1px solid var(--text-muted)', padding: '6px 16px', borderRadius: '4px', color: 'var(--text-main)', cursor: 'pointer', fontSize: '0.9rem' }}

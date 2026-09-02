@@ -31,7 +31,20 @@ export function useTelemetry() {
         const pollStatus = () => {
             fetch(`${API_URL}/mission/status`)
                 .then(res => res.json())
-                .then(data => setBackendStatus(data))
+                .then(data => {
+                    setBackendStatus(prev => {
+                        // Clear stale telemetry when mission enters STARTING
+                        if (data.state === 'STARTING' && prev.state !== 'STARTING') {
+                            setTelemetry(null);
+                            setDroneHistory({});
+                            setCoverageHistory([]);
+                            missionStartTime.current = null;
+                            setAlerts([]);
+                            prevTelemetry.current = null;
+                        }
+                        return data;
+                    });
+                })
                 .catch(err => console.error("Failed to fetch mission status", err));
         };
 
@@ -238,12 +251,12 @@ export function useTelemetry() {
         prevTelemetry.current = current;
     };
 
-    const startMission = async (mapId: string, droneCount: number = 2) => {
+    const startMission = async (mapId: string, droneCount: number = 2, victimCount: number = 5) => {
         try {
             await fetch(`${API_URL}/mission/start`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ map_id: mapId, drone_count: droneCount })
+                body: JSON.stringify({ map_id: mapId, drone_count: droneCount, victim_count: victimCount })
             });
         } catch (e) {
             console.error(e);
@@ -253,6 +266,14 @@ export function useTelemetry() {
     const stopMission = async () => {
         try {
             await fetch(`${API_URL}/mission/stop`, { method: 'POST' });
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const completeMission = async () => {
+        try {
+            await fetch(`${API_URL}/mission/complete`, { method: 'POST' });
         } catch (e) {
             console.error(e);
         }
@@ -277,6 +298,7 @@ export function useTelemetry() {
         coverageHistory,
         startMission,
         stopMission,
+        completeMission,
         resetMission
     };
 }

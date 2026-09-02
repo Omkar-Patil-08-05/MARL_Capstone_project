@@ -7,10 +7,11 @@ interface HeaderProps {
     telemetry: MissionTelemetry | null;
     backendStatus: BackendMissionStatus;
     onStop: () => void;
+    onComplete: () => void;
     onReset: () => void;
 }
 
-export function Header({ isConnected, telemetry, backendStatus, onStop, onReset }: HeaderProps) {
+export function Header({ isConnected, telemetry, backendStatus, onStop, onComplete, onReset }: HeaderProps) {
     const isLive = isConnected && telemetry !== null;
 
     return (
@@ -30,32 +31,47 @@ export function Header({ isConnected, telemetry, backendStatus, onStop, onReset 
                     <span className="value-label">Backend Status</span>
                     <span className="value-text text-cyan">{backendStatus.state}</span>
                 </div>
-                
+
                 {telemetry && (
-                    <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '24px' }}>
-                        <span className="value-label">Mission Status</span>
-                        <span className="value-text text-cyan">{telemetry.status}</span>
+                    <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '16px' }}>
+                        <span className="value-label">Progress</span>
+                        <span className="value-text" style={{ fontSize: '0.85rem' }}>
+                            Victims: {telemetry.victims_detected}/{telemetry.total_victims} | Cov: {telemetry.coverage.toFixed(1)}% | Step: {telemetry.decision_count}/{telemetry.max_decisions}
+                        </span>
                     </div>
                 )}
-                
+
+                <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '24px' }}>
+                    <span className="value-label">Mission Status</span>
+                    <span className="value-text text-cyan">{telemetry ? telemetry.status : backendStatus.state}</span>
+                </div>
+
                 {backendStatus.state !== 'IDLE' && (
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button 
-                            className="btn-danger" 
+                        <button
+                            className="btn-danger"
                             onClick={() => { if(window.confirm('Are you sure you want to STOP the mission?')) onStop() }}
-                            disabled={backendStatus.state === 'STOPPING'}
+                            disabled={backendStatus.state === 'STOPPING' || backendStatus.state === 'COMPLETE'}
                             style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                         >
                             <Square size={14} /> STOP
                         </button>
-                        <button 
-                            className="btn-warning" 
+                        <button
+                            className="btn-success"
+                            onClick={() => { if(window.confirm('Are you sure you want to COMPLETE the mission?')) onComplete() }}
+                            disabled={backendStatus.state === 'STOPPING' || backendStatus.state === 'COMPLETE'}
+                            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
+                            COMPLETE MISSION
+                        </button>
+                        <button
+                            className="btn-warning"
                             onClick={() => { if(window.confirm('Reset mission?')) onReset() }}
                             style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: '#d97706', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                         >
                             <RefreshCcw size={14} /> RESET
                         </button>
-                        <button 
+                        <button
                             onClick={async () => {
                                 try {
                                     const res = await fetch('http://localhost:8000/api/mission/view_simulation', { method: 'POST' });

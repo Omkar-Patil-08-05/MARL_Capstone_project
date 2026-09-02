@@ -193,6 +193,8 @@ def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--map', type=str, default='realistic_sar')
     parser.add_argument('--drones', type=int, default=2)
+    parser.add_argument('--controller', type=str, default='hybrid', choices=['hybrid', 'qmix'])
+    parser.add_argument('--checkpoint', type=str, default=None, help='Path to QMIX checkpoint')
     parsed, _ = parser.parse_known_args()
 
     # Load spawn coordinates
@@ -225,15 +227,23 @@ def main(args=None):
         )
         all_configs.append(c)
 
-    checkpoint_path = os.path.join(workspace_dir, "models/qmix_sar_v4_align_best.pth")
+    if parsed.checkpoint:
+        checkpoint_path = os.path.abspath(parsed.checkpoint)
+    elif parsed.drones == 6:
+        checkpoint_path = os.path.join(workspace_dir, "marl_drone_project/models/qmix_n6_exp2/qmix_sar_v4_align_best.pth")
+    else:
+        checkpoint_path = os.path.join(workspace_dir, "models/qmix_sar_v4_align_best.pth")
 
     if parsed.drones == 1:
         node = StandaloneDeterministicNode(mission_config, all_configs)
+    elif parsed.controller == 'qmix':
+        # Pure QMIX scaling for N drones
+        node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300)
     elif parsed.drones == 2:
         # Strictly identical to qmix_drone_test.py for 2 drones baseline
         node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300)
     else:
-        # 3 or 4 drones -> orchestrator delegates 0,1 to QMIX and 2,3 to Deterministic
+        # 3+ drones -> orchestrator delegates 0,1 to QMIX and 2+ to Deterministic
         qmix_configs = all_configs[0:2]
         det_configs = all_configs[2:]
         node = SwarmOrchestratorNode(mission_config, qmix_configs, det_configs, checkpoint_path, max_decisions=300)

@@ -15,7 +15,7 @@ export function VictimDetectionPanel({ victims }: { victims: VictimState[] }) {
     return (
         <div className="panel" style={{ marginTop: '1rem' }}>
             <h3>VICTIM DETECTION</h3>
-            <div className="flex-col gap-2">
+            <div className="flex-col gap-2" style={{ maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
                 {victims.map((v) => (
                     <div key={v.id} style={{
                         padding: '0.75rem',

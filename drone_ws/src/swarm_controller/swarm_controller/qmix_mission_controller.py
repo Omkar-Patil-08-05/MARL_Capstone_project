@@ -61,13 +61,15 @@ class QMIXMissionController(Node):
             "safety_override"
         ])
 
-        self.traj0_file = open(os.path.join(self.results_dir, "trajectory_drone_0.csv"), "w", newline='')
-        self.traj0_writer = csv.writer(self.traj0_file)
-        self.traj0_writer.writerow(["timestamp", "world_x", "world_y", "world_z", "grid_x", "grid_y"])
-
-        self.traj1_file = open(os.path.join(self.results_dir, "trajectory_drone_1.csv"), "w", newline='')
-        self.traj1_writer = csv.writer(self.traj1_file)
-        self.traj1_writer.writerow(["timestamp", "world_x", "world_y", "world_z", "grid_x", "grid_y"])
+        self.trajectory_files = {}
+        self.trajectory_writers = {}
+        for agent in self.agents:
+            d_id_str = str(agent.config.drone_id)
+            f = open(os.path.join(self.results_dir, f"trajectory_{d_id_str}.csv"), "w", newline='')
+            w = csv.writer(f)
+            w.writerow(["timestamp", "world_x", "world_y", "world_z", "grid_x", "grid_y"])
+            self.trajectory_files[d_id_str] = f
+            self.trajectory_writers[d_id_str] = w
 
         self.victim_file = open(os.path.join(self.results_dir, "victim_detection.csv"), "w", newline='')
         self.victim_writer = csv.writer(self.victim_file)
@@ -384,7 +386,13 @@ class QMIXMissionController(Node):
                 "drones": drones_data,
                 "explored_cells": explored_cells,
                 "victims": victims_state,
-                "tracked_victims": tracked_victims_state
+                "tracked_victims": tracked_victims_state,
+                "coordination": {
+                    "qmix_drones": len(self.agents),
+                    "coord_drones": 0,
+                    "active_frontiers": {},
+                    "safety_holds": {str(a.config.drone_id): "HOLD" for a in self.agents if getattr(a, 'state', None) and a.state.name == "HOLD"}
+                }
             }
 
             msg = String()
@@ -504,7 +512,13 @@ class QMIXMissionController(Node):
 
         action_names = {0: "+X", 1: "-X", 2: "+Y", 3: "-Y", 4: "Hover"}
 
-        # 2. Dispatch all actions
+        # ============================================================
+        # QMIX + Rule-Based Safety Shield (Multi-Agent Occupancy)
+        # ============================================================
+        # Phase A: Compute all proposed targets BEFORE dispatching any action.
+        # This ensures deterministic conflict resolution independent of
+        # processing order.
+        proposed = []  # List of (curr_gx, curr_gy, target_gx, target_gy, action)
         for idx, agent in enumerate(self.agents):
             action = actions[idx]
             curr_gx, curr_gy = self.env.drone_positions[idx]
@@ -515,17 +529,93 @@ class QMIXMissionController(Node):
             elif action == 2: target_gy += 1
             elif action == 3: target_gy -= 1
 
-            safety_override = False
+            # Clamp to grid bounds
             safe_gx, safe_gy, is_valid = GridWorldTransform.clamp_grid(target_gx, target_gy)
             if not is_valid:
-                self.get_logger().warn(f"[{agent.config.drone_id}] Boundary violation prevented!")
+                safe_gx, safe_gy = curr_gx, curr_gy
+                action = 4  # Override to hover on boundary violation
+
+            # Obstacle check
+            if self.env.grid[safe_gx, safe_gy] == -1:
+                safe_gx, safe_gy = curr_gx, curr_gy
+                action = 4  # Override to hover on obstacle
+
+            proposed.append((curr_gx, curr_gy, safe_gx, safe_gy, action))
+
+        # Phase B: Detect cell-swap conflicts.
+        # If drone A wants to move from X→Y and drone B wants to move from Y→X,
+        # both are overridden to hover to prevent mid-air crossing collision.
+        swap_overrides = set()
+        for i in range(len(proposed)):
+            for j in range(i + 1, len(proposed)):
+                ci, cj = proposed[i], proposed[j]
+                # i: curr=(ci[0],ci[1]) -> target=(ci[2],ci[3])
+                # j: curr=(cj[0],cj[1]) -> target=(cj[2],cj[3])
+                if (ci[2], ci[3]) == (cj[0], cj[1]) and (cj[2], cj[3]) == (ci[0], ci[1]):
+                    swap_overrides.add(i)
+                    swap_overrides.add(j)
+
+        # Phase C: Apply occupancy claims with deterministic priority (lower index first).
+        # claimed_cells tracks all cells that will be occupied after this step.
+        # Start by claiming current positions of drones that are hovering.
+        claimed_cells = set()
+        final_actions = []  # (safe_gx, safe_gy, action, safety_override)
+
+        # First pass: apply swap overrides (force hover at current position)
+        resolved_proposed = list(proposed)
+        for idx in swap_overrides:
+            curr_gx, curr_gy, _, _, _ = resolved_proposed[idx]
+            resolved_proposed[idx] = (curr_gx, curr_gy, curr_gx, curr_gy, 4)
+
+        # Second pass: claim cells in deterministic order
+        for idx in range(len(resolved_proposed)):
+            curr_gx, curr_gy, safe_gx, safe_gy, action = resolved_proposed[idx]
+            safety_override = False
+
+            # Check original vs resolved to detect if bounds/obstacle already overrode
+            orig_action = actions[idx]
+            orig_curr_gx, orig_curr_gy = self.env.drone_positions[idx]
+            orig_target_gx, orig_target_gy = orig_curr_gx, orig_curr_gy
+            if orig_action == 0: orig_target_gx += 1
+            elif orig_action == 1: orig_target_gx -= 1
+            elif orig_action == 2: orig_target_gy += 1
+            elif orig_action == 3: orig_target_gy -= 1
+
+            # Boundary violation
+            _, _, is_valid = GridWorldTransform.clamp_grid(orig_target_gx, orig_target_gy)
+            if not is_valid:
+                self.get_logger().warn(f"[{self.agents[idx].config.drone_id}] Boundary violation prevented!")
                 safety_override = True
 
-            if self.env.grid[safe_gx, safe_gy] == -1:
-                self.get_logger().warn(f"[{agent.config.drone_id}] Obstacle collision prevented! Falling back to hover.")
+            # Obstacle collision
+            clamped_gx, clamped_gy, _ = GridWorldTransform.clamp_grid(orig_target_gx, orig_target_gy)
+            if self.env.grid[clamped_gx, clamped_gy] == -1:
+                self.get_logger().warn(f"[{self.agents[idx].config.drone_id}] Obstacle collision prevented! Falling back to hover.")
+                safety_override = True
+
+            # Swap override
+            if idx in swap_overrides:
+                self.get_logger().warn(f"[{self.agents[idx].config.drone_id}] Cell-swap collision prevented! Falling back to hover.")
+                safety_override = True
+
+            # Multi-agent occupancy check
+            if (safe_gx, safe_gy) in claimed_cells:
+                self.get_logger().warn(f"[{self.agents[idx].config.drone_id}] Occupancy conflict at ({safe_gx},{safe_gy})! Falling back to hover.")
                 safe_gx, safe_gy = curr_gx, curr_gy
                 action = 4
                 safety_override = True
+                # If even the current cell is claimed (shouldn't happen normally),
+                # still allow it — drone is physically there already
+                if (safe_gx, safe_gy) in claimed_cells:
+                    pass  # Can't move, can't stay unclaimed — accept overlap at current pos
+
+            claimed_cells.add((safe_gx, safe_gy))
+            final_actions.append((safe_gx, safe_gy, action, safety_override))
+
+        # 2. Dispatch all finalized actions
+        for idx, agent in enumerate(self.agents):
+            safe_gx, safe_gy, action, safety_override = final_actions[idx]
+            curr_gx, curr_gy = self.env.drone_positions[idx]
 
             if safety_override:
                 self.safety_overrides_count += 1
@@ -548,7 +638,15 @@ class QMIXMissionController(Node):
             self.last_actions[agent.config.drone_id] = action_names[action]
             self.last_safety_overrides[agent.config.drone_id] = safety_override
 
-            self.log_decision(agent, curr_gx, curr_gy, action, action_names[action], target_gx, target_gy, target_wx, target_wy, latencies[idx], safety_override)
+            # Use original QMIX target for logging (before safety override)
+            orig_action = actions[idx]
+            orig_tgt_gx, orig_tgt_gy = curr_gx, curr_gy
+            if orig_action == 0: orig_tgt_gx += 1
+            elif orig_action == 1: orig_tgt_gx -= 1
+            elif orig_action == 2: orig_tgt_gy += 1
+            elif orig_action == 3: orig_tgt_gy -= 1
+
+            self.log_decision(agent, curr_gx, curr_gy, action, action_names[action], orig_tgt_gx, orig_tgt_gy, target_wx, target_wy, latencies[idx], safety_override)
             self.get_logger().info(f"[{agent.config.drone_id}] Action: {action_names[action]} -> Grid ({safe_gx},{safe_gy}) -> World ({target_wx:.1f}, {target_wy:.1f})")
 
     def log_decision(self, agent, gx, gy, action, action_name, tgt_gx, tgt_gy, tgt_wx, tgt_wy, inf_time, safety):
@@ -578,12 +676,9 @@ class QMIXMissionController(Node):
 
         # Log Trajectories
         drone_id_str = str(agent.config.drone_id)
-        if "drone_0" in drone_id_str:
-            self.traj0_writer.writerow([t, curr_wx, curr_wy, wz, gx, gy])
-            self.traj0_file.flush()
-        elif "drone_1" in drone_id_str:
-            self.traj1_writer.writerow([t, curr_wx, curr_wy, wz, gx, gy])
-            self.traj1_file.flush()
+        if drone_id_str in self.trajectory_writers:
+            self.trajectory_writers[drone_id_str].writerow([t, curr_wx, curr_wy, wz, gx, gy])
+            self.trajectory_files[drone_id_str].flush()
 
         # Check newly detected victims
         for v_pos, status in self.env.victims.items():
@@ -595,7 +690,7 @@ class QMIXMissionController(Node):
 
     def destroy_node(self):
         self.log_file.close()
-        self.traj0_file.close()
-        self.traj1_file.close()
+        for f in self.trajectory_files.values():
+            f.close()
         self.victim_file.close()
         super().destroy_node()
