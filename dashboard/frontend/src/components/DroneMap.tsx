@@ -15,7 +15,7 @@ interface DroneMapProps {
     coverage?: number;
 }
 
-export function DroneMap({ worldData, drones, history, exploredCells, victims, trackedVictims, activeFrontiers, coverage = 0 }: DroneMapProps) {
+export function DroneMap({ worldData, drones, history, exploredCells, victims, trackedVictims, coverage = 0 }: DroneMapProps) {
     const [isExpanded, setIsExpanded] = React.useState(false);
 
     // If modal is active, listen for escape key
@@ -93,9 +93,8 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
         );
     }
 
-    const { grid, world, obstacles } = worldData;
+    const { world, obstacles } = worldData;
     const viewBox = `0 0 ${world.width_m} ${world.height_m}`;
-    const mpc = grid.meters_per_cell;
 
     const getDroneColor = (droneId: string): string => {
         const idx = parseInt(droneId.replace('drone_', ''), 10);

@@ -8,9 +8,7 @@ import time
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "dashboard", "backend"))
-from database import DatabaseWriter
-
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "dashboard", "backend", "results", "antigravity.db")
+from database import DB_PATH  # type: ignore
 
 def init_db():
     # Schema is initialized when database module is imported (db_writer instantiated)

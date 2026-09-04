@@ -5,7 +5,7 @@ import { MissionOverview } from './components/MissionOverview';
 import { DroneMap } from './components/DroneMap';
 import { DroneCard } from './components/DroneCard';
 import { AlertsFeed } from './components/AlertsFeed';
-import { MissionProgress } from './components/MissionProgress';
+
 import { MapSelection } from './components/MapSelection';
 import { VictimDetectionPanel } from './components/VictimDetectionPanel';
 import { CoverageGraph } from './components/CoverageGraph';

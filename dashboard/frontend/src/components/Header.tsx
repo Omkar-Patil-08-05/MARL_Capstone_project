@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Radio, Wifi, WifiOff, Square, RefreshCcw, Map, Clock } from 'lucide-react';
+import { Activity, Radio, WifiOff, Square, RefreshCcw, Map, Clock } from 'lucide-react';
 import type { MissionTelemetry, BackendMissionStatus } from '../types/telemetry';
 
 const Timer = () => {
@@ -92,7 +92,7 @@ export function Header({ isConnected, telemetry, backendStatus, onStop, onComple
                                 try {
                                     const res = await fetch('http://localhost:8000/api/mission/view_simulation', { method: 'POST' });
                                     if (!res.ok) alert("Failed to launch Gazebo GUI. Alternatively, run: gz sim -g");
-                                } catch (e) {
+                                } catch {
                                     alert("Failed to connect to backend. Run manually: gz sim -g");
                                 }
                             }}

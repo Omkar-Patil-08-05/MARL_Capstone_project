@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { MapRegistry, BackendMissionStatus } from '../types/telemetry';
-import { Map, Play, Loader, AlertTriangle, RotateCcw, Cpu, CheckCircle2, Lock, Users } from 'lucide-react';
+import { Map, Play, Loader, AlertTriangle, RotateCcw, Cpu, CheckCircle2, Users } from 'lucide-react';
 
 interface MapSelectionProps {
     registry: MapRegistry;

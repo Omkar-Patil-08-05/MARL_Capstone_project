@@ -8,7 +8,7 @@ interface MissionSummaryProps {
 }
 
 export function MissionSummary({ telemetry, status, onClose }: MissionSummaryProps) {
-    const [duration, setDuration] = useState(0);
+
 
     // Keep track of mission duration internally, or just display the max timestamp.
     // If backend provides a final timestamp in the status or if we tracked start, we could be exact.

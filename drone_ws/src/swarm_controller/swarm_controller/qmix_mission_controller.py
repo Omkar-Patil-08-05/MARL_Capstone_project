@@ -2,7 +2,6 @@ import os
 import csv
 import time
 import math
-import rclpy
 from rclpy.node import Node
 import sys
 from std_msgs.msg import String
@@ -123,7 +122,7 @@ class QMIXMissionController(Node):
     def sync_victims_to_env(self):
         """Synchronizes dynamic victims from VictimManager to SARGridEnv for FOV detection."""
         self.env.victims.clear()
-        for v_id, v_obj in self.victim_manager.victims.items():
+        for v_obj in self.victim_manager.victims.values():
             gx = v_obj.grid_x
             gy = v_obj.grid_y
 
@@ -144,8 +143,6 @@ class QMIXMissionController(Node):
 
     def _initialize_grid_obstacles(self):
         """Populates the grid with static buildings from generated_world_meta.json."""
-        import json
-
         # Robust project-relative resolution
         project_root = os.path.expanduser('~/capstone_project_antigravity')
         meta_path = os.path.join(project_root, 'worlds', 'generated_world_meta.json')
@@ -160,7 +157,6 @@ class QMIXMissionController(Node):
             raise RuntimeError(f"CRITICAL: Metadata file {meta_path} is malformed.")
 
         obstacles = meta.get("obstacles", [])
-        victims_meta = meta.get("victims", [])
         drone_spawns = meta.get("drone_base", {}).get("spawns", [])
 
         METERS_PER_CELL = GridWorldTransform.METERS_PER_CELL
@@ -285,13 +281,12 @@ class QMIXMissionController(Node):
             if all(a.state == FlightState.COMPLETE for a in self.agents):
                 mission_status = "COMPLETE"
 
-            elapsed = current_time - self.start_time
             valid_cells = (self.env.grid != -1).sum()
             explored = (self.env.grid == 1).sum()
             coverage = (explored / valid_cells) * 100 if valid_cells > 0 else 0
 
             drones_data = []
-            for i, agent in enumerate(self.agents):
+            for agent in self.agents:
                 lx, ly, lz = agent.px4.current_position
                 wx = lx + agent.config.world_spawn_x
                 wy = ly + agent.config.world_spawn_y
@@ -397,10 +392,6 @@ class QMIXMissionController(Node):
         # PHASE 1: BFS SEMANTIC FIX
         if sum(new_cells) > 0:
             self.env._update_global_bfs()
-
-        valid_cells = (self.env.grid != -1).sum()
-        explored = (self.env.grid == 1).sum()
-        coverage = (explored / valid_cells) * 100 if valid_cells > 0 else 0
 
         # 1. Collect all observations synchronously
         t_start = time.time()

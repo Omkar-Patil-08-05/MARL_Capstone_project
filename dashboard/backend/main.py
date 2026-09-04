@@ -6,6 +6,7 @@ import os
 import signal
 import time
 import secrets
+import sys
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -13,7 +14,6 @@ from typing import Optional
 import uvicorn
 import uuid
 
-import psutil
 try:
     import psutil
 except ImportError:
