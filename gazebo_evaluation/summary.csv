@@ -1,0 +1,11 @@
+episode_id,seed,duration,policy_steps,coverage,victims_found,total_victims,invalid_actions,hover_actions,timeouts,collisions
+11,11,222.45728492736816,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+12,12,216.0997805595398,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+13,13,225.09928250312805,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+14,14,241.84266996383667,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+15,15,241.29991126060486,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+16,16,237.34977006912231,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+17,17,220.6998450756073,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+18,18,220.1482813358307,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+19,19,243.94916939735413,300,0.9008,5,5,0,1290,0,unavailable for this prototype
+20,20,230.2041938304901,300,0.9008,5,5,0,1290,0,unavailable for this prototype

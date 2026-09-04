@@ -1,0 +1,8 @@
+{
+  "checkpoint": "qmix_sar_v4_align_best.pth",
+  "arrival_tolerance": 0.1,
+  "max_speed": 2.0,
+  "movement_timeout": 5.0,
+  "control_frequency": 20.0,
+  "episodes": 1
+}

@@ -1,0 +1,2 @@
+episode_id,seed,duration,policy_steps,coverage,victims_found,total_victims,invalid_actions,hover_actions,timeouts,collisions
+1,101,702.3480679988861,300,0.9151193633952255,5,5,2,1323,189,unavailable for this prototype

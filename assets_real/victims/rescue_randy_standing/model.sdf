@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+    <model name="rescue_randy_standing">
+        <static>true</static>
+        <link name="link">
+            <pose>0 0 0 0 0 0</pose>
+            <!-- Body Cylinder -->
+            <collision name="body_collision">
+                <pose>0 0 0.75 0 0 0</pose>
+                <geometry>
+                    <cylinder>
+                        <radius>0.2</radius>
+                        <length>1.5</length>
+                    </cylinder>
+                </geometry>
+            </collision>
+            <visual name="body_visual">
+                <pose>0 0 0.75 0 0 0</pose>
+                <geometry>
+                    <cylinder>
+                        <radius>0.2</radius>
+                        <length>1.5</length>
+                    </cylinder>
+                </geometry>
+                <material>
+                    <ambient>0.8 0.4 0.1 1</ambient>
+                    <diffuse>0.8 0.4 0.1 1</diffuse>
+                </material>
+                <plugin filename="ignition-gazebo-thermal-system" name="ignition::gazebo::systems::Thermal">
+                    <heat_signature>materials/textures/RescueRandy_Thermal.png</heat_signature>
+                    <max_temp>305</max_temp>
+                </plugin>
+            </visual>
+            <!-- Head Sphere -->
+            <collision name="head_collision">
+                <pose>0 0 1.65 0 0 0</pose>
+                <geometry>
+                    <sphere>
+                        <radius>0.15</radius>
+                    </sphere>
+                </geometry>
+            </collision>
+            <visual name="head_visual">
+                <pose>0 0 1.65 0 0 0</pose>
+                <geometry>
+                    <sphere>
+                        <radius>0.15</radius>
+                    </sphere>
+                </geometry>
+                <material>
+                    <ambient>0.9 0.7 0.5 1</ambient>
+                    <diffuse>0.9 0.7 0.5 1</diffuse>
+                </material>
+                <plugin filename="ignition-gazebo-thermal-system" name="ignition::gazebo::systems::Thermal">
+                    <heat_signature>materials/textures/RescueRandy_Thermal.png</heat_signature>
+                    <max_temp>307</max_temp>
+                </plugin>
+            </visual>
+        </link>
+    </model>
+</sdf>

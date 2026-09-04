@@ -38,6 +38,9 @@ marl_drone_project/results/
 marl_drone_project/**/__pycache__/
 results/
 drone_ws/results/
+analysis/outputs/
+*.pt
+
 
 # -------------------------
 # Temporary logs

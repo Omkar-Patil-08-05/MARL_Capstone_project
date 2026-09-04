@@ -1,0 +1,13 @@
+--- SAR Evaluation (100 episodes) ---
+
+--- QMIX SAR POLICY ---
+Mean Reward:         247.1
+Mean Coverage:       83.93% (Std: 13.66%)
+Max Coverage:        99.24%
+% Reaching >= 99%:   10.0%
+% Reaching 100%:     0.0%
+Victims Detected:    4.24 / 5 (Rate: 56.0%)
+Collisions:          13.8
+Boundary Collisions: 0.0
+Redundant Steps:     413.3
+Mission Time:        291.8
