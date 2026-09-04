@@ -181,29 +181,19 @@ export function useTelemetry() {
                 });
             }
 
-            // Victim detection — identify WHICH victim was detected
+            // Victim detection — generate alerts based ONLY on stable mission victims transitioning to DETECTED
             if (current.victims && prev.victims) {
                 current.victims.forEach(v => {
-                    const pv = prev.victims.find(x => x.id === v.id);
-                    if (v.detected && pv && !pv.detected) {
-                        // Find the closest drone at this moment
-                        let closestDrone = 'SWARM';
-                        let minDist = Infinity;
-                        current.drones.forEach(d => {
-                            const dx = d.grid_x - v.x;
-                            const dy = d.grid_y - v.y;
-                            const dist = Math.sqrt(dx * dx + dy * dy);
-                            if (dist < minDist) {
-                                minDist = dist;
-                                closestDrone = d.id.replace('drone_', 'DRONE ');
-                            }
-                        });
-                        newAlerts.push({
-                            id: Math.random().toString(),
-                            timestamp: current.timestamp,
-                            message: `🚁 ${closestDrone} DETECTED VICTIM ${v.id} at (${v.x}, ${v.y})`,
-                            type: 'success'
-                        });
+                    if (v.state === 'DETECTED') {
+                        const pv = prev.victims.find(x => x.id === v.id);
+                        if (pv && pv.state === 'UNDETECTED') {
+                            newAlerts.push({
+                                id: Math.random().toString(),
+                                timestamp: current.timestamp,
+                                message: `MISSION DETECTION: VICTIM ${v.id.replace('victim_', '')} LOCATED`,
+                                type: 'success'
+                            });
+                        }
                     }
                 });
             }

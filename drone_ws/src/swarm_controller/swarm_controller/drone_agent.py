@@ -118,9 +118,16 @@ class DroneAgent:
             self.px4.publish_offboard_control_mode()
             self.px4.publish_trajectory_setpoint(takeoff_target)
             
+            # Continuously retry OFFBOARD and ARM in case PX4 rejected them earlier due to EKF2 unreadiness
+            self.state_timer += 1
+            if self.state_timer % self.mission.control_rate_hz == 0:
+                self.px4.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, param1=1.0, param2=6.0)
+                self.px4.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, param1=1.0)
+            
             z_error = abs(self.px4.current_position[2] - takeoff_target[2])
             if z_error < 0.5:
-                self._log_transition(FlightState.WAYPOINT_NAVIGATION)
+                self.mission_goal_local = takeoff_target
+                self._log_transition(FlightState.HOLD)
 
         elif self.state == FlightState.WAYPOINT_NAVIGATION:
             self.state_timer += 1
@@ -131,13 +138,17 @@ class DroneAgent:
                 self.mission_goal_local[2] # Z stays fixed at mission_goal
             ]
             
-            self.px4.publish_offboard_control_mode()
-            self.px4.publish_trajectory_setpoint(control_target_local)
-            
             # evaluate distance to IMMUTABLE mission goal
             dx = self.px4.current_position[0] - self.mission_goal_local[0]
             dy = self.px4.current_position[1] - self.mission_goal_local[1]
             dist_to_goal = math.sqrt(dx*dx + dy*dy)
+            
+            # Calculate yaw to face the target (atan2(y_diff, x_diff))
+            # Note: dx, dy above are (current - goal). We want (goal - current) -> (-dx, -dy)
+            target_yaw = math.atan2(-dy, -dx)
+            
+            self.px4.publish_offboard_control_mode()
+            self.px4.publish_trajectory_setpoint(control_target_local, yaw=target_yaw)
             
             if dist_to_goal < self.mission.goal_tolerance:
                 if not self.require_min_dwell or self.state_timer >= self.mission.min_waypoint_dwell_ticks:
@@ -149,9 +160,8 @@ class DroneAgent:
             self.px4.publish_offboard_control_mode()
             self.px4.publish_trajectory_setpoint(self.mission_goal_local)
             
+            # Note: Removed automatic transition to LAND. The mission controller will explicitly command LAND.
             self.state_timer += 1
-            if self.state_timer >= self.mission.hold_duration:
-                self._log_transition(FlightState.LAND)
 
         elif self.state == FlightState.LAND:
             if self.state_timer % self.mission.control_rate_hz == 0:

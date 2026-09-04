@@ -28,7 +28,7 @@ def get_config():
     parser.add_argument('--target_update_interval', type=int, default=5) # Episodes
     parser.add_argument('--grad_clip', type=float, default=10.0)
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--checkpoint_dir', type=str, default='models')
+    parser.add_argument('--checkpoint_dir', type=str, default=None, help='Directory to save checkpoints. Defaults to models/baseline_n2 or models/qmix_n{N}')
     parser.add_argument('--checkpoint_name', type=str, default='qmix_sar_v4_align.pth')
     parser.add_argument('--metrics_file', type=str, default='results/sar_qmix/v4_final/training_metrics.csv', help='Path to metrics log')
     parser.add_argument('--eval_interval', type=int, default=50)
@@ -92,6 +92,12 @@ def evaluate_policy(env, agent_net, args, device, episode_num=None):
 def main():
     args = get_config()
     
+    if args.checkpoint_dir is None:
+        if args.num_agents == 2:
+            args.checkpoint_dir = 'models/baseline_n2'
+        else:
+            args.checkpoint_dir = f'models/qmix_n{args.num_agents}'
+            
     # Determinism
     seed = args.seed
     random.seed(seed)

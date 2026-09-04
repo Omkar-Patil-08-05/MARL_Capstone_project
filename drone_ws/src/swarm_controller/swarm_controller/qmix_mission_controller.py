@@ -12,7 +12,6 @@ from swarm_controller.drone_agent import DroneAgent, FlightState
 from swarm_controller.grid_world_transform import GridWorldTransform
 from swarm_controller.qmix_ros2_adapter import QMIXAdapter
 from swarm_controller.victim_manager import VictimManager
-from swarm_controller.victim_localizer import VictimLocalizer
 
 sys.path.append('/home/capstone/capstone_project_antigravity')
 from marl_drone_project.env.sar_env import SARGridEnv
@@ -24,7 +23,7 @@ class QMIXMissionController(Node):
         self.drone_configs = drone_configs
         self.max_decisions = max_decisions
 
-        self.localizer = VictimLocalizer()
+
 
         # Instantiate drones
         self.agents = [DroneAgent(self, config, mission_config) for config in drone_configs]
@@ -89,81 +88,37 @@ class QMIXMissionController(Node):
         self.global_step_state = "INITIALIZING"
 
         self.setup_telemetry()
-        self.setup_perception_subscribers()
 
         # Create control loop timer
         timer_period = 0.05
         self.timer = self.create_timer(timer_period, self.tick)
 
-    def setup_perception_subscribers(self):
-        """Creates subscribers for the JSON detection stream from the YOLO node."""
-        self.detection_subs = []
+    def _check_proximity_detection(self):
+        """Continuous proximity-based mission detection.
+        
+        Runs every tick (20Hz) to ensure victims are detected the instant
+        a drone passes within 3.5m, regardless of QMIX decision timing.
+        This is the SOLE authoritative detection mechanism.
+        YOLO/camera state has ZERO influence on this check.
+        """
         for agent in self.agents:
-            topic = f'/drone_{agent.config.drone_id}/camera/detection_data'
-            # Using default argument binding in lambda to capture the correct drone_id
-            sub = self.create_subscription(
-                String,
-                topic,
-                lambda msg, d_id=agent.config.drone_id: self.detection_callback(msg, d_id),
-                10
-            )
-            self.detection_subs.append(sub)
-
-    def detection_callback(self, msg, drone_id):
-        """Processes incoming detection JSON via VictimLocalizer and VictimManager."""
-        try:
-            data = json.loads(msg.data)
-            source = data.get('source', 'UNKNOWN')
-            img_w = data.get('image_width', 640)
-            img_h = data.get('image_height', 480)
-            detections = data.get('detections', [])
-
-            if not detections:
-                return
-
-            # Get drone state from either QMIX agents or Deterministic agents
-            all_possible_agents = list(self.agents)
-            if hasattr(self, 'det_agents'):
-                all_possible_agents.extend(self.det_agents)
-
-            agent = next((a for a in all_possible_agents if a.config.drone_id == drone_id), None)
-            if not agent:
-                return
-
-            lx, ly, wz = agent.px4.current_position
+            if agent.state not in [FlightState.WAYPOINT_NAVIGATION, FlightState.HOLD]:
+                continue
+            lx, ly, _ = agent.px4.current_position
             wx = lx + agent.config.world_spawn_x
             wy = ly + agent.config.world_spawn_y
 
-            # Simplified yaw assumption (drone looks where it's going, or 0 if hovering)
-            # For exact yaw we would need quaternion from vehicle_odometry.
-            # For N8 mock, we assume 0 rad (North) for simplicity in flat-ground estimation.
-            drone_yaw = 0.0
+            for v_id, victim in self.victim_manager.victims.items():
+                if victim.state.value == "UNDETECTED":
+                    dist = math.hypot(victim.world_x - wx, victim.world_y - wy)
+                    if dist <= 3.5:
+                        if self.victim_manager.mark_detected(v_id, detected_by=agent.config.drone_id, detection_distance=dist):
+                            self.get_logger().info(
+                                f"[{agent.config.drone_id}] MISSION DETECTION: "
+                                f"{v_id} at distance {dist:.1f}m "
+                                f"(drone@({wx:.1f},{wy:.1f}) victim@({victim.world_x:.1f},{victim.world_y:.1f}))"
+                            )
 
-            for det in detections:
-                bbox = det.get('bbox')
-                conf = det.get('confidence', 0.0)
-
-                # Localize to world coordinates
-                loc_res = self.localizer.localize(
-                    drone_world_x=wx,
-                    drone_world_y=wy,
-                    drone_world_z=-wz, # NED down is positive, so altitude is -wz
-                    drone_yaw=drone_yaw,
-                    img_w=img_w,
-                    img_h=img_h,
-                    bbox=bbox
-                )
-
-                # Update tracks
-                self.victim_manager.process_visual_detection(
-                    world_x=loc_res['world_x'],
-                    world_y=loc_res['world_y'],
-                    source=source,
-                    confidence=conf,
-                    drone_id=drone_id
-                )
-        except Exception as e:
-            self.get_logger().error(f"Detection callback error: {e}")
 
     def sync_victims_to_env(self):
         """Synchronizes dynamic victims from VictimManager to SARGridEnv for FOV detection."""
@@ -251,7 +206,6 @@ class QMIXMissionController(Node):
 
     def tick(self):
         current_time = time.time()
-        self.get_logger().info(f"D0 connected: {self.agents[0].px4.is_connected()}")
         if self.mission_active and not self.land_commanded:
             if current_time - self.last_heartbeat_time >= 60.0:
                 self.last_heartbeat_time = current_time
@@ -277,6 +231,10 @@ class QMIXMissionController(Node):
 
         for agent in self.agents:
             agent.tick()
+
+        # Continuous proximity-based mission detection (runs every tick at 20Hz)
+        if self.mission_active:
+            self._check_proximity_detection()
 
         self.telemetry_tick_counter += 1
         if self.telemetry_tick_counter % 2 == 0:
@@ -342,6 +300,10 @@ class QMIXMissionController(Node):
 
                 drone_id = agent.config.drone_id
 
+                # Actual runtime velocity from PX4 odometry (NED frame)
+                vx_ned, vy_ned, vz_ned = agent.px4.current_velocity
+                speed = math.sqrt(vx_ned**2 + vy_ned**2 + vz_ned**2)
+
                 drones_data.append({
                     "id": str(drone_id),
                     "state": agent.state.name,
@@ -351,7 +313,11 @@ class QMIXMissionController(Node):
                     "grid_x": int(gx),
                     "grid_y": int(gy),
                     "action": self.last_actions.get(drone_id, "None"),
-                    "safety_override": self.last_safety_overrides.get(drone_id, False)
+                    "safety_override": self.last_safety_overrides.get(drone_id, False),
+                    "vx": round(float(vx_ned), 3),
+                    "vy": round(float(vy_ned), 3),
+                    "vz": round(float(vz_ned), 3),
+                    "speed": round(float(speed), 2)
                 })
 
             # Build explored cells list from authoritative SARGridEnv
@@ -365,8 +331,8 @@ class QMIXMissionController(Node):
             victims_state = [v.get_dict() for v in self.victim_manager.victims.values()]
             tracked_victims_state = [t.get_dict() for t in self.victim_manager.tracked_victims.values()]
 
-            # Recalculate unique ground truth victims detected
-            unique_detected = sum(1 for v in self.victim_manager.victims.values() if v.state.value == "DETECTED")
+            # Calculate unique detections based on mission state
+            unique_detected = sum(1 for v in self.victim_manager.victims.values() if v.state.value == "DETECTED" or v.state.value == "RESCUED")
 
             msg_dict = {
                 "type": "telemetry",
@@ -422,68 +388,7 @@ class QMIXMissionController(Node):
         # Phase N5: Update moving victims
         self.victim_manager.update()
 
-        # Phase N6: MOCK PERCEPTION
-        # Instead of SARGridEnv automatically detecting victims, the MOCK perception emulates it
-        # without exposing ground truth directly to RL environment state.
-        all_possible_agents = list(self.agents)
-        if hasattr(self, 'det_agents'):
-            all_possible_agents.extend(self.det_agents)
-
-        for idx, agent in enumerate(all_possible_agents):
-            lx, ly, wz = agent.px4.current_position
-            wx = lx + agent.config.world_spawn_x
-            wy = ly + agent.config.world_spawn_y
-
-            # Check all ground-truth victims
-            for v_id, v_obj in self.victim_manager.victims.items():
-                # Emulate FOV bounding box (drone camera sees roughly 8m x 6m from 15m altitude)
-                dx = v_obj.world_x - wx
-                dy = v_obj.world_y - wy
-                dist = math.hypot(dx, dy)
-
-                # If within simulated FOV, generate a mock bounding box
-                if dist < 6.0:
-                    self.get_logger().info(f"[PERCEPTION] drone_{agent.config.drone_id} candidate {v_id}")
-
-                    # Calculate exactly where the victim would appear in the camera image
-                    # Assuming camera alt=15m, yaw=0, fov_h=60deg, fov_v=45deg
-                    alt = 15.0
-                    fov_h = math.radians(60.0)
-                    fov_v = math.radians(45.0)
-
-                    offset_x_local = dx
-                    offset_y_local = dy
-
-                    nx = offset_y_local / (alt * math.tan(fov_h / 2.0))
-                    ny = -offset_x_local / (alt * math.tan(fov_v / 2.0))
-
-                    cx = nx * 320.0 + 320.0
-                    cy = ny * 240.0 + 240.0
-
-                    # Mock bounding box generation (100x100 box around center)
-                    bbox = [int(cx - 50), int(cy - 50), int(cx + 50), int(cy + 50)]
-
-                    self.get_logger().info(f"[PERCEPTION] drone_{agent.config.drone_id} bbox={bbox}")
-
-                    loc_res = self.localizer.localize(
-                        drone_world_x=wx,
-                        drone_world_y=wy,
-                        drone_world_z=15.0, # Pass positive altitude directly for MOCK
-                        drone_yaw=0.0,
-                        img_w=640,
-                        img_h=480,
-                        bbox=bbox
-                    )
-
-                    self.get_logger().info(f"[PERCEPTION] drone_{agent.config.drone_id} localized=({loc_res['world_x']:.1f}, {loc_res['world_y']:.1f})")
-
-                    self.victim_manager.process_visual_detection(
-                        world_x=loc_res['world_x'],
-                        world_y=loc_res['world_y'],
-                        source="MOCK",
-                        confidence=0.99,
-                        drone_id=agent.config.drone_id
-                    )
+        # Removed Mock Perception
 
         self.sync_victims_to_env()
 
@@ -680,13 +585,7 @@ class QMIXMissionController(Node):
             self.trajectory_writers[drone_id_str].writerow([t, curr_wx, curr_wy, wz, gx, gy])
             self.trajectory_files[drone_id_str].flush()
 
-        # Check newly detected victims
-        for v_pos, status in self.env.victims.items():
-            if status == 1 and v_pos not in self.detected_victims:
-                self.detected_victims.add(v_pos)
-                self.victim_manager.mark_detected_by_grid(v_pos[0], v_pos[1])
-                self.victim_writer.writerow([t, self.decisions_made, v_pos[0], v_pos[1], drone_id_str])
-                self.victim_file.flush()
+        # Note: Proximity detection has been moved to _check_proximity_detection() in tick() for continuous checking
 
     def destroy_node(self):
         self.log_file.close()

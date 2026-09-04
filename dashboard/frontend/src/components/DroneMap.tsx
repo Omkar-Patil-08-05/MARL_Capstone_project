@@ -140,11 +140,12 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
 
             <g className="victims-gt-layer">
                 {victims.map(v => {
-                    const cx = (v.x * mpc) + (mpc / 2);
-                    const cy = (v.y * mpc) + (mpc / 2);
+                    const cx = v.world_x;
+                    const cy = v.world_y;
                     return (
                         <g key={`gt-${v.id}`} transform={`translate(${cx}, ${cy})`}>
-                            <circle r={2.0} fill="rgba(255, 85, 51, 0.6)" stroke="#ff5533" strokeWidth={0.5} />
+                            <circle r={2.0} fill={v.detected ? "rgba(0,255,135,0.6)" : "rgba(255, 85, 51, 0.6)"} stroke={v.detected ? "#00ff87" : "#ff5533"} strokeWidth={0.5} />
+                            {v.detected && <text y={0.8} fill="#000" fontSize={2.0} fontWeight={900} textAnchor="middle" style={{ fontFamily: 'sans-serif' }}>✓</text>}
                         </g>
                     );
                 })}
@@ -152,14 +153,13 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
 
             <g className="victims-layer">
                 {trackedVictims && trackedVictims.map(v => {
-                    const cx = (v.x * mpc) + (mpc / 2);
-                    const cy = (v.y * mpc) + (mpc / 2);
+                    const cx = v.world_x;
+                    const cy = v.world_y;
                     return (
                         <g key={v.id} transform={`translate(${cx}, ${cy})`}>
-                            <circle r={2.5} fill="rgba(0,255,135,0.25)" stroke="#00ff87" strokeWidth={0.6} />
-                            <circle r={1.2} fill="#00ff87" />
-                            <text y={0.6} fill="#000" fontSize={1.6} fontWeight={900} textAnchor="middle" style={{ fontFamily: 'sans-serif' }}>✓</text>
-                            <text y={-4} fill="#00ff87" fontSize={2.2} fontWeight={700} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)' }}>{v.id}</text>
+                            <rect x={-2.5} y={-2.5} width={5} height={5} fill="none" stroke="rgba(0, 200, 255, 0.8)" strokeWidth={0.5} strokeDasharray="1,1" />
+                            <text y={-3.5} fill="#00c8ff" fontSize={1.8} fontWeight={700} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)' }}>{v.id}</text>
+                            {v.confidence && <text y={4.5} fill="#00c8ff" fontSize={1.2} fontWeight={700} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)' }}>{(v.confidence * 100).toFixed(0)}%</text>}
                         </g>
                     );
                 })}

@@ -25,6 +25,11 @@ class Victim:
         self.state = VictimState.UNDETECTED
         self.movement_state = MovementState.RESTING
         
+        # Detection metadata (populated by mark_detected)
+        self.detected_by = None
+        self.detection_distance = None
+        self.detection_time = None
+        
         self.profile = profile_config
         self.rng = random_gen
         
@@ -45,7 +50,10 @@ class Victim:
             "world_y": self.world_y,
             "detected": self.state == VictimState.DETECTED or self.state == VictimState.RESCUED,
             "state": self.state.value,
-            "movement_state": self.movement_state.value
+            "movement_state": self.movement_state.value,
+            "detected_by": self.detected_by,
+            "detection_distance": round(self.detection_distance, 2) if self.detection_distance is not None else None,
+            "detection_time": self.detection_time
         }
 
 class TrackedVictim:
@@ -166,42 +174,26 @@ class VictimManager:
             subprocess.Popen(cmd)
             time.sleep(0.1)
 
-    def process_visual_detection(self, world_x, world_y, source, confidence, drone_id):
-        """Processes an incoming visual detection from YOLO/Mock and maintains stable tracks."""
-        # 1. Associate with ground truth to get the strict identity
-        gt_best_dist = float('inf')
-        gt_best_id = None
-        for v_id, victim in self.victims.items():
-            dist = math.hypot(victim.world_x - world_x, victim.world_y - world_y)
-            if dist < gt_best_dist and dist < self.association_radius:
-                gt_best_dist = dist
-                gt_best_id = v_id
-                
-        if gt_best_id is not None:
-            self.mark_detected(gt_best_id)
-            err_m = gt_best_dist
-            
-            # 2. Use the ground truth ID directly as the track ID for a strict 1:1 mapping
-            if gt_best_id in self.tracked_victims:
-                # Update existing track
-                self.tracked_victims[gt_best_id].update(world_x, world_y, source, confidence, drone_id)
-                self.tracked_victims[gt_best_id].gt_error = err_m
-                self.node.get_logger().info(f"[PERCEPTION] drone_{drone_id} detection accepted {gt_best_id}")
-            else:
-                # Create new track
-                self.tracked_victims[gt_best_id] = TrackedVictim(gt_best_id, world_x, world_y, source, confidence, drone_id)
-                self.tracked_victims[gt_best_id].gt_error = err_m
-                self.node.get_logger().info(f"[PERCEPTION] drone_{drone_id} detection accepted {gt_best_id}")
-                self.node.get_logger().info(f"[VictimTracker] New victim track {gt_best_id} initialized at ({world_x:.1f}, {world_y:.1f}) by D{drone_id}")
-                
-            gt_v = self.victims[gt_best_id]
-            grid_err = math.hypot( (world_x / 4.0) - (gt_v.world_x / 4.0), (world_y / 4.0) - (gt_v.world_y / 4.0) )
-            self.node.get_logger().info(f"[Metrics] LOCALIZATION ERROR -> Mean: {err_m:.2f}m, Max bounds (X:{abs(world_x - gt_v.world_x):.2f}m, Y:{abs(world_y - gt_v.world_y):.2f}m), Grid Cell: {grid_err:.2f}")
+    def process_discovery_event(self, track_id, world_x, world_y, source, confidence, drone_id):
+        """Processes an incoming visual detection from RGB-D perception."""
+        track_id_str = f"victim_{track_id}"
+        
+        if track_id_str in self.tracked_victims:
+            # Update existing track
+            self.tracked_victims[track_id_str].update(world_x, world_y, source, confidence, drone_id)
+            self.node.get_logger().info(f"[VictimTracker] Updated track {track_id_str} at ({world_x:.1f}, {world_y:.1f}) by D{drone_id}")
+        else:
+            # Create new track
+            self.tracked_victims[track_id_str] = TrackedVictim(track_id_str, world_x, world_y, source, confidence, drone_id)
+            self.node.get_logger().info(f"[VictimTracker] New track {track_id_str} initialized at ({world_x:.1f}, {world_y:.1f}) by D{drone_id}")
 
-    def mark_detected(self, v_id):
+    def mark_detected(self, v_id, detected_by=None, detection_distance=None):
         if v_id in self.victims and self.victims[v_id].state == VictimState.UNDETECTED:
             self.victims[v_id].state = VictimState.DETECTED
-            self.node.get_logger().info(f"[VictimManager] Ground truth {v_id} marked as DETECTED internally!")
+            self.victims[v_id].detected_by = detected_by
+            self.victims[v_id].detection_distance = detection_distance
+            self.victims[v_id].detection_time = time.time()
+            self.node.get_logger().info(f"[VictimManager] Ground truth {v_id} marked as DETECTED by {detected_by} at {detection_distance:.1f}m!")
             return True
         return False
         
@@ -308,8 +300,6 @@ class VictimManager:
         subprocess.Popen(cmd)
 
     def get_dashboard_state(self):
-        """Returns the serialized state for telemetry output (using camera tracked victims instead of GT)."""
-        # The frontend expects a list of victim dicts.
-        # We will supply the tracked victims so the dashboard shows visual detections accurately.
-        return [t.get_dict() for t in self.tracked_victims.values()]
+        """Returns the serialized state for telemetry output (using mission victims)."""
+        return [v.get_dict() for v in self.victims.values()]
 

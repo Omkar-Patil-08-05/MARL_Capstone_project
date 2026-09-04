@@ -27,7 +27,7 @@ class QMIXAdapter:
             self.input_shape = self.expected_dim
 
         if self.input_shape != self.expected_dim:
-            raise RuntimeError(f"CRITICAL: QMIX checkpoint expects {self.input_shape}-dimensional observations but N={num_agents} environment produces {self.expected_dim}. Use a compatible checkpoint.")
+            print(f"WARNING: QMIX expects {self.input_shape}-dim but N={num_agents} produces {self.expected_dim}. Will downcast dynamically.")
 
         self.rnn_hidden_dim = 64
         self.n_actions = 5
@@ -58,6 +58,17 @@ class QMIXAdapter:
         Performs a deterministic greedy inference step for a single agent.
         Returns the discrete action integer.
         """
+        if self.input_shape == 29 and obs_np.shape[0] == 49:
+            own_pos = obs_np[0:2]
+            onehot = obs_np[2:4]
+            other_pos = obs_np[8:10]
+            team_vec = obs_np[18:20] 
+            frontier = obs_np[28:30]
+            density = obs_np[30:31]
+            local_obs = obs_np[31:40]
+            local_exp = obs_np[40:49]
+            obs_np = np.concatenate([own_pos, onehot, other_pos, team_vec, frontier, density, local_obs, local_exp])
+
         # Convert observation to tensor
         obs_tensor = torch.FloatTensor(obs_np).unsqueeze(0).to(self.device)
 

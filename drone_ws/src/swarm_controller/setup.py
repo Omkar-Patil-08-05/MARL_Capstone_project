@@ -30,7 +30,8 @@ setup(
             'two_drone_deterministic_test = swarm_controller.two_drone_deterministic_test:main',
             'qmix_drone_test = swarm_controller.qmix_drone_test:main',
             'swarm_runner = swarm_controller.swarm_runner:main',
-            'yolo_human_detection = swarm_controller.yolo_human_detection:main'
+            'yolo_human_detection = swarm_controller.yolo_human_detection:main',
+            'swarm_perception_node = swarm_controller.swarm_perception_node:main'
         ],
     },
 )

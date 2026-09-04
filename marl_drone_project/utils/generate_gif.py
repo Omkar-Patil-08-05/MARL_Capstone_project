@@ -3,7 +3,10 @@ import sys
 import torch
 import numpy as np
 import imageio
-import matplotlib.pyplot as plt
+
+# Set Agg backend before importing pyplot to avoid NoneType figure errors on headless systems
+import matplotlib
+matplotlib.use('Agg')
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.sar_env import SARGridEnv
@@ -21,18 +24,17 @@ def create_gif(model_path, output_path, max_steps=150, seed=42):
     ckpt = torch.load(model_path, map_location=device)
     agent_net.load_state_dict(ckpt['agent_net'])
     agent_net.eval()
-    
-    # Use Agg backend for headless plotting
-    import matplotlib
-    matplotlib.use('Agg')
+
     
     visualizer = SARVisualizer(env)
     visualizer.reset()
+    assert visualizer.fig is not None
     visualizer.fig.suptitle("QMIX SAR Best Policy Replay", color='blue', weight='bold')
     
     hidden_state = agent_net.init_hidden().expand(env.num_drones, -1).to(device)
     
     frames = []
+    done = False
     
     for step in range(max_steps):
         local_obs = [env.get_agent_state(i) for i in range(env.num_drones)]
@@ -49,7 +51,7 @@ def create_gif(model_path, output_path, max_steps=150, seed=42):
         # Save frame
         frame_path = f"/tmp/frame_{step:03d}.png"
         visualizer.fig.savefig(frame_path, dpi=100)
-        frames.append(imageio.imread(frame_path))
+        frames.append(imageio.v2.imread(frame_path))
         os.remove(frame_path)
         
         if done:
@@ -63,5 +65,5 @@ def create_gif(model_path, output_path, max_steps=150, seed=42):
 if __name__ == '__main__':
     create_gif(
         model_path='models/qmix_sar_v3_best_best.pth',
-        output_path='/home/capstone/.gemini/antigravity-ide/brain/7c816e4d-3701-40b7-b001-78f9ab4632d1/qmix_sar_final_replay.gif'
+        output_path='qmix_sar_final_replay.gif'
     )

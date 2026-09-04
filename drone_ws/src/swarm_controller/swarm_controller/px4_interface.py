@@ -16,6 +16,13 @@ class PX4Interface:
             depth=1
         )
         
+        qos_profile_reliable = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=5
+        )
+        
         # Build topics dynamically based on namespace
         ns = f"/{self.config.namespace}" if self.config.namespace else ""
         
@@ -24,7 +31,7 @@ class PX4Interface:
         self.trajectory_setpoint_publisher = self.node.create_publisher(
             TrajectorySetpoint, f'{ns}/fmu/in/trajectory_setpoint', qos_profile)
         self.vehicle_command_publisher = self.node.create_publisher(
-            VehicleCommand, f'{ns}/fmu/in/vehicle_command', qos_profile)
+            VehicleCommand, f'{ns}/fmu/in/vehicle_command', qos_profile_reliable)
             
         self.vehicle_odometry_subscriber = self.node.create_subscription(
             VehicleOdometry, f'{ns}/fmu/out/vehicle_odometry', self._vehicle_odometry_callback, qos_profile)

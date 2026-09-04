@@ -26,6 +26,7 @@ class SwarmOrchestratorNode(QMIXMissionController):
 
         # Explicitly subscribe to D2/D3 perception to feed the global VictimManager
         from std_msgs.msg import String
+        self.detection_subs = []
         for agent in self.det_agents:
             topic = f'/drone_{agent.config.drone_id}/camera/detection_data'
             sub = self.create_subscription(
@@ -229,8 +230,6 @@ def main(args=None):
 
     if parsed.checkpoint:
         checkpoint_path = os.path.abspath(parsed.checkpoint)
-    elif parsed.drones == 6:
-        checkpoint_path = os.path.join(workspace_dir, "marl_drone_project/models/qmix_n6_exp2/qmix_sar_v4_align_best.pth")
     else:
         checkpoint_path = os.path.join(workspace_dir, "models/qmix_sar_v4_align_best.pth")
 

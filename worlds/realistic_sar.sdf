@@ -3215,38 +3215,62 @@
 
   <include>
     <name>victim_22</name>
-    <uri>model://rescue_randy_standing</uri>
-    <pose>98.00 34.00 0.0 0 0 0</pose>
+    <uri>model://casual_female</uri>
+    <pose>34.00 6.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_23</name>
-    <uri>model://rescue_randy_standing</uri>
-    <pose>6.00 38.00 0.0 0 0 0</pose>
+    <uri>model://casual_female</uri>
+    <pose>54.00 94.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_24</name>
-    <uri>model://rescue_randy_standing</uri>
-    <pose>6.00 98.00 0.0 0 0 0</pose>
+    <uri>model://casual_female</uri>
+    <pose>98.00 14.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_25</name>
-    <uri>model://rescue_randy_standing</uri>
-    <pose>98.00 98.00 0.0 0 0 0</pose>
+    <uri>model://casual_female</uri>
+    <pose>2.00 90.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_26</name>
-    <uri>model://rescue_randy_standing</uri>
-    <pose>46.00 2.00 0.0 0 0 0</pose>
+    <uri>model://casual_female</uri>
+    <pose>94.00 74.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_27</name>
-    <uri>model://rescue_randy_standing</uri>
-    <pose>50.00 94.00 0.0 0 0 0</pose>
+    <uri>model://casual_female</uri>
+    <pose>34.00 50.00 0.0 0 0 0</pose>
+  </include>
+
+  <include>
+    <name>victim_28</name>
+    <uri>model://casual_female</uri>
+    <pose>2.00 38.00 0.0 0 0 0</pose>
+  </include>
+
+  <include>
+    <name>victim_29</name>
+    <uri>model://casual_female</uri>
+    <pose>66.00 6.00 0.0 0 0 0</pose>
+  </include>
+
+  <include>
+    <name>victim_30</name>
+    <uri>model://casual_female</uri>
+    <pose>2.00 2.00 0.0 0 0 0</pose>
+  </include>
+
+  <include>
+    <name>victim_31</name>
+    <uri>model://casual_female</uri>
+    <pose>82.00 42.00 0.0 0 0 0</pose>
   </include>
 
 

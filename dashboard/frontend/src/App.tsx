@@ -61,7 +61,7 @@ function App() {
                             key={drone.id}
                             drone={drone}
                             activeView={activeView}
-                            onToggleCamera={() => {}}
+                            onToggleCamera={() => setActiveView(v => v === 'MAP' ? 'CAMERA' : 'MAP')}
                         />
                     ))}
                 </div>
@@ -82,7 +82,7 @@ function App() {
 
                 {/* Right Column: Victims, Coordination, Alerts */}
                 <div style={{ gridColumn: '3', gridRow: '1 / 3', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
-                    <VictimDetectionPanel victims={telemetry ? (telemetry.tracked_victims || []) : []} />
+                    <VictimDetectionPanel victims={telemetry ? (telemetry.victims || []) : []} />
                     <SwarmCoordinationStats telemetry={telemetry} />
                     <AlertsFeed alerts={alerts} />
                 </div>

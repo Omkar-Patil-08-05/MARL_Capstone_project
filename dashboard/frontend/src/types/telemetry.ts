@@ -8,6 +8,10 @@ export interface DroneTelemetry {
     grid_y: number;
     action: string;
     safety_override: boolean;
+    vx?: number;
+    vy?: number;
+    vz?: number;
+    speed?: number;
 }
 
 export interface MissionTelemetry {
@@ -37,6 +41,8 @@ export interface VictimState {
     last_seen_sec_ago?: number;
     gt_error?: number;
     observations?: number;
+    detection_distance?: number;
+    detection_time?: number;
 }
 
 export interface ExploredCell {

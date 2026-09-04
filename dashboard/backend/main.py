@@ -211,7 +211,13 @@ async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 
         print(f"[MISSION] World generated successfully: {gen_result.stdout.strip()}")
 
         # 1. Start Simulator Stack
-        launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_swarm.sh")
+        if drone_count == 6:
+            launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_6_drone_lightweight.sh")
+            print("[MISSION] Using lightweight no-camera launcher for 6 drones")
+        else:
+            launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_swarm_rgbd.sh")
+            print(f"[MISSION] Using full RGB-D launcher for {drone_count} drones")
+            
         # Start in new process group
         sim_proc = subprocess.Popen(["bash", launch_script, map_id, str(drone_count)], preexec_fn=os.setsid)
         mission_manager.process_groups.append(os.getpgid(sim_proc.pid))
@@ -219,7 +225,7 @@ async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 
         # 2. Wait for Simulator Topics (up to 90s)
         print("[MISSION] Waiting for /drone_0/fmu/out/vehicle_odometry...")
         ready = False
-        for _ in range(30):
+        for _ in range(90):
             if mission_manager.state != "STARTING":
                 return
             res = subprocess.run(["bash", "-c", "source /opt/ros/jazzy/setup.bash && ros2 topic list"], capture_output=True, text=True)
@@ -236,18 +242,13 @@ async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 
         mission_manager.set_state("SIMULATOR_READY")
 
         # 3. Wait for EKF2 stabilization
-        print("[MISSION] Waiting 60s for EKF2 stabilization...")
-        for _ in range(60):
-            if mission_manager.state != "SIMULATOR_READY":
-                return
-            await asyncio.sleep(1)
+        print("[MISSION] Skipping artificial EKF2 stabilization wait (handled by px4_interface.py)...")
+
 
         mission_manager.set_state("QMIX_STARTING")
 
         # 4. Start QMIX Controller
-        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && ros2 run swarm_controller swarm_runner --map {map_id} --drones {drone_count}"
-        if drone_count == 6:
-            qmix_cmd += " --controller qmix"
+        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && export ROS_DISABLE_TYPE_HASH_CHECK=1 && ros2 run swarm_controller swarm_runner --map {map_id} --drones {drone_count} --controller qmix"
         qmix_proc = subprocess.Popen(["bash", "-c", qmix_cmd], preexec_fn=os.setsid)
         mission_manager.process_groups.append(os.getpgid(qmix_proc.pid))
 
@@ -298,6 +299,7 @@ class TelemetrySubscriber(Node):
 import cv2  # type: ignore
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image as RosImage
+from rclpy.qos import qos_profile_sensor_data
 
 # Shared global buffers for camera streams
 LATEST_FRAMES = {i: b"" for i in range(6)}
@@ -309,7 +311,7 @@ class CameraSubscriber(Node):
         self.loop = loop
         self.bridge = CvBridge()
         for i in range(6):
-            self.create_subscription(RosImage, f'/drone_{i}/camera/detection_image', lambda msg, d_id=i: self.img_callback(d_id, msg), 1)
+            self.create_subscription(RosImage, f'/drone_{i}/camera/detection_image', lambda msg, d_id=i: self.img_callback(d_id, msg), qos_profile_sensor_data)
 
     def img_callback(self, drone_id, msg):
         try:
@@ -450,7 +452,7 @@ async def mjpeg_generator(drone_id: int):
         if frame:
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        await asyncio.sleep(0.05)  # 20 FPS max
+        await asyncio.sleep(0.1)  # 10 FPS max — sufficient for visual demo
 
 from fastapi.responses import StreamingResponse
 

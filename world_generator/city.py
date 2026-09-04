@@ -302,7 +302,7 @@ def finalize_victims():
         xml += f"""
   <include>
     <name>{vid}</name>
-    <uri>model://rescue_randy_standing</uri>
+    <uri>model://casual_female</uri>
     <pose>{valid_x:.2f} {valid_y:.2f} 0.0 0 0 0</pose>
   </include>
 """

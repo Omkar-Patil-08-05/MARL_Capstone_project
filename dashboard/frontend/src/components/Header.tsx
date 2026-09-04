@@ -1,6 +1,22 @@
-import React from 'react';
-import { Activity, Radio, Wifi, WifiOff, Square, RefreshCcw, Map } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Activity, Radio, Wifi, WifiOff, Square, RefreshCcw, Map, Clock } from 'lucide-react';
 import type { MissionTelemetry, BackendMissionStatus } from '../types/telemetry';
+
+const Timer = () => {
+    const [seconds, setSeconds] = useState(0);
+    useEffect(() => {
+        const interval = setInterval(() => setSeconds(s => s + 1), 1000);
+        return () => clearInterval(interval);
+    }, []);
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return (
+        <span className="value-text" style={{ fontSize: '1rem', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Clock size={16} className="text-cyan" />
+            {m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}
+        </span>
+    );
+};
 
 interface HeaderProps {
     isConnected: boolean;
@@ -32,19 +48,17 @@ export function Header({ isConnected, telemetry, backendStatus, onStop, onComple
                     <span className="value-text text-cyan">{backendStatus.state}</span>
                 </div>
 
-                {telemetry && (
-                    <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '16px' }}>
-                        <span className="value-label">Progress</span>
-                        <span className="value-text" style={{ fontSize: '0.85rem' }}>
-                            Victims: {telemetry.victims_detected}/{telemetry.total_victims} | Cov: {telemetry.coverage.toFixed(1)}% | Step: {telemetry.decision_count}/{telemetry.max_decisions}
-                        </span>
-                    </div>
-                )}
-
                 <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '24px' }}>
                     <span className="value-label">Mission Status</span>
                     <span className="value-text text-cyan">{telemetry ? telemetry.status : backendStatus.state}</span>
                 </div>
+
+                {telemetry && telemetry.status === 'RUNNING' && (
+                    <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '24px' }}>
+                        <span className="value-label">Mission Timer</span>
+                        <Timer />
+                    </div>
+                )}
 
                 {backendStatus.state !== 'IDLE' && (
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

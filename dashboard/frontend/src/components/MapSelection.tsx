@@ -13,7 +13,7 @@ const DRONE_PALETTE = ['#00f2fe', '#4facfe', '#a78bfa', '#f472b6', '#fb923c', '#
 export function MapSelection({ registry, backendStatus, onStart }: MapSelectionProps) {
     const maps = Object.values(registry);
     const [selectedMapId, setSelectedMapId] = useState<string>(maps.length > 0 ? maps[0].id : '');
-    const [droneCount, setDroneCount] = useState<number>(2);
+    const [droneCount, setDroneCount] = useState<number>(6);
     const [victimCount, setVictimCount] = useState<number>(5);
 
     const selectedMap = registry[selectedMapId];
