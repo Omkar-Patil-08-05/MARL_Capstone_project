@@ -12,11 +12,13 @@ import { CoverageGraph } from './components/CoverageGraph';
 import { SwarmCoordinationStats } from './components/SwarmCoordinationStats';
 import { MissionResults } from './components/MissionResults';
 import { MissionSummary } from './components/MissionSummary';
+import { DatabaseViewer } from './components/DatabaseViewer';
 
 function App() {
     const { telemetry, worldData, mapRegistry, backendStatus, isConnected, alerts, droneHistory, coverageHistory, startMission, stopMission, completeMission, resetMission } = useTelemetry();
     const [activeView, setActiveView] = useState<'MAP' | 'CAMERA'>('MAP');
     const [showSummary, setShowSummary] = useState(true);
+    const [currentView, setCurrentView] = useState<'MISSION' | 'DATABASE'>('MISSION');
 
     const isMissionActive = backendStatus.state !== 'IDLE' && backendStatus.state !== 'STOPPED' && backendStatus.state !== 'ERROR';
 
@@ -29,22 +31,28 @@ function App() {
                 onStop={stopMission}
                 onComplete={completeMission}
                 onReset={resetMission}
+                currentView={currentView}
+                onToggleView={() => setCurrentView(v => v === 'MISSION' ? 'DATABASE' : 'MISSION')}
             />
 
-            {!isMissionActive && mapRegistry && (
-                <MapSelection
-                    registry={mapRegistry}
-                    backendStatus={backendStatus}
-                    onStart={startMission}
-                />
-            )}
-
-            {isMissionActive && (
+            {currentView === 'DATABASE' ? (
+                <DatabaseViewer />
+            ) : (
                 <>
-                    <MissionOverview
-                        telemetry={telemetry ? telemetry.mission : null}
-                        victims={telemetry ? telemetry.victims : []}
-                    />
+                    {!isMissionActive && mapRegistry && (
+                        <MapSelection
+                            registry={mapRegistry}
+                            backendStatus={backendStatus}
+                            onStart={startMission}
+                        />
+                    )}
+
+                    {isMissionActive && (
+                        <>
+                            <MissionOverview
+                                telemetry={telemetry ? telemetry.mission : null}
+                                victims={telemetry ? telemetry.victims : []}
+                            />
 
             <div style={{
                 display: 'grid',
@@ -108,10 +116,12 @@ function App() {
         </>
             )}
 
-            {backendStatus.error && (
-                <div style={{ color: 'var(--text-warning)', padding: '1rem', textAlign: 'center', backgroundColor: '#331111' }}>
-                    <strong>SYSTEM ERROR:</strong> {backendStatus.error}
-                </div>
+                    {backendStatus.error && (
+                        <div style={{ color: 'var(--text-warning)', padding: '1rem', textAlign: 'center', backgroundColor: '#331111' }}>
+                            <strong>SYSTEM ERROR:</strong> {backendStatus.error}
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

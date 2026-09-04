@@ -25,9 +25,11 @@ interface HeaderProps {
     onStop: () => void;
     onComplete: () => void;
     onReset: () => void;
+    currentView: 'MISSION' | 'DATABASE';
+    onToggleView: () => void;
 }
 
-export function Header({ isConnected, telemetry, backendStatus, onStop, onComplete, onReset }: HeaderProps) {
+export function Header({ isConnected, telemetry, backendStatus, onStop, onComplete, onReset, currentView, onToggleView }: HeaderProps) {
     const isLive = isConnected && telemetry !== null;
 
     return (
@@ -100,7 +102,25 @@ export function Header({ isConnected, telemetry, backendStatus, onStop, onComple
                         </button>
                     </div>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center' }}>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '12px', paddingLeft: '12px', borderLeft: '1px solid rgba(255,255,255,0.2)' }}>
+                    <button
+                        onClick={onToggleView}
+                        style={{
+                            background: currentView === 'DATABASE' ? 'var(--accent-cyan)' : 'transparent',
+                            color: currentView === 'DATABASE' ? 'black' : 'var(--accent-cyan)',
+                            border: '1px solid var(--accent-cyan)',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <Activity size={14} /> {currentView === 'DATABASE' ? 'BACK TO MISSION' : 'RESULTS DATABASE'}
+                    </button>
                     {isLive ? (
                         <div className="live-indicator">
                             <div className="live-dot" />
