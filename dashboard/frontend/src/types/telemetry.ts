@@ -19,12 +19,15 @@ export interface MissionTelemetry {
     decision_count: number;
     max_decisions: number;
     global_step_state?: string;
+    sim_time?: number;
+    rtf?: number;
     coverage: number;
     victims_detected: number;
     total_victims: number;
     explored_count: number;
     valid_count: number;
     safety_overrides: number;
+    camera_enabled?: boolean;
 }
 
 export interface VictimState {
@@ -60,6 +63,7 @@ export interface TelemetryPayload {
     tracked_victims?: VictimState[];
     active_map_id?: string;
     backend_status?: string;
+    camera_enabled?: boolean;
     coordination?: {
         active_frontiers: Record<string, [number, number]>;
         safety_holds: Record<string, string>;
@@ -101,6 +105,8 @@ export interface WorldVictim {
 }
 
 export interface WorldData {
+    id?: string;
+    name?: string;
     grid: {
         width: number;
         height: number;
@@ -111,10 +117,16 @@ export interface WorldData {
         height_m: number;
         origin_x: number;
         origin_y: number;
+        terrain_width_m?: number;
+        terrain_height_m?: number;
+        terrain_origin_x?: number;
+        terrain_origin_y?: number;
     };
     obstacles: WorldObstacle[];
     victims: WorldVictim[];
     drone_spawns: { id: string; x: number; y: number }[];
+    sectors?: { id: string; name: string; center: { x: number; y: number }; radius: number }[];
+    tree_visuals?: { x: number; y: number; scale: number }[];
 }
 
 export interface AlertEvent {
@@ -134,6 +146,12 @@ export interface MapRegistryEntry {
     meters_per_cell: number;
     victim_count: number;
     policy_compatible: boolean;
+    origin_x?: number;
+    origin_y?: number;
+    terrain_width_m?: number;
+    terrain_height_m?: number;
+    terrain_origin_x?: number;
+    terrain_origin_y?: number;
 }
 
 export type MapRegistry = Record<string, MapRegistryEntry>;

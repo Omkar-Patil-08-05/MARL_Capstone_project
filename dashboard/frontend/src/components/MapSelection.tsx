@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import type { MapRegistry, BackendMissionStatus } from '../types/telemetry';
-import { Map, Play, Loader, AlertTriangle, RotateCcw, Cpu, CheckCircle2, Users } from 'lucide-react';
+import { Map, Play, Loader, AlertTriangle, RotateCcw, Cpu, CheckCircle2, Users, Camera, Zap } from 'lucide-react';
 
 interface MapSelectionProps {
     registry: MapRegistry;
     backendStatus: BackendMissionStatus;
-    onStart: (mapId: string, droneCount: number, victimCount: number) => void;
+    onStart: (mapId: string, droneCount: number, victimCount: number, cameraEnabled: boolean) => void;
 }
 
 const DRONE_PALETTE = ['#00f2fe', '#4facfe', '#a78bfa', '#f472b6', '#fb923c', '#facc15', '#4ade80', '#2dd4bf'];
@@ -15,6 +15,7 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
     const [selectedMapId, setSelectedMapId] = useState<string>(maps.length > 0 ? maps[0].id : '');
     const [droneCount, setDroneCount] = useState<number>(6);
     const [victimCount, setVictimCount] = useState<number>(5);
+    const [cameraEnabled, setCameraEnabled] = useState<boolean>(false);
 
     const selectedMap = registry[selectedMapId];
     const isStarting = ['STARTING', 'SIMULATOR_READY', 'QMIX_STARTING'].includes(backendStatus.state);
@@ -81,7 +82,14 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                                     }}>SELECTED</div>
                                 )}
                                 <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '4px' }}>{m.name}</div>
-                                <div className="text-muted" style={{ fontSize: '0.8rem' }}>{m.grid_width}×{m.grid_height} Grid</div>
+                                <div className="text-muted" style={{ fontSize: '0.8rem', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    <span>{m.grid_width}×{m.grid_height} Grid</span>
+                                    {m.id === 'forest_sar' || m.id === 'forest_dense_candidate' ? (
+                                        <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>200m SAR / 500m Terrain (Dense Woodland)</span>
+                                    ) : (
+                                        <span style={{ color: 'var(--accent-cyan)' }}>100m Urban Disaster</span>
+                                    )}
+                                </div>
                             </div>
                         );
                     })}
@@ -89,20 +97,28 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
 
                 {/* Map Details */}
                 {selectedMap && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: selectedMap.terrain_width_m && selectedMap.terrain_width_m > 200 ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap: '12px', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
                         <div className="value-display">
-                            <span className="value-label">Dimensions</span>
-                            <span className="value-text" style={{ fontSize: '1rem' }}>{selectedMap.grid_width} × {selectedMap.grid_height}</span>
+                            <span className="value-label">Search Grid</span>
+                            <span className="value-text" style={{ fontSize: '0.95rem' }}>{selectedMap.grid_width} × {selectedMap.grid_height} ({selectedMap.meters_per_cell}m/cell)</span>
                         </div>
                         <div className="value-display">
-                            <span className="value-label">Physical Area</span>
-                            <span className="value-text" style={{ fontSize: '1rem' }}>
+                            <span className="value-label">Operational Area</span>
+                            <span className="value-text" style={{ fontSize: '0.95rem' }}>
                                 {selectedMap.grid_width * selectedMap.meters_per_cell}m × {selectedMap.grid_height * selectedMap.meters_per_cell}m
                             </span>
                         </div>
+                        {selectedMap.terrain_width_m && selectedMap.terrain_width_m > 200 && (
+                            <div className="value-display">
+                                <span className="value-label">Terrain World</span>
+                                <span className="value-text" style={{ fontSize: '0.95rem', color: 'var(--accent-green)' }}>
+                                    {selectedMap.terrain_width_m}m × {selectedMap.terrain_height_m}m
+                                </span>
+                            </div>
+                        )}
                         <div className="value-display">
-                            <span className="value-label">Victims</span>
-                            <span className="value-text" style={{ fontSize: '1rem', color: '#ff5533' }}>{victimCount}</span>
+                            <span className="value-label">Victims Target</span>
+                            <span className="value-text" style={{ fontSize: '0.95rem', color: '#ff5533' }}>{victimCount}</span>
                         </div>
                     </div>
                 )}
@@ -205,10 +221,68 @@ export function MapSelection({ registry, backendStatus, onStart }: MapSelectionP
                     ))}
                 </div>
 
+                {/* Perception & Speed Mode Selector */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Camera size={14} /> SENSOR & SIMULATION SPEED MODE
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <button
+                            type="button"
+                            onClick={() => setCameraEnabled(false)}
+                            style={{
+                                padding: '12px 14px',
+                                borderRadius: '8px',
+                                border: !cameraEnabled ? '2px solid var(--accent-cyan)' : '1px solid var(--border-light)',
+                                background: !cameraEnabled ? 'rgba(0, 242, 254, 0.12)' : 'rgba(255,255,255,0.03)',
+                                color: !cameraEnabled ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px',
+                                transition: 'all 0.15s'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.88rem' }}>
+                                <Zap size={16} /> TACTICAL KINEMATICS (HIGH-SPEED)
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: !cameraEnabled ? 'var(--text-main)' : 'var(--text-muted)', lineHeight: '1.3' }}>
+                                Unthrottled physics lockstep, rapid multi-agent waypoint traversal, omnidirectional proximity detection.
+                            </div>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setCameraEnabled(true)}
+                            style={{
+                                padding: '12px 14px',
+                                borderRadius: '8px',
+                                border: cameraEnabled ? '2px solid var(--accent-green)' : '1px solid var(--border-light)',
+                                background: cameraEnabled ? 'rgba(0, 255, 136, 0.12)' : 'rgba(255,255,255,0.03)',
+                                color: cameraEnabled ? 'var(--accent-green)' : 'var(--text-muted)',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px',
+                                transition: 'all 0.15s'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.88rem' }}>
+                                <Camera size={16} /> OPTICAL PERCEPTION (RGB-D)
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: cameraEnabled ? 'var(--text-main)' : 'var(--text-muted)', lineHeight: '1.3' }}>
+                                Synchronized optical camera feeds, real-time computer vision, YOLOv8 victim localization.
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
                 {/* START BUTTON */}
                 <button
                     disabled={!canStart}
-                    onClick={() => canStart && onStart(selectedMapId, droneCount, victimCount)}
+                    onClick={() => canStart && onStart(selectedMapId, droneCount, victimCount, cameraEnabled)}
                     style={{
                         marginTop: '4px',
                         padding: '14px 24px',

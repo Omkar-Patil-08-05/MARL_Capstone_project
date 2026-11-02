@@ -9,13 +9,15 @@ from swarm_controller.configs import DroneConfig, MissionConfig
 from swarm_controller.drone_agent import DroneAgent, FlightState
 from swarm_controller.qmix_mission_controller import QMIXMissionController
 
+from swarm_controller.grid_world_transform import GridWorldTransform
+
 class SwarmOrchestratorNode(QMIXMissionController):
     """
     Subclasses QMIXMissionController to safely tick and publish telemetry for D2/D3
     without breaking the PyTorch dimension constraints for D0/D1.
     """
-    def __init__(self, mission_config, qmix_configs, det_configs, checkpoint_path, max_decisions=300):
-        super().__init__(mission_config, qmix_configs, checkpoint_path, max_decisions=max_decisions)
+    def __init__(self, mission_config, qmix_configs, det_configs, checkpoint_path, max_decisions=300, meta_file=None):
+        super().__init__(mission_config, qmix_configs, checkpoint_path, max_decisions=max_decisions, meta_file=meta_file)
         self.get_logger().info(f"SwarmOrchestrator: {len(qmix_configs)} QMIX agents, {len(det_configs)} Deterministic agents.")
 
         self.det_agents = [DroneAgent(self, config, mission_config) for config in det_configs]
@@ -149,10 +151,11 @@ class StandaloneDeterministicNode(Node):
 
         drones_data = []
         for agent in self.agents:
-            lx, ly, lz = agent.px4.current_position
-            wx = lx + agent.config.world_spawn_x
-            wy = ly + agent.config.world_spawn_y
-            wz = lz
+            local_north, local_east, local_down = agent.px4.current_position
+            wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                local_north, local_east, agent.config.world_spawn_x, agent.config.world_spawn_y
+            )
+            wz = -local_down + getattr(agent.config, 'world_spawn_z', 0.2)
             gx, gy = GridWorldTransform.world_to_grid(wx, wy)
 
             drones_data.append({
@@ -160,7 +163,7 @@ class StandaloneDeterministicNode(Node):
                 "state": agent.state.name,
                 "x": round(float(wx), 2),
                 "y": round(float(wy), 2),
-                "z": round(-float(wz), 2),
+                "z": round(float(wz), 2),
                 "grid_x": int(gx),
                 "grid_y": int(gy),
                 "action": "DETERMINISTIC",
@@ -202,17 +205,71 @@ def main(args=None):
     workspace_dir = "/home/capstone/capstone_project_antigravity"
     if parsed.map == "realistic_sar":
         meta_file = os.path.join(workspace_dir, "worlds/generated_world_meta.json")
+        GridWorldTransform.set_bounds(width=25, height=25, meters_per_cell=4.0, origin_x=0.0, origin_y=0.0)
+        mission_config = MissionConfig(
+            enable_apf=False,
+            control_rate_hz=20,
+            takeoff_altitude=15.0,
+            goal_tolerance=1.9,
+            min_waypoint_dwell_ticks=2,
+            estimator_timeout=900,
+            waypoint_sim_timeout=15.0,
+            waypoint_wall_watchdog=90.0,
+            min_waypoint_dwell_sec=0.1,
+            stall_detection_sec=6.0
+        )
+    elif parsed.map == "forest_dense_candidate":
+        meta_file = os.path.join(workspace_dir, "worlds/forest_dense_candidate_meta.json")
+        GridWorldTransform.set_bounds(width=25, height=25, meters_per_cell=8.0, origin_x=-180.0, origin_y=-20.0)
+        # Dense Forest Candidate: rapid waypoint progression (3.2m goal tolerance for 8m cells, 0.1s dwell)
+        # for high-speed continuous coverage without idle halts
+        mission_config = MissionConfig(
+            enable_apf=False,
+            control_rate_hz=20,
+            takeoff_altitude=15.0,
+            goal_tolerance=3.2,
+            min_waypoint_dwell_ticks=2,
+            estimator_timeout=900,
+            waypoint_sim_timeout=20.0,
+            waypoint_wall_watchdog=90.0,
+            min_waypoint_dwell_sec=0.1,
+            stall_detection_sec=6.0
+        )
+    elif parsed.map == "forest_sar":
+        meta_file = os.path.join(workspace_dir, "worlds/forest_sar_meta.json")
+        GridWorldTransform.set_bounds(width=25, height=25, meters_per_cell=8.0, origin_x=-180.0, origin_y=-20.0)
+        # Forest SAR: rapid waypoint progression (3.2m goal tolerance for 8m cells, 0.1s dwell)
+        # for high-speed continuous coverage without idle halts
+        mission_config = MissionConfig(
+            enable_apf=False,
+            control_rate_hz=20,
+            takeoff_altitude=15.0,
+            goal_tolerance=3.2,
+            min_waypoint_dwell_ticks=2,
+            estimator_timeout=900,
+            waypoint_sim_timeout=20.0,
+            waypoint_wall_watchdog=90.0,
+            min_waypoint_dwell_sec=0.1,
+            stall_detection_sec=6.0
+        )
     else:
         meta_file = os.path.join(workspace_dir, "worlds/earthquake_world_meta.json")
+        GridWorldTransform.set_bounds(width=25, height=25, meters_per_cell=4.0, origin_x=0.0, origin_y=0.0)
+        mission_config = MissionConfig(
+            enable_apf=False,
+            control_rate_hz=20,
+            takeoff_altitude=15.0,
+            goal_tolerance=1.9,
+            min_waypoint_dwell_ticks=2,
+            estimator_timeout=900,
+            waypoint_sim_timeout=15.0,
+            waypoint_wall_watchdog=90.0,
+            min_waypoint_dwell_sec=0.1,
+            stall_detection_sec=6.0
+        )
 
     with open(meta_file, 'r') as f:
         meta = json.load(f)
-
-    mission_config = MissionConfig(
-        enable_apf=False,
-        control_rate_hz=20,
-        takeoff_altitude=15.0
-    )
 
     all_configs = []
     for i in range(parsed.drones):
@@ -223,8 +280,8 @@ def main(args=None):
             system_id=i+1,
             world_spawn_x=float(s['x']),
             world_spawn_y=float(s['y']),
-            world_spawn_z=0.2,
-            world_yaw=0.0
+            world_spawn_z=float(s.get('z', 0.2)),
+            world_yaw=float(s.get('yaw', 0.0))
         )
         all_configs.append(c)
 
@@ -237,23 +294,24 @@ def main(args=None):
         node = StandaloneDeterministicNode(mission_config, all_configs)
     elif parsed.controller == 'qmix':
         # Pure QMIX scaling for N drones
-        node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300)
+        node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300, meta_file=meta_file)
     elif parsed.drones == 2:
         # Strictly identical to qmix_drone_test.py for 2 drones baseline
-        node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300)
+        node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300, meta_file=meta_file)
     else:
         # 3+ drones -> orchestrator delegates 0,1 to QMIX and 2+ to Deterministic
         qmix_configs = all_configs[0:2]
         det_configs = all_configs[2:]
-        node = SwarmOrchestratorNode(mission_config, qmix_configs, det_configs, checkpoint_path, max_decisions=300)
+        node = SwarmOrchestratorNode(mission_config, qmix_configs, det_configs, checkpoint_path, max_decisions=300, meta_file=meta_file)
 
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

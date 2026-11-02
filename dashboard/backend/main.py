@@ -7,6 +7,7 @@ import signal
 import time
 import secrets
 import sys
+import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -81,11 +82,13 @@ class MissionManager:
         self.state = "IDLE"
         self.active_map_id = None
         self.process_groups = []
+        self.gui_process = None
         self.error_msg = None
         self.lock = threading.Lock()
         self.mission_start_time = None
         self.drone_count = 0
         self.active_mission_id = None
+        self.camera_enabled = False
         self.results_file = os.path.join(os.path.dirname(__file__), "results", "mission_history.json")
         os.makedirs(os.path.dirname(self.results_file), exist_ok=True)
         if not os.path.exists(self.results_file):
@@ -167,31 +170,28 @@ class MissionManager:
             self.log_result("STOPPED")
 
         print("[MISSION] Stopping all process groups...")
+        if self.gui_process and self.gui_process.poll() is None:
+            try:
+                os.killpg(os.getpgid(self.gui_process.pid), signal.SIGTERM)
+            except Exception as e:
+                print(f"Error terminating gui_process: {e}")
+            self.gui_process = None
+
+        for pgid in self.process_groups:
+            try:
+                os.killpg(pgid, signal.SIGTERM)
+            except Exception as e:
+                pass
+        await asyncio.sleep(1.0)
         for pgid in self.process_groups:
             try:
                 os.killpg(pgid, signal.SIGKILL)
             except Exception as e:
-                print(f"Error killing pgid {pgid}: {e}")
+                pass
         self.process_groups = []
-
-        # Fallback system cleanup just to be completely safe
-        subprocess.run('pkill -9 -f "MicroXRCEAgent" || true', shell=True)
-        subprocess.run('pkill -9 -f "px4" || true', shell=True)
-        subprocess.run('pkill -9 -f "gz sim" || true', shell=True)
-        subprocess.run('pkill -9 -f "ruby.*gz" || true', shell=True)
-        subprocess.run('pkill -9 -f "qmix_drone_test" || true', shell=True)
-        subprocess.run('pkill -9 -f "swarm_runner" || true', shell=True)
-        subprocess.run('pkill -9 -f "yolo_human_detection" || true', shell=True)
 
         # Stop ros2 daemon to clear phantom topic caches
         subprocess.run('source /opt/ros/jazzy/setup.bash && ros2 daemon stop || true', shell=True, executable='/bin/bash')
-
-        # Wait for processes to genuinely terminate
-        for _ in range(15):
-            res = subprocess.run('pgrep -f "gz sim|px4|MicroXRCEAgent|swarm_runner|yolo_human_detection"', shell=True, capture_output=True, text=True)
-            if not res.stdout.strip():
-                break
-            await asyncio.sleep(1)
 
         global _LATEST_TELEMETRY, _TELEMETRY_RECEIVED
         _LATEST_TELEMETRY = None
@@ -205,11 +205,12 @@ class MissionManager:
 
 mission_manager = MissionManager()
 
-async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 5):
+async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 5, seed: Optional[int] = None, max_decisions: Optional[int] = None, lightweight: bool = False):
     try:
         mission_manager.set_state("STARTING")
         mission_manager.active_map_id = map_id
         mission_manager.drone_count = drone_count
+        mission_manager.camera_enabled = not lightweight
         mission_manager.mission_start_time = time.time()
         mission_manager.active_mission_id = str(uuid.uuid4())
         
@@ -223,34 +224,53 @@ async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 
         })
 
         # 0. Generate world with requested victim count
-        gen_seed = secrets.randbelow(1_000_000)
-        gen_script = os.path.expanduser("~/capstone_project_antigravity/world_generator/generate_world.py")
-        gen_cmd = ["python3", gen_script, "--victims", str(victim_count), "--seed", str(gen_seed)]
-        print(f"[MISSION] Generating world: victims={victim_count}, seed={gen_seed}")
+        candidate_world_path = os.path.expanduser("~/capstone_project_antigravity/worlds/forest_dense_candidate.sdf")
+        if map_id == "forest_dense_candidate" and os.path.exists(candidate_world_path):
+            print(f"[MISSION] Preserving existing verified candidate world: {candidate_world_path}")
+        else:
+            gen_seed = seed if seed is not None else secrets.randbelow(1_000_000)
+            if map_id in ["forest_sar", "forest_dense_candidate"]:
+                gen_script = os.path.expanduser("~/capstone_project_antigravity/world_generator/generate_forest_world.py")
+                gen_cmd = [
+                    "python3", gen_script,
+                    "--victims", str(victim_count),
+                    "--seed", str(gen_seed),
+                    "--trees", "950",
+                    "--output-dir", os.path.expanduser("~/capstone_project_antigravity/worlds"),
+                    "--output-name", map_id
+                ]
+            else:
+                gen_script = os.path.expanduser("~/capstone_project_antigravity/world_generator/generate_world.py")
+                gen_cmd = ["python3", gen_script, "--victims", str(victim_count), "--seed", str(gen_seed)]
+            print(f"[MISSION] Generating world for {map_id}: victims={victim_count}, seed={gen_seed}")
 
-        gen_result = subprocess.run(
-            gen_cmd,
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
+            gen_result = await asyncio.to_thread(
+                subprocess.run,
+                gen_cmd,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
 
-        if gen_result.returncode != 0:
-            error_msg = f"World generation failed (exit {gen_result.returncode}): {gen_result.stderr.strip()}"
-            print(f"[MISSION] {error_msg}")
-            mission_manager.set_state("ERROR", error_msg)
-            with mission_manager.lock:
-                mission_manager.state = "IDLE"
-                mission_manager.active_map_id = None
-                mission_manager.mission_start_time = None
-            return
+            if gen_result.returncode != 0:
+                error_msg = f"World generation failed (exit {gen_result.returncode}): {gen_result.stderr.strip()}"
+                print(f"[MISSION] {error_msg}")
+                mission_manager.set_state("ERROR", error_msg)
+                with mission_manager.lock:
+                    mission_manager.state = "IDLE"
+                    mission_manager.active_map_id = None
+                    mission_manager.mission_start_time = None
+                return
 
-        print(f"[MISSION] World generated successfully: {gen_result.stdout.strip()}")
+            print(f"[MISSION] World generated successfully: {gen_result.stdout.strip()}")
 
         # 1. Start Simulator Stack
-        if drone_count == 6:
+        if lightweight or os.environ.get("USE_LIGHTWEIGHT_LAUNCH") == "1":
             launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_6_drone_lightweight.sh")
-            print("[MISSION] Using lightweight no-camera launcher for 6 drones")
+            print(f"[MISSION] Using high-speed tactical kinematics launcher for {drone_count} drones (Proximity Mode)")
+        elif drone_count == 2:
+            launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_swarm_rgbd.sh")
+            print(f"[MISSION] Using RGB-D perception launcher for {drone_count} drones (Configuration C)")
         else:
             launch_script = os.path.expanduser("~/capstone_project_antigravity/scripts/launch_swarm_rgbd.sh")
             print(f"[MISSION] Using full RGB-D launcher for {drone_count} drones")
@@ -265,15 +285,22 @@ async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 
         for _ in range(90):
             if mission_manager.state != "STARTING":
                 return
-            res = subprocess.run(["bash", "-c", "source /opt/ros/jazzy/setup.bash && ros2 topic list"], capture_output=True, text=True)
+            res = await asyncio.to_thread(
+                subprocess.run,
+                ["bash", "-c", "source /opt/ros/jazzy/setup.bash && export ROS_LOCALHOST_ONLY=1 && ros2 topic list"],
+                capture_output=True,
+                text=True
+            )
             if all(f"/drone_{i}/fmu/out/vehicle_odometry" in res.stdout for i in range(drone_count)):
                 ready = True
                 break
             await asyncio.sleep(3)
 
         if not ready:
-            mission_manager.set_state("ERROR", "Timed out waiting for simulator topics.")
-            await mission_manager.stop_mission()
+            err_msg = "Timed out waiting for simulator topics (odometry/px4)."
+            print(f"[MISSION] {err_msg}")
+            mission_manager.set_state("ERROR", err_msg)
+            await mission_manager.stop_mission(final_state="ERROR")
             return
 
         mission_manager.set_state("SIMULATOR_READY")
@@ -285,7 +312,8 @@ async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 
         mission_manager.set_state("QMIX_STARTING")
 
         # 4. Start QMIX Controller
-        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && export ROS_DISABLE_TYPE_HASH_CHECK=1 && ros2 run swarm_controller swarm_runner --map {map_id} --drones {drone_count} --controller qmix"
+        max_dec_env = f"export MAX_DECISIONS={max_decisions} && " if max_decisions else ""
+        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && export ROS_DISABLE_TYPE_HASH_CHECK=1 && export PX4_GZ_WORLD=\"{map_id}\" && {max_dec_env}ros2 run swarm_controller swarm_runner --map {map_id} --drones {drone_count} --controller qmix --ros-args -p use_sim_time:=true"
         qmix_proc = subprocess.Popen(["bash", "-c", qmix_cmd], preexec_fn=os.setsid)
         mission_manager.process_groups.append(os.getpgid(qmix_proc.pid))
 
@@ -293,7 +321,7 @@ async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 
 
     except Exception as e:
         mission_manager.set_state("ERROR", str(e))
-        await mission_manager.stop_mission()
+        await mission_manager.stop_mission(final_state="ERROR")
 
 
 # ---------------------------------------------------------
@@ -319,6 +347,9 @@ class TelemetrySubscriber(Node):
                 data["active_map_id"] = mission_manager.active_map_id
                 data["active_mission_id"] = mission_manager.active_mission_id
                 data["backend_status"] = mission_manager.state
+                data["camera_enabled"] = getattr(mission_manager, 'camera_enabled', False)
+                if "mission" in data and isinstance(data["mission"], dict):
+                    data["mission"]["camera_enabled"] = getattr(mission_manager, 'camera_enabled', False)
 
                 # Check for mission complete
                 if data.get("mission", {}).get("status") == "COMPLETE":
@@ -375,8 +406,25 @@ from sensor_msgs.msg import Image as RosImage
 from rclpy.qos import qos_profile_sensor_data
 
 # Shared global buffers for camera streams
-LATEST_FRAMES = {i: b"" for i in range(6)}
+LATEST_DET_FRAMES = {i: b"" for i in range(6)}
+LATEST_RAW_FRAMES = {i: b"" for i in range(6)}
+LAST_FRAME_TIME = {i: 0.0 for i in range(6)}
 frame_lock = threading.Lock()
+
+def generate_placeholder_frame(drone_id: int, status_text: str) -> bytes:
+    img = np.zeros((240, 320, 3), dtype=np.uint8)
+    img[:] = (20, 18, 14)
+    for y in range(0, 240, 40):
+        cv2.line(img, (0, y), (320, y), (35, 30, 25), 1)
+    for x in range(0, 320, 40):
+        cv2.line(img, (x, 0), (x, 240), (35, 30, 25), 1)
+    cv2.putText(img, f"DRONE {drone_id} SENSOR", (12, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (254, 242, 0), 1, cv2.LINE_AA)
+    cv2.drawMarker(img, (160, 120), (80, 80, 80), cv2.MARKER_CROSS, 20, 1)
+    color = (0, 255, 136) if "LIVE" in status_text else (0, 200, 255) if "STARTING" in status_text else (100, 100, 255)
+    cv2.putText(img, status_text, (20, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.48, color, 1, cv2.LINE_AA)
+    cv2.putText(img, "OPTICAL / DOWNWARD FOV", (12, 222), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (120, 120, 120), 1, cv2.LINE_AA)
+    ret, buf = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 75])
+    return buf.tobytes() if ret else b""
 
 class CameraSubscriber(Node):
     def __init__(self, loop):
@@ -384,33 +432,70 @@ class CameraSubscriber(Node):
         self.loop = loop
         self.bridge = CvBridge()
         for i in range(6):
-            self.create_subscription(RosImage, f'/drone_{i}/camera/detection_image', lambda msg, d_id=i: self.img_callback(d_id, msg), qos_profile_sensor_data)
+            self.create_subscription(
+                RosImage,
+                f'/drone_{i}/camera/detection_image',
+                lambda msg, d_id=i: self.det_callback(d_id, msg),
+                qos_profile_sensor_data
+            )
+            self.create_subscription(
+                RosImage,
+                f'/drone_{i}/camera/image',
+                lambda msg, d_id=i: self.raw_callback(d_id, msg),
+                qos_profile_sensor_data
+            )
 
-    def img_callback(self, drone_id, msg):
+    def det_callback(self, drone_id, msg):
         try:
             cv_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             ret, buffer = cv2.imencode('.jpg', cv_img, [cv2.IMWRITE_JPEG_QUALITY, 80])
             if ret:
                 with frame_lock:
-                    LATEST_FRAMES[drone_id] = buffer.tobytes()
-        except Exception as e:
+                    LATEST_DET_FRAMES[drone_id] = buffer.tobytes()
+                    LAST_FRAME_TIME[drone_id] = time.time()
+        except Exception:
+            pass
+
+    def raw_callback(self, drone_id, msg):
+        try:
+            cv_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+            ret, buffer = cv2.imencode('.jpg', cv_img, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            if ret:
+                with frame_lock:
+                    LATEST_RAW_FRAMES[drone_id] = buffer.tobytes()
+                    LAST_FRAME_TIME[drone_id] = time.time()
+        except Exception:
             pass
 
 def ros_spin_thread(loop):
-    rclpy.init(args=None)
-    telemetry_node = TelemetrySubscriber(loop)
-    camera_node = CameraSubscriber(loop)
-    executor = rclpy.executors.MultiThreadedExecutor()
-    executor.add_node(telemetry_node)
-    executor.add_node(camera_node)
     try:
+        if not rclpy.ok():
+            rclpy.init(args=None)
+    except Exception as e:
+        print(f"ROS 2 init error (proceeding if already initialized): {e}")
+    try:
+        telemetry_node = TelemetrySubscriber(loop)
+        camera_node = CameraSubscriber(loop)
+        executor = rclpy.executors.MultiThreadedExecutor()
+        executor.add_node(telemetry_node)
+        executor.add_node(camera_node)
         executor.spin()
     except Exception as e:
         print(f"ROS 2 subscriber thread exception: {e}")
     finally:
-        telemetry_node.destroy_node()
-        camera_node.destroy_node()
-        rclpy.shutdown()
+        try:
+            telemetry_node.destroy_node()
+        except Exception:
+            pass
+        try:
+            camera_node.destroy_node()
+        except Exception:
+            pass
+        try:
+            if rclpy.ok():
+                rclpy.shutdown()
+        except Exception:
+            pass
 
 # ---------------------------------------------------------
 # FastAPI App Lifecycle & Endpoints
@@ -506,9 +591,11 @@ def dict_factory(cursor, row):
 
 def query_db(query, args=(), one=False):
     import sqlite3
-    conn = sqlite3.connect(db_writer.db_path)
+    conn = sqlite3.connect(db_writer.db_path, timeout=15.0)
     conn.row_factory = dict_factory
     try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout=5000;")
         cur = conn.cursor()
         cur.execute(query, args)
         rv = cur.fetchall()
@@ -591,6 +678,120 @@ def get_db_safety(mission_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.get("/api/db/live")
+def get_live_mission_snapshot():
+    """
+    Returns a real-time snapshot of the currently active mission.
+    Sourced from in-memory _LATEST_TELEMETRY (written by ROS subscriber),
+    augmented with lightweight DB lookups for episode/victim counts.
+    Returns 204 (no content) when no mission is active.
+    """
+    global _LATEST_TELEMETRY
+    
+    state = mission_manager.state
+    active_id = mission_manager.active_mission_id
+    active_map = mission_manager.active_map_id
+    
+    # No active mission — return empty so frontend shows historical view
+    if state in ["IDLE", "STOPPED", "ERROR"] or not active_id:
+        return {"active": False, "state": state, "camera_enabled": False}
+    
+    snapshot = {
+        "active": True,
+        "state": state,
+        "mission_id": active_id,
+        "map_id": active_map,
+        "drone_count": mission_manager.drone_count,
+        "camera_enabled": getattr(mission_manager, 'camera_enabled', False),
+        "start_time": mission_manager.mission_start_time,
+        "elapsed": round(time.time() - mission_manager.mission_start_time, 1) if mission_manager.mission_start_time else 0,
+        # Telemetry-derived fields (live, from latest WS broadcast)
+        "coverage": 0.0,
+        "victims_detected": 0,
+        "total_victims": 0,
+        "decision_count": 0,
+        "max_decisions": 0,
+        "safety_overrides": 0,
+        "sim_rtf": None,
+        "drones": [],
+        "victims": [],
+        "telemetry_age_sec": None,
+    }
+    
+    if _LATEST_TELEMETRY:
+        try:
+            data = json.loads(_LATEST_TELEMETRY)
+            mission = data.get("mission", {})
+            ts = data.get("timestamp", 0)
+            snapshot["coverage"]         = round(mission.get("coverage", 0.0), 2)
+            snapshot["victims_detected"] = mission.get("victims_detected", 0)
+            snapshot["total_victims"]    = mission.get("total_victims", 0)
+            snapshot["decision_count"]   = mission.get("decision_count", 0)
+            snapshot["max_decisions"]    = mission.get("max_decisions", 0)
+            snapshot["safety_overrides"] = mission.get("safety_overrides", 0)
+            snapshot["sim_rtf"]          = mission.get("rtf")
+            snapshot["telemetry_age_sec"] = round(time.time() - ts, 2) if ts else None
+            
+            snapshot["drones"] = [
+                {
+                    "id": d.get("id"),
+                    "state": d.get("state"),
+                    "action": d.get("action"),
+                    "x": round(d.get("x", 0), 2),
+                    "y": round(d.get("y", 0), 2),
+                    "z": round(d.get("z", 0), 2),
+                    "safety_override": d.get("safety_override", False),
+                }
+                for d in data.get("drones", [])
+            ]
+            
+            snapshot["victims"] = [
+                {
+                    "id": v.get("id"),
+                    "state": v.get("state", "UNDETECTED"),
+                    "detected": v.get("detected", False),
+                    "world_x": round(v.get("world_x", 0), 2),
+                    "world_y": round(v.get("world_y", 0), 2),
+                    "detected_by": v.get("detected_by"),
+                    "confidence": v.get("confidence"),
+                    "source": v.get("source"),
+                    "gt_error": v.get("gt_error"),
+                }
+                for v in data.get("victims", [])
+            ]
+        except Exception:
+            pass
+
+    # Also pull lightweight DB stats for this mission (non-blocking, read-only)
+    try:
+        ep_row = query_db(
+            "SELECT COUNT(*) as c, AVG(coverage) as avg_cov FROM episodes WHERE mission_id = ?",
+            [active_id], one=True
+        )
+        if ep_row:
+            snapshot["episodes_recorded"] = ep_row.get("c", 0)
+            snapshot["avg_episode_coverage"] = round(ep_row.get("avg_cov") or 0.0, 2)
+        
+        telem_row = query_db(
+            "SELECT COUNT(*) as c FROM telemetry WHERE mission_id = ?",
+            [active_id], one=True
+        )
+        if telem_row:
+            snapshot["telemetry_rows"] = telem_row.get("c", 0)
+            
+        det_row = query_db(
+            "SELECT COUNT(*) as c FROM detection_events WHERE mission_id = ?",
+            [active_id], one=True
+        )
+        if det_row:
+            snapshot["detection_events"] = det_row.get("c", 0)
+    except Exception:
+        pass
+    
+    return snapshot
+
+
 import math
 @app.get("/api/db/evaluation/authoritative")
 def get_authoritative_evaluation():
@@ -639,10 +840,41 @@ def get_authoritative_evaluation():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class GenerateRequest(BaseModel):
+    map_id: str
+    victim_count: int = 5
+    seed: Optional[int] = None
+
+@app.post("/api/world/generate")
+async def generate_world_endpoint(req: GenerateRequest):
+    if req.map_id not in get_map_registry():
+        raise HTTPException(status_code=400, detail="Invalid map_id")
+    seed = req.seed if req.seed is not None else secrets.randbelow(1_000_000)
+    if req.map_id in ["forest_sar", "forest_dense_candidate"]:
+        gen_script = os.path.expanduser("~/capstone_project_antigravity/world_generator/generate_forest_world.py")
+        gen_cmd = [
+            "python3", gen_script,
+            "--victims", str(req.victim_count),
+            "--seed", str(seed),
+            "--trees", "950",
+            "--output-dir", os.path.expanduser("~/capstone_project_antigravity/worlds"),
+            "--output-name", req.map_id
+        ]
+    else:
+        gen_script = os.path.expanduser("~/capstone_project_antigravity/world_generator/generate_world.py")
+        gen_cmd = ["python3", gen_script, "--victims", str(req.victim_count), "--seed", str(seed)]
+    res = subprocess.run(gen_cmd, capture_output=True, text=True, timeout=60)
+    if res.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Generation failed: {res.stderr.strip()}")
+    return {"status": "success", "map_id": req.map_id, "seed": seed, "output": res.stdout.strip()}
+
 class StartRequest(BaseModel):
     map_id: str
     drone_count: int = 2
     victim_count: int = 5
+    seed: Optional[int] = None
+    max_decisions: Optional[int] = None
+    lightweight: Optional[bool] = False
 
 @app.post("/api/mission/start")
 async def start_mission(req: StartRequest):
@@ -652,9 +884,11 @@ async def start_mission(req: StartRequest):
         raise HTTPException(status_code=400, detail="drone_count must be 1–6")
     if req.victim_count < 1 or req.victim_count > 10:
         raise HTTPException(status_code=400, detail="victim_count must be 1–10")
+    if req.max_decisions is not None and (req.max_decisions < 1 or req.max_decisions > 300):
+        raise HTTPException(status_code=400, detail="max_decisions must be 1–300")
 
     with mission_manager.lock:
-        if mission_manager.state not in ["IDLE", "COMPLETE", "ERROR"]:
+        if mission_manager.state not in ["IDLE", "STOPPED", "COMPLETE", "ERROR"]:
             raise HTTPException(status_code=400, detail="Mission already active or starting")
 
     # Fully clean up any previous completed/crashed mission state
@@ -662,8 +896,8 @@ async def start_mission(req: StartRequest):
     global _LAST_TIMESTAMP
     _LAST_TIMESTAMP = None
 
-    asyncio.create_task(start_mission_task(req.map_id, req.drone_count, req.victim_count))
-    return {"status": "starting", "map_id": req.map_id, "drone_count": req.drone_count, "victim_count": req.victim_count}
+    asyncio.create_task(start_mission_task(req.map_id, req.drone_count, req.victim_count, req.seed, req.max_decisions, req.lightweight or False))
+    return {"status": "starting", "map_id": req.map_id, "drone_count": req.drone_count, "victim_count": req.victim_count, "seed": req.seed, "max_decisions": req.max_decisions, "lightweight": req.lightweight}
 
 @app.post("/api/mission/stop")
 async def api_mission_stop():
@@ -690,7 +924,8 @@ def get_mission_status():
     return {
         "state": mission_manager.state,
         "active_map_id": mission_manager.active_map_id,
-        "error": mission_manager.error_msg
+        "error": mission_manager.error_msg,
+        "process_groups": list(mission_manager.process_groups)
     }
 
 @app.post("/api/mission/view_simulation")
@@ -698,25 +933,85 @@ async def view_simulation():
     if mission_manager.state not in ["SIMULATOR_READY", "QMIX_STARTING", "RUNNING", "COMPLETE"]:
         raise HTTPException(status_code=400, detail="Simulation is not currently running")
 
+    # 1. Single-instance protection via tracked process
+    if mission_manager.gui_process is not None and mission_manager.gui_process.poll() is None:
+        return {"status": "already_running", "message": "Gazebo GUI is already running"}
+
+    # 2. Single-instance protection via system pgrep
+    res = subprocess.run(["pgrep", "-f", "gz sim -g"], capture_output=True, text=True)
+    if res.stdout.strip():
+        return {"status": "already_running", "message": "Gazebo GUI is already active on system"}
+
     try:
-        # Launch Gazebo GUI in the background attached to the running server session
-        # We redirect output to /dev/null to prevent blocking
-        subprocess.Popen(
-            "export GZ_IP=127.0.0.1 && gz sim -g > /dev/null 2>&1",
-            shell=True,
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        gui_env = os.environ.copy()
+        gui_env["GZ_IP"] = "127.0.0.1"
+        resource_paths = [
+            os.path.join(project_root, "models"),
+            os.path.join(project_root, "assets_real"),
+            os.path.join(project_root, "assets_real", "victims"),
+            os.path.join(project_root, "assets_real", "Trees"),
+            os.path.join(project_root, "generated_worlds"),
+            os.path.join(project_root, "worlds"),
+            "/home/capstone/PX4-Autopilot/Tools/simulation/gz/models",
+            "/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds"
+        ]
+        if "GZ_SIM_RESOURCE_PATH" in gui_env and gui_env["GZ_SIM_RESOURCE_PATH"]:
+            gui_env["GZ_SIM_RESOURCE_PATH"] = ":".join(resource_paths) + ":" + gui_env["GZ_SIM_RESOURCE_PATH"]
+        else:
+            gui_env["GZ_SIM_RESOURCE_PATH"] = ":".join(resource_paths)
+
+        if "DISPLAY" not in gui_env or not gui_env["DISPLAY"]:
+            gui_env["DISPLAY"] = ":0"
+        gui_env["QT_QPA_PLATFORM"] = "xcb"
+
+        gui_config_path = os.path.join(os.path.dirname(__file__), "lightweight_gui.config")
+        gui_cmd = ["gz", "sim", "-g"]
+        if os.path.exists(gui_config_path):
+            gui_cmd.extend(["--gui-config", gui_config_path])
+
+        # Non-blocking GUI launch attached to running simulation server
+        proc = subprocess.Popen(
+            gui_cmd,
+            env=gui_env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             preexec_fn=os.setsid
         )
-        return {"status": "success", "message": "Gazebo GUI launched"}
+        mission_manager.gui_process = proc
+        return {"status": "success", "message": "Gazebo GUI launched successfully", "pid": proc.pid}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to launch Gazebo GUI: {str(e)}")
 
 async def mjpeg_generator(drone_id: int):
     while True:
+        frame = None
+        now = time.time()
         with frame_lock:
-            frame = LATEST_FRAMES.get(drone_id)
+            det = LATEST_DET_FRAMES.get(drone_id)
+            raw = LATEST_RAW_FRAMES.get(drone_id)
+            last_t = LAST_FRAME_TIME.get(drone_id, 0.0)
+            # Accommodate Gazebo simulation load / low RTF (8.0s wall window prevents false stale frames)
+            is_fresh = (now - last_t) < 8.0
+
+            if is_fresh and det:
+                frame = det
+            elif is_fresh and raw:
+                frame = raw
+            elif (det or raw) and not is_fresh:
+                frame = generate_placeholder_frame(drone_id, "STALE FRAME - RECONNECTING")
+            else:
+                if mission_manager.state in ["STARTING", "SIMULATOR_READY", "QMIX_STARTING"]:
+                    frame = generate_placeholder_frame(drone_id, "CAMERA STARTING...")
+                elif mission_manager.state == "RUNNING":
+                    frame = generate_placeholder_frame(drone_id, "CONNECTING TO SENSOR...")
+                else:
+                    frame = generate_placeholder_frame(drone_id, "NO SIGNAL / STANDBY")
+
         if frame:
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            content_length = len(frame)
+            header = f"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: {content_length}\r\n\r\n".encode("utf-8")
+            yield header + frame + b"\r\n"
         await asyncio.sleep(0.1)  # 10 FPS max — sufficient for visual demo
 
 from fastapi.responses import StreamingResponse
@@ -725,7 +1020,16 @@ from fastapi.responses import StreamingResponse
 async def camera_stream(drone_id: int):
     if drone_id < 0 or drone_id > 5:
         raise HTTPException(status_code=400, detail="Invalid drone ID")
-    return StreamingResponse(mjpeg_generator(drone_id), media_type="multipart/x-mixed-replace; boundary=frame")
+    return StreamingResponse(
+        mjpeg_generator(drone_id),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 @app.websocket("/ws/telemetry")
 async def websocket_endpoint(websocket: WebSocket):

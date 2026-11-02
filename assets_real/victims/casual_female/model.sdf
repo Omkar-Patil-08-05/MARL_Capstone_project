@@ -18,7 +18,7 @@
                         <uri>meshes/casual_female.dae</uri>
                     </mesh>
                 </geometry>
-                <plugin filename="ignition-gazebo-thermal-system" name="ignition::gazebo::systems::Thermal">
+                <plugin filename="gz-sim-thermal-system" name="gz::sim::systems::Thermal">
                     <heat_signature>materials/textures/RescueRandy_Thermal.png</heat_signature>
                     <max_temp>310</max_temp>
                 </plugin>

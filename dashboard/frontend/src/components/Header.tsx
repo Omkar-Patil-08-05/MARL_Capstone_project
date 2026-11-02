@@ -2,18 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { Activity, Radio, WifiOff, Square, RefreshCcw, Map, Clock } from 'lucide-react';
 import type { MissionTelemetry, BackendMissionStatus } from '../types/telemetry';
 
-const Timer = () => {
+const Timer = ({ simTime }: { simTime?: number }) => {
     const [seconds, setSeconds] = useState(0);
     useEffect(() => {
         const interval = setInterval(() => setSeconds(s => s + 1), 1000);
         return () => clearInterval(interval);
     }, []);
+
+    let simFormatted: string | null = null;
+    if (simTime !== undefined && simTime > 0) {
+        const sm = Math.floor(simTime / 60);
+        const ss = Math.floor(simTime % 60);
+        simFormatted = `${sm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+    }
+
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
+    const wallFormatted = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
     return (
-        <span className="value-text" style={{ fontSize: '1rem', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span className="value-text" style={{ fontSize: '0.95rem', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Clock size={16} className="text-cyan" />
-            {m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}
+            {simFormatted ? (
+                <span>
+                    {simFormatted} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>(Wall {wallFormatted})</span>
+                </span>
+            ) : (
+                wallFormatted
+            )}
         </span>
     );
 };
@@ -57,8 +73,8 @@ export function Header({ isConnected, telemetry, backendStatus, onStop, onComple
 
                 {telemetry && telemetry.status === 'RUNNING' && (
                     <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '24px' }}>
-                        <span className="value-label">Mission Timer</span>
-                        <Timer />
+                        <span className="value-label">Mission Timer (Sim / Wall)</span>
+                        <Timer simTime={telemetry.sim_time} />
                     </div>
                 )}
 

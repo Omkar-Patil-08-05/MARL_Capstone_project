@@ -29,9 +29,9 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 CTRL_ROOT = os.path.join(PROJECT_ROOT, "drone_ws", "src", "marl_controller", "marl_controller")
 sys.path.insert(0, CTRL_ROOT)
 
-from state_builder import StateBuilder
-from qmix_inference import QMIXInference
-from action_mapper import ActionMapper
+from state_builder import StateBuilder  # type: ignore
+from qmix_inference import QMIXInference  # type: ignore
+from action_mapper import ActionMapper  # type: ignore
 
 MODEL_PATH = os.path.join(
     PROJECT_ROOT, "marl_drone_project", "models",

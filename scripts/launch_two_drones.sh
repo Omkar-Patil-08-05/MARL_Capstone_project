@@ -12,6 +12,7 @@ cleanup() {
     pkill -f "px4" || true
     pkill -9 -f "gz sim" || true
     pkill -9 -f "ruby.*gz" || true
+    pkill -f "ros_gz_bridge" || true
     echo "Cleanup complete."
 }
 trap cleanup EXIT INT TERM
@@ -21,6 +22,7 @@ pkill -f "MicroXRCEAgent" || true
 pkill -f "px4" || true
 pkill -9 -f "gz sim" || true
 pkill -9 -f "ruby.*gz" || true
+pkill -f "ros_gz_bridge" || true
 sleep 2
 
 echo "Starting MicroXRCEAgent on UDP 8888..."
@@ -39,6 +41,12 @@ if [ "$MAP_ID" == "realistic_sar" ]; then
 elif [ "$MAP_ID" == "earthquake_world" ]; then
     META_FILE="$WORKSPACE_DIR/worlds/earthquake_world_meta.json"
     export PX4_GZ_WORLD="earthquake_world"
+elif [ "$MAP_ID" == "forest_sar" ]; then
+    META_FILE="$WORKSPACE_DIR/worlds/forest_sar_meta.json"
+    export PX4_GZ_WORLD="forest_sar"
+elif [ "$MAP_ID" == "forest_dense_candidate" ]; then
+    META_FILE="$WORKSPACE_DIR/worlds/forest_dense_candidate_meta.json"
+    export PX4_GZ_WORLD="forest_dense_candidate"
 else
     echo "Error: Unsupported map ID: $MAP_ID"
     exit 1
@@ -50,11 +58,13 @@ if [ ! -f "$META_FILE" ]; then
 fi
 D0_X=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][0]['x'])")
 D0_Y=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][0]['y'])")
+D0_Z=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][0].get('z', 0.2))")
 D1_X=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][1]['x'])")
 D1_Y=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][1]['y'])")
+D1_Z=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][1].get('z', 0.2))")
 
-echo "Drone 0 spawn: ($D0_X, $D0_Y)"
-echo "Drone 1 spawn: ($D1_X, $D1_Y)"
+echo "Drone 0 spawn: ($D0_X, $D0_Y, $D0_Z)"
+echo "Drone 1 spawn: ($D1_X, $D1_Y, $D1_Z)"
 
 # Setup PX4 Gazebo environment
 source /home/capstone/PX4-Autopilot/build/px4_sitl_default/rootfs/gz_env.sh
@@ -65,7 +75,7 @@ export GZ_SIM_RESOURCE_PATH="/home/capstone/capstone_project_antigravity/models:
 # 1. Start Gazebo Server (force Mesa EGL for Intel GPU — NVIDIA EGL is broken)
 echo "Starting Gazebo Server with headless rendering (Mesa EGL)..."
 # export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json
-gz sim -s -v 4 -r ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf > /tmp/gz.log 2>&1 &
+gz sim -s -v 4 -r --headless-rendering ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf > /tmp/gz.log 2>&1 &
 GZ_PID=$!
 
 # 2. Wait 10 seconds for Gazebo and PX4 to fully initialize
@@ -92,15 +102,27 @@ if [ $CLOCK_ACTIVE -eq 0 ]; then
 fi
 echo "Gazebo clock is active! Proceeding."
 
+# Bridge simulation clock to ROS 2 for use_sim_time nodes
+echo "Starting ROS-Gazebo Bridge for /clock..."
+source /opt/ros/jazzy/setup.bash
+ros2 run ros_gz_bridge parameter_bridge /clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock > /tmp/bridge.log 2>&1 &
+sleep 2
+
 export PX4_GZ_STANDALONE=1
 export PX4_PARAM_NAV_DLL_ACT=0
 export PX4_SYS_AUTOSTART=4001
 export PX4_SIMULATOR=gz
 
-# Moderate physical speed enhancements for demonstration
-export PX4_PARAM_MPC_XY_CRUISE=5.0
-export PX4_PARAM_MPC_XY_VEL_MAX=8.0
-export PX4_PARAM_MPC_JERK_AUTO=4.0
+# Environment-specific velocity profiling
+if [ "$MAP_ID" == "forest_sar" ] || [ "$MAP_ID" == "forest_dense_candidate" ]; then
+    export PX4_PARAM_MPC_XY_CRUISE=7.5
+    export PX4_PARAM_MPC_XY_VEL_MAX=10.0
+    export PX4_PARAM_MPC_JERK_AUTO=8.0
+else
+    export PX4_PARAM_MPC_XY_CRUISE=5.0
+    export PX4_PARAM_MPC_XY_VEL_MAX=8.0
+    export PX4_PARAM_MPC_JERK_AUTO=4.0
+fi
 
 PX4_DIR="/home/capstone/PX4-Autopilot"
 BUILD_DIR="${PX4_DIR}/build/px4_sitl_default"
@@ -114,7 +136,7 @@ echo "Starting PX4 Instance 0..."
 (
     cd /tmp/px4_instance_0
     export PX4_GZ_MODEL="x500"
-    export PX4_GZ_MODEL_POSE="$D0_X,$D0_Y,0.2,0,0,0"
+    export PX4_GZ_MODEL_POSE="$D0_X,$D0_Y,$D0_Z,0,0,0"
     export PX4_UXRCE_DDS_NS="drone_0"
     ${BUILD_DIR}/bin/px4 -i 0 -d ${BUILD_DIR}/etc > out.log 2> err.log
 ) &
@@ -127,7 +149,7 @@ echo "Starting PX4 Instance 1..."
 (
     cd /tmp/px4_instance_1
     export PX4_GZ_MODEL="x500"
-    export PX4_GZ_MODEL_POSE="$D1_X,$D1_Y,0.2,0,0,0"
+    export PX4_GZ_MODEL_POSE="$D1_X,$D1_Y,$D1_Z,0,0,0"
     export PX4_UXRCE_DDS_NS="drone_1"
     ${BUILD_DIR}/bin/px4 -i 1 -d ${BUILD_DIR}/etc > out.log 2> err.log
 ) &
@@ -148,9 +170,8 @@ echo "Checking drone_1 odometry topic:"
 timeout 5 ros2 topic echo /drone_1/fmu/out/vehicle_odometry --once || echo "DRONE 1 ODOMETRY TIMEOUT!"
 echo "Validation complete."
 
-echo "Starting YOLO Human Detection Nodes..."
-bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export VISION_MODE=yolo && ~/yolo_venv/bin/python /home/capstone/capstone_project_antigravity/drone_ws/install/swarm_controller/lib/swarm_controller/yolo_human_detection --ros-args -p drone_id:=0" > /tmp/yolo_0.log 2>&1 &
-bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export VISION_MODE=yolo && ~/yolo_venv/bin/python /home/capstone/capstone_project_antigravity/drone_ws/install/swarm_controller/lib/swarm_controller/yolo_human_detection --ros-args -p drone_id:=1" > /tmp/yolo_1.log 2>&1 &
+# Note: Standard x500 has no camera; YOLO nodes not started in pure physics configuration
+echo "Skipping YOLO nodes (pure physics x500 configuration)."
 
 echo "All instances started. Press Ctrl+C to stop."
 sleep infinity

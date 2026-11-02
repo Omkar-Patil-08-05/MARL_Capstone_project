@@ -69,6 +69,7 @@ function App() {
                             key={drone.id}
                             drone={drone}
                             activeView={activeView}
+                            cameraEnabled={telemetry?.mission.camera_enabled ?? false}
                             onToggleCamera={() => setActiveView(v => v === 'MAP' ? 'CAMERA' : 'MAP')}
                         />
                     ))}

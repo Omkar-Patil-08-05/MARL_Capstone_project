@@ -52,6 +52,12 @@ if [ "$MAP_ID" == "realistic_sar" ]; then
 elif [ "$MAP_ID" == "earthquake_world" ]; then
     META_FILE="$WORKSPACE_DIR/worlds/earthquake_world_meta.json"
     export PX4_GZ_WORLD="earthquake_world"
+elif [ "$MAP_ID" == "forest_sar" ]; then
+    META_FILE="$WORKSPACE_DIR/worlds/forest_sar_meta.json"
+    export PX4_GZ_WORLD="forest_sar"
+elif [ "$MAP_ID" == "forest_dense_candidate" ]; then
+    META_FILE="$WORKSPACE_DIR/worlds/forest_dense_candidate_meta.json"
+    export PX4_GZ_WORLD="forest_dense_candidate"
 else
     echo "Error: Unsupported map ID: $MAP_ID"
     exit 1
@@ -65,22 +71,27 @@ fi
 # Extract spawn coordinates dynamically
 declare -a DRONE_X
 declare -a DRONE_Y
+declare -a DRONE_Z
 for ((i=0; i<$DRONE_COUNT; i++)); do
     X=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][$i]['x'])")
     Y=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][$i]['y'])")
+    Z=$(python3 -c "import json; print(json.load(open('$META_FILE'))['drone_base']['spawns'][$i].get('z', 0.2))")
     DRONE_X[$i]=$X
     DRONE_Y[$i]=$Y
-    echo "Drone $i spawn: ($X, $Y)"
+    DRONE_Z[$i]=$Z
+    echo "Drone $i spawn: ($X, $Y, $Z)"
 done
 
 # Setup PX4 Gazebo environment
 source /home/capstone/PX4-Autopilot/build/px4_sitl_default/rootfs/gz_env.sh
 export PX4_GZ_WORLDS="/home/capstone/capstone_project_antigravity/worlds"
-export GZ_SIM_RESOURCE_PATH="/home/capstone/capstone_project_antigravity/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds:/home/capstone/capstone_project_antigravity/assets_real/victims"
+export GZ_SIM_RESOURCE_PATH="/home/capstone/capstone_project_antigravity/models:/home/capstone/capstone_project_antigravity/assets_real:/home/capstone/capstone_project_antigravity/assets_real/victims:/home/capstone/PX4-Autopilot/Tools/simulation/gz/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds:/home/capstone/capstone_project_antigravity/generated_worlds:/home/capstone/capstone_project_antigravity/worlds"
 
-# 1. Start Gazebo Server (headless by default)
+# 1. Start Gazebo Server (with headless rendering for camera sensors)
 echo "Starting Gazebo Server with headless rendering..."
-gz sim -s -v 4 -r ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf > /tmp/gz.log 2>&1 &
+export __NV_PRIME_RENDER_OFFLOAD=1
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+gz sim -s -v 4 -r --headless-rendering ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf > /tmp/gz.log 2>&1 &
 GZ_PID=$!
 
 # 2. Wait for stabilization
@@ -105,13 +116,28 @@ if [ $CLOCK_ACTIVE -eq 0 ]; then
 fi
 echo "Gazebo clock is active! Proceeding."
 
+# Spawn world overview camera for offscreen 3D world recording
+echo "Spawning World Overview Camera for offscreen 3D rendering..."
+gz service -s /world/${PX4_GZ_WORLD}/create --reqtype gz.msgs.EntityFactory --reptype gz.msgs.Boolean --timeout 3000 --req 'sdf_filename: "/home/capstone/capstone_project_antigravity/models/world_overview_camera/model.sdf"' || echo "World overview camera spawn warning (continuing)"
+
 export PX4_GZ_STANDALONE=1
 export PX4_PARAM_NAV_DLL_ACT=0
 export PX4_SYS_AUTOSTART=4100
 export PX4_SIMULATOR=gz
-export PX4_PARAM_MPC_XY_CRUISE=5.0
-export PX4_PARAM_MPC_XY_VEL_MAX=8.0
-export PX4_PARAM_MPC_JERK_AUTO=4.0
+
+# Environment-specific velocity profiling:
+# In forest_sar, 8m cell size warrants high-speed kinematics for responsive search
+if [ "$MAP_ID" == "forest_sar" ] || [ "$MAP_ID" == "forest_dense_candidate" ]; then
+    export PX4_PARAM_MPC_XY_CRUISE=12.0
+    export PX4_PARAM_MPC_XY_VEL_MAX=16.0
+    export PX4_PARAM_MPC_ACC_HOR=6.0
+    export PX4_PARAM_MPC_JERK_AUTO=16.0
+    export PX4_PARAM_MPC_Z_VEL_MAX_UP=3.5
+else
+    export PX4_PARAM_MPC_XY_CRUISE=5.0
+    export PX4_PARAM_MPC_XY_VEL_MAX=8.0
+    export PX4_PARAM_MPC_JERK_AUTO=4.0
+fi
 
 export PX4_GZ_MODELS="/home/capstone/capstone_project_antigravity/models"
 
@@ -123,21 +149,43 @@ for ((i=0; i<$DRONE_COUNT; i++)); do
     mkdir -p /tmp/px4_instance_$i
 done
 
-# Launch PX4 instances concurrently
+# Launch PX4 instances with stagger to allow clean EKF2 initialization
 for ((i=0; i<$DRONE_COUNT; i++)); do
     echo "Starting PX4 Instance $i..."
     (
         cd /tmp/px4_instance_$i
+        export PX4_GZ_WORLD="$PX4_GZ_WORLD"
         # NEW: RGB-D down model instead of standard x500
         export PX4_GZ_MODEL="x500_rgbd_down"
-        export PX4_GZ_MODEL_POSE="${DRONE_X[$i]},${DRONE_Y[$i]},0.2,0,0,0"
+        export PX4_GZ_MODEL_POSE="${DRONE_X[$i]},${DRONE_Y[$i]},${DRONE_Z[$i]},0,0,0"
         export PX4_UXRCE_DDS_NS="drone_$i"
         ${BUILD_DIR}/bin/px4 -i $i -d ${BUILD_DIR}/etc > out.log 2> err.log
     ) &
+    if [ $i -lt $((DRONE_COUNT - 1)) ]; then
+        echo "Waiting 10s before launching next PX4 instance..."
+        sleep 10
+    fi
 done
 
-echo "=== EXPLICIT X500_RGBD_DOWN EXISTENCE VALIDATION ==="
-gz model --list | grep x500_rgbd_down || echo "NO x500_rgbd_down MODELS FOUND!"
+# START RGB-D PERCEPTION INFRASTRUCTURE IMMEDIATELY
+echo "Starting ROS-Gazebo Bridge for $DRONE_COUNT drones..."
+BRIDGE_TOPICS="/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock /world_camera/image@sensor_msgs/msg/Image[gz.msgs.Image /world/${PX4_GZ_WORLD}/model/world_overview_camera/link/link/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image "
+BRIDGE_REMAPS="--ros-args -r /world/${PX4_GZ_WORLD}/model/world_overview_camera/link/link/sensor/camera/image:=/world_camera/image "
+for ((i=0; i<$DRONE_COUNT; i++)); do
+    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image "
+    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image "
+    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo "
+    BRIDGE_TOPICS+="/model/x500_rgbd_down_${i}/pose@geometry_msgs/msg/PoseStamped[gz.msgs.Pose "
+    
+    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/image:=/drone_${i}/camera/image "
+    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/depth_image:=/drone_${i}/camera/depth_image "
+    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/camera_info:=/drone_${i}/camera/camera_info "
+    BRIDGE_REMAPS+="-r /model/x500_rgbd_down_${i}/pose:=/model/drone_${i}/pose "
+done
+
+source /opt/ros/jazzy/setup.bash
+ros2 run ros_gz_bridge parameter_bridge $BRIDGE_TOPICS $BRIDGE_REMAPS > /tmp/bridge.log 2>&1 &
+sleep 4
 
 echo "=== ROS 2 TELEMETRY VALIDATION ==="
 source /opt/ros/jazzy/setup.bash
@@ -145,38 +193,16 @@ source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash
 
 for ((i=0; i<$DRONE_COUNT; i++)); do
     echo "Checking drone_$i odometry topic:"
-    timeout 5 ros2 topic echo /drone_$i/fmu/out/vehicle_odometry --once || echo "DRONE $i ODOMETRY TIMEOUT!"
+    timeout 5 ros2 topic echo /drone_$i/fmu/out/vehicle_odometry --once || echo "DRONE $i ODOMETRY WAITING..."
 done
 echo "Validation complete."
-
-# START RGB-D PERCEPTION INFRASTRUCTURE
-
-echo "Starting ROS-Gazebo Bridge for $DRONE_COUNT drones..."
-BRIDGE_TOPICS=""
-BRIDGE_REMAPS="--ros-args "
-for ((i=0; i<$DRONE_COUNT; i++)); do
-    BRIDGE_TOPICS+="/world/realistic_sar/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image "
-    BRIDGE_TOPICS+="/world/realistic_sar/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image "
-    BRIDGE_TOPICS+="/world/realistic_sar/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo "
-    BRIDGE_TOPICS+="/model/x500_rgbd_down_${i}/pose@geometry_msgs/msg/PoseStamped[gz.msgs.Pose "
-    
-    BRIDGE_REMAPS+="-r /world/realistic_sar/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/image:=/drone_${i}/camera/image "
-    BRIDGE_REMAPS+="-r /world/realistic_sar/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/depth_image:=/drone_${i}/camera/depth_image "
-    BRIDGE_REMAPS+="-r /world/realistic_sar/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/camera_info:=/drone_${i}/camera/camera_info "
-    BRIDGE_REMAPS+="-r /model/x500_rgbd_down_${i}/pose:=/model/drone_${i}/pose "
-done
-
-# We have to wrap this in a bash -c because we need to properly evaluate BRIDGE_ARGS unquoted, but wait, we can just run it directly
-source /opt/ros/jazzy/setup.bash
-ros2 run ros_gz_bridge parameter_bridge $BRIDGE_TOPICS $BRIDGE_REMAPS > /tmp/bridge.log 2>&1 &
-sleep 5
 
 echo "Starting Centralized YOLO Perception Node..."
 bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && ~/yolo_venv/bin/python3 /home/capstone/capstone_project_antigravity/drone_ws/src/swarm_controller/swarm_controller/swarm_perception_node.py" > /tmp/central_yolo.log 2>&1 &
 sleep 2
 
 echo "Starting RGB-D Victim Localizer..."
-bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && python3 /home/capstone/capstone_project_antigravity/drone_ws/src/swarm_controller/swarm_controller/rgbd_victim_localizer.py" > /tmp/localizer.log 2>&1 &
+bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export WORLD_META_PATH=\"$META_FILE\" && export DEPTH_SYNC_TOLERANCE=0.6 && python3 /home/capstone/capstone_project_antigravity/drone_ws/src/swarm_controller/swarm_controller/rgbd_victim_localizer.py" > /tmp/localizer.log 2>&1 &
 
 echo "All instances started. Press Ctrl+C to stop."
 sleep infinity

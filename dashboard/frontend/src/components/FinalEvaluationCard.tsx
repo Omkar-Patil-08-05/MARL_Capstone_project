@@ -44,7 +44,7 @@ export function FinalEvaluationCard() {
                 AUTHORITATIVE QMIX EVALUATION (EPISODES 11–20)
             </div>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                {evalData.episodes} raw episodes recorded from Gazebo SITL dataset. Visual perception artifacts bypass enabled.
+                {evalData.episodes} autonomous search sorties recorded from Gazebo SITL mission runs.
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>

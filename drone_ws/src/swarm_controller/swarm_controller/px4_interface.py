@@ -1,3 +1,5 @@
+import math
+import time as _pytime
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 from px4_msgs.msg import OffboardControlMode, TrajectorySetpoint, VehicleCommand, VehicleOdometry, VehicleStatus
@@ -13,7 +15,7 @@ class PX4Interface:
             reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.VOLATILE,
             history=HistoryPolicy.KEEP_LAST,
-            depth=1
+            depth=5
         )
         
         qos_profile_reliable = QoSProfile(
@@ -38,32 +40,59 @@ class PX4Interface:
         self.vehicle_status_subscriber = self.node.create_subscription(
             VehicleStatus, f'{ns}/fmu/out/vehicle_status_v1', self._vehicle_status_callback, qos_profile)
             
-        # Telemetry State
+        # Telemetry State (authoritative from vehicle_status)
         self.nav_state: int = VehicleStatus.NAVIGATION_STATE_MAX
         self.arming_state: int = VehicleStatus.ARMING_STATE_DISARMED
+        self.pre_flight_checks_pass: bool = False
         self.current_position: List[float] = [0.0, 0.0, 0.0]
         self.current_velocity: List[float] = [0.0, 0.0, 0.0]
         self.connected: bool = False
+        self.odometry_count: int = 0
+        self.status_count: int = 0
+        self.last_odometry_time_ns: int = 0
+        self.last_odometry_wall_time: float = 0.0
+        self.last_status_wall_time: float = 0.0
+        self.current_sim_time: float = 0.0
         
     def _vehicle_status_callback(self, msg: VehicleStatus) -> None:
         self.nav_state = msg.nav_state
         self.arming_state = msg.arming_state
+        self.pre_flight_checks_pass = msg.pre_flight_checks_pass
+        self.status_count += 1
+        self.last_status_wall_time = _pytime.time()
         self.connected = True
         
     def _vehicle_odometry_callback(self, msg: VehicleOdometry) -> None:
-        self.current_position = [msg.position[0], msg.position[1], msg.position[2]]
-        self.current_velocity = [msg.velocity[0], msg.velocity[1], msg.velocity[2]]
-        
-        # HACK: Bypass VehicleStatus failure due to Jazzy type hash / size mismatch
+        self.current_position = [float(msg.position[0]), float(msg.position[1]), float(msg.position[2])]
+        self.current_velocity = [float(msg.velocity[0]), float(msg.velocity[1]), float(msg.velocity[2])]
+        self.odometry_count += 1
+        self.last_odometry_time_ns = self.node.get_clock().now().nanoseconds
+        self.last_odometry_wall_time = _pytime.time()
+        # msg.timestamp is in microseconds from simulation clock
+        if msg.timestamp > 0:
+            self.current_sim_time = float(msg.timestamp) * 1e-6
         self.connected = True
-        self.nav_state = VehicleStatus.NAVIGATION_STATE_OFFBOARD
-        self.arming_state = VehicleStatus.ARMING_STATE_ARMED
         
     def is_connected(self) -> bool:
-        return self.connected
+        if self.odometry_count == 0:
+            return False
+        now = _pytime.time()
+        return (now - self.last_odometry_wall_time) < 4.0
         
     def is_estimator_ready(self) -> bool:
-        return self.current_position != [0.0, 0.0, 0.0] and self.current_position[2] != 0.0
+        """
+        Estimator readiness requires verified reception of multiple odometry frames,
+        finite 3D coordinates, and timestamp freshness within 2.0 seconds.
+        Does not depend on non-zero altitude, correctly supporting ground-level takeoff.
+        """
+        if self.odometry_count < 5:
+            return False
+        if not all(math.isfinite(c) for c in self.current_position):
+            return False
+        now = _pytime.time()
+        if (now - self.last_odometry_wall_time) > 2.5:
+            return False
+        return True
         
     def is_armed(self) -> bool:
         return self.arming_state == VehicleStatus.ARMING_STATE_ARMED

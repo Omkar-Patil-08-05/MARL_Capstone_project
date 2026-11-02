@@ -15,12 +15,13 @@ class MovementState(Enum):
     MOVING = "MOVING"
 
 class Victim:
-    def __init__(self, v_id, grid_x, grid_y, world_x, world_y, profile_config, random_gen):
+    def __init__(self, v_id, grid_x, grid_y, world_x, world_y, profile_config, random_gen, world_z=0.1):
         self.id = v_id
         self.grid_x = grid_x
         self.grid_y = grid_y
         self.world_x = world_x
         self.world_y = world_y
+        self.world_z = world_z
         
         self.state = VictimState.UNDETECTED
         self.movement_state = MovementState.RESTING
@@ -48,6 +49,7 @@ class Victim:
             "y": self.grid_y,
             "world_x": self.world_x,
             "world_y": self.world_y,
+            "world_z": self.world_z,
             "detected": self.state == VictimState.DETECTED or self.state == VictimState.RESCUED,
             "state": self.state.value,
             "movement_state": self.movement_state.value,
@@ -131,7 +133,18 @@ class VictimManager:
         
         self.waypoint_tolerance = 0.5 # meters
         self.gz_update_interval = 1.0 # Throttle Gazebo service calls to 1 Hz to prevent performance drop
-        self.last_update_time = time.time()
+        self.last_update_time = None
+
+    def _get_current_time(self) -> float:
+        """Returns the current simulation time in seconds from ROS clock, or falls back to wall clock."""
+        if self.node is not None:
+            try:
+                now_ns = self.node.get_clock().now().nanoseconds
+                if now_ns > 0:
+                    return now_ns * 1e-9
+            except Exception:
+                pass
+        return time.time()
 
     def parse_metadata(self, metadata):
         victims_meta = metadata.get("victims", [])
@@ -143,6 +156,7 @@ class VictimManager:
             grid_y = v_meta["grid"]["y"]
             world_x = v_meta["world"]["x"]
             world_y = v_meta["world"]["y"]
+            world_z = v_meta["world"].get("z", 0.1)
             
             # Assign varied behavior profiles based on index for variety
             if idx == 0:
@@ -156,12 +170,12 @@ class VictimManager:
             else:
                 p_name = "wanderer"
                 
-            self.victims[v_id] = Victim(v_id, grid_x, grid_y, world_x, world_y, self.profiles[p_name], self.rng)
+            self.victims[v_id] = Victim(v_id, grid_x, grid_y, world_x, world_y, self.profiles[p_name], self.rng, world_z=world_z)
 
     def spawn_all(self):
         """Spawns all victims into Gazebo using the rescue_randy_sitting model."""
         for v_id, victim in self.victims.items():
-            self.node.get_logger().info(f"[VictimManager] Spawning {v_id} at world({victim.world_x:.1f}, {victim.world_y:.1f}) with profile {victim.profile['movement_enabled']}")
+            self.node.get_logger().info(f"[VictimManager] Spawning {v_id} at world({victim.world_x:.1f}, {victim.world_y:.1f}, {victim.world_z:.1f}) with profile {victim.profile['movement_enabled']}")
             
             # Using the casual_female standing human model
             model_path = "/home/capstone/capstone_project_antigravity/assets_real/victims/casual_female/model.sdf"
@@ -169,7 +183,7 @@ class VictimManager:
                 'gz', 'service', '-s', f'/world/{self.world_name}/create',
                 '--reqtype', 'gz.msgs.EntityFactory',
                 '--reptype', 'gz.msgs.Boolean',
-                '--req', f'sdf_filename: "{model_path}", name: "{v_id}", pose: {{position: {{x: {victim.world_x}, y: {victim.world_y}, z: 0.1}}}}'
+                '--req', f'sdf_filename: "{model_path}", name: "{v_id}", pose: {{position: {{x: {victim.world_x}, y: {victim.world_y}, z: {victim.world_z}}}}}'
             ]
             subprocess.Popen(cmd)
             time.sleep(0.1)
@@ -192,7 +206,7 @@ class VictimManager:
             self.victims[v_id].state = VictimState.DETECTED
             self.victims[v_id].detected_by = detected_by
             self.victims[v_id].detection_distance = detection_distance
-            self.victims[v_id].detection_time = time.time()
+            self.victims[v_id].detection_time = self._get_current_time()
             self.node.get_logger().info(f"[VictimManager] Ground truth {v_id} marked as DETECTED by {detected_by} at {detection_distance:.1f}m!")
             return True
         return False
@@ -240,8 +254,36 @@ class VictimManager:
 
     def update(self):
         """Main update loop. Should be called periodically from the mission controller."""
-        current_time = time.time()
+        current_time = self._get_current_time()
+        
+        # Guard against uninitialized clock
+        if current_time <= 0.0:
+            return
+            
+        # First update initializes baseline without stepping
+        if self.last_update_time is None or self.last_update_time <= 0.0:
+            self.last_update_time = current_time
+            for victim in self.victims.values():
+                victim.last_gz_update_time = current_time
+            return
+            
+        # Clock reset or rewind: resynchronize baseline without advancing
+        if current_time < self.last_update_time:
+            self.last_update_time = current_time
+            return
+
         dt = current_time - self.last_update_time
+        
+        # Simulation is paused or zero elapsed time: do not advance victims
+        if dt == 0.0:
+            return
+            
+        # Large discontinuous time jump (>2.0s):
+        # Resync time baseline without applying a teleporting delta step
+        if dt > 2.0:
+            self.last_update_time = current_time
+            return
+            
         self.last_update_time = current_time
         
         # Update track statuses

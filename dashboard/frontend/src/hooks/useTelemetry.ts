@@ -241,12 +241,17 @@ export function useTelemetry() {
         prevTelemetry.current = current;
     };
 
-    const startMission = async (mapId: string, droneCount: number = 2, victimCount: number = 5) => {
+    const startMission = async (mapId: string, droneCount: number = 2, victimCount: number = 5, cameraEnabled: boolean = false) => {
         try {
             await fetch(`${API_URL}/mission/start`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ map_id: mapId, drone_count: droneCount, victim_count: victimCount })
+                body: JSON.stringify({
+                    map_id: mapId,
+                    drone_count: droneCount,
+                    victim_count: victimCount,
+                    lightweight: !cameraEnabled
+                })
             });
         } catch (e) {
             console.error(e);

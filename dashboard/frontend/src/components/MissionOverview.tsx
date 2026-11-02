@@ -79,7 +79,14 @@ export function MissionOverview({ telemetry, victims }: MissionOverviewProps) {
                         <span className="value-label">QMIX Decisions</span>
                         <span className="value-text">{telemetry.decision_count} / {telemetry.max_decisions}</span>
                         {telemetry.global_step_state && (
-                            <span style={{ fontSize: '0.65rem', color: telemetry.global_step_state === 'EXECUTING' ? 'var(--accent-cyan)' : 'var(--text-muted)' }}>
+                            <span style={{
+                                fontSize: '0.65rem',
+                                color: (telemetry.global_step_state === 'EXECUTING' || telemetry.global_step_state === 'NAVIGATING')
+                                    ? 'var(--accent-cyan)'
+                                    : telemetry.global_step_state === 'SYNCHRONIZING'
+                                    ? '#eab308'
+                                    : 'var(--text-muted)'
+                            }}>
                                 {telemetry.global_step_state}
                             </span>
                         )}

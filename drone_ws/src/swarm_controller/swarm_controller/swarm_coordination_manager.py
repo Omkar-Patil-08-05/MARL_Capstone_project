@@ -69,9 +69,10 @@ class SwarmCoordinationManager:
             if agent.get_state() not in [FlightState.WAYPOINT_NAVIGATION, FlightState.HOLD]:
                 continue
 
-            lx, ly, lz = agent.px4.current_position
-            wx = lx + agent.config.world_spawn_x
-            wy = ly + agent.config.world_spawn_y
+            local_north, local_east, _ = agent.px4.current_position
+            wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                local_north, local_east, agent.config.world_spawn_x, agent.config.world_spawn_y
+            )
             gx, gy = GridWorldTransform.world_to_grid(wx, wy)
 
             drone_new = 0
@@ -115,9 +116,10 @@ class SwarmCoordinationManager:
             if agent.get_state() not in [FlightState.WAYPOINT_NAVIGATION, FlightState.HOLD]:
                 continue
 
-            lx, ly, wz = agent.px4.current_position
-            wx = lx + agent.config.world_spawn_x
-            wy = ly + agent.config.world_spawn_y
+            local_north, local_east, _ = agent.px4.current_position
+            wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                local_north, local_east, agent.config.world_spawn_x, agent.config.world_spawn_y
+            )
             drone_id = agent.config.drone_id
 
             for v_id, v_obj in self.orchestrator.victim_manager.victims.items():
@@ -175,8 +177,11 @@ class SwarmCoordinationManager:
         targets = []
         for a in self.qmix_agents + self.det_agents:
             if hasattr(a, 'mission_goal_local') and a.mission_goal_local:
-                wx = a.mission_goal_local[0] + a.config.world_spawn_x
-                wy = a.mission_goal_local[1] + a.config.world_spawn_y
+                goal_north = a.mission_goal_local[0]
+                goal_east = a.mission_goal_local[1]
+                wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                    goal_north, goal_east, a.config.world_spawn_x, a.config.world_spawn_y
+                )
                 targets.append((a.config.drone_id, wx, wy))
         return targets
 
@@ -199,9 +204,10 @@ class SwarmCoordinationManager:
         # 3. Collect current world positions for all drones
         current_world_pos = {}
         for a in self.qmix_agents + self.det_agents:
-            lx, ly, lz = a.px4.current_position
-            wx = lx + a.config.world_spawn_x
-            wy = ly + a.config.world_spawn_y
+            local_north, local_east, _ = a.px4.current_position
+            wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                local_north, local_east, a.config.world_spawn_x, a.config.world_spawn_y
+            )
             current_world_pos[a.config.drone_id] = (wx, wy)
 
         target_world_pos = self.get_world_targets()
@@ -379,11 +385,12 @@ class SwarmCoordinationManager:
                     del self.safety_holds[drone_id]
 
             # Safe to proceed with the step
-            tlx = twx - a.config.world_spawn_x
-            tly = twy - a.config.world_spawn_y
+            local_north, local_east = GridWorldTransform.world_enu_to_px4_ned(
+                twx, twy, a.config.world_spawn_x, a.config.world_spawn_y
+            )
 
             is_hover = (safe_gx == cgx and safe_gy == cgy)
-            a.set_mission_goal_local(float(tlx), float(tly), a.initial_pos[2] - a.mission.takeoff_altitude, require_min_dwell=is_hover)
+            a.set_mission_goal_local(float(local_north), float(local_east), a.initial_pos[2] - a.mission.takeoff_altitude, require_min_dwell=is_hover)
 
             if a.get_state() != FlightState.WAYPOINT_NAVIGATION:
                 a._log_transition(FlightState.WAYPOINT_NAVIGATION)

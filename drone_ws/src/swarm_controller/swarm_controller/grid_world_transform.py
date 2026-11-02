@@ -74,3 +74,41 @@ class GridWorldTransform:
             is_valid = False
             
         return safe_x, safe_y, is_valid
+
+    @classmethod
+    def world_enu_to_px4_ned(cls, world_x: float, world_y: float, spawn_x: float, spawn_y: float) -> Tuple[float, float]:
+        """
+        Converts World ENU coordinates to PX4 local NED coordinates.
+        World ENU: +X is East, +Y is North.
+        PX4 Local NED: position[0] is North, position[1] is East.
+        Returns:
+            (local_north, local_east)
+        """
+        local_north = world_y - spawn_y
+        local_east = world_x - spawn_x
+        return local_north, local_east
+
+    @classmethod
+    def px4_ned_to_world_enu(cls, local_north: float, local_east: float, spawn_x: float, spawn_y: float) -> Tuple[float, float]:
+        """
+        Converts PX4 local NED coordinates to World ENU coordinates.
+        PX4 Local NED: local_north is position[0], local_east is position[1].
+        World ENU: +X is East, +Y is North.
+        Returns:
+            (world_x, world_y)
+        """
+        world_x = local_east + spawn_x
+        world_y = local_north + spawn_y
+        return world_x, world_y
+
+    @classmethod
+    def is_within_world_bounds(cls, world_x: float, world_y: float, margin: float = 5.0) -> bool:
+        """
+        Validates if world coordinates lie within valid search grid bounds (with optional margin).
+        """
+        min_x = cls.GRID_ORIGIN_X - margin
+        max_x = cls.GRID_ORIGIN_X + cls.GRID_SIZE_X * cls.METERS_PER_CELL + margin
+        min_y = cls.GRID_ORIGIN_Y - margin
+        max_y = cls.GRID_ORIGIN_Y + cls.GRID_SIZE_Y * cls.METERS_PER_CELL + margin
+        return (min_x <= world_x <= max_x) and (min_y <= world_y <= max_y)
+

@@ -100,3 +100,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 gazebo_evaluation_clean/
+
+# -------------------------
+# Local backups
+# -------------------------
+backups/

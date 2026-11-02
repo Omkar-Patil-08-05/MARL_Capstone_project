@@ -16,13 +16,12 @@ sys.path.append('/home/capstone/capstone_project_antigravity')
 from marl_drone_project.env.sar_env import SARGridEnv
 
 class QMIXMissionController(Node):
-    def __init__(self, mission_config, drone_configs, checkpoint_path, max_decisions=30):
+    def __init__(self, mission_config, drone_configs, checkpoint_path, max_decisions=30, meta_file=None):
         super().__init__('qmix_mission_controller')
         self.mission_config = mission_config
         self.drone_configs = drone_configs
-        self.max_decisions = max_decisions
-
-
+        self.max_decisions = int(os.environ.get("MAX_DECISIONS", str(max_decisions)))
+        self.meta_file = meta_file
 
         # Instantiate drones
         self.agents = [DroneAgent(self, config, mission_config) for config in drone_configs]
@@ -36,8 +35,8 @@ class QMIXMissionController(Node):
         )
         self.env.reset()
 
-        # Override initial grid with small_sar.sdf buildings
-        self._initialize_grid_obstacles()
+        # Override initial grid with static obstacles from metadata
+        self._initialize_grid_obstacles(meta_file=self.meta_file)
 
         self.unspawned_victims = list(self.env.victims.keys())
 
@@ -78,6 +77,7 @@ class QMIXMissionController(Node):
         self.mission_active = False
         self.land_commanded = False
         self.detected_victims = set()
+        self.detection_radius = float(os.environ.get("DETECTION_RADIUS", str(1.5 * GridWorldTransform.METERS_PER_CELL)))
         self.last_decision_time = time.time()
         self.last_heartbeat_time = time.time()
         self.natural_hover_count = 0
@@ -96,25 +96,29 @@ class QMIXMissionController(Node):
         """Continuous proximity-based mission detection.
         
         Runs every tick (20Hz) to ensure victims are detected the instant
-        a drone passes within 3.5m, regardless of QMIX decision timing.
-        This is the SOLE authoritative detection mechanism.
-        YOLO/camera state has ZERO influence on this check.
+        a drone passes within the sensor detection radius, regardless of QMIX decision timing.
+        This is the authoritative detection mechanism.
         """
         for agent in self.agents:
             if agent.state not in [FlightState.WAYPOINT_NAVIGATION, FlightState.HOLD]:
                 continue
-            lx, ly, _ = agent.px4.current_position
-            wx = lx + agent.config.world_spawn_x
-            wy = ly + agent.config.world_spawn_y
+            local_north, local_east, _ = agent.px4.current_position
+            wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                local_north, local_east, agent.config.world_spawn_x, agent.config.world_spawn_y
+            )
 
             for v_id, victim in self.victim_manager.victims.items():
                 if victim.state.value == "UNDETECTED":
                     dist = math.hypot(victim.world_x - wx, victim.world_y - wy)
-                    if dist <= 3.5:
+                    if dist <= self.detection_radius:
                         if self.victim_manager.mark_detected(v_id, detected_by=agent.config.drone_id, detection_distance=dist):
+                            self.detected_victims.add(v_id)
+                            t_sec = self.get_clock().now().nanoseconds / 1e9
+                            self.victim_writer.writerow([t_sec, self.decisions_made, victim.grid_x, victim.grid_y, agent.config.drone_id])
+                            self.victim_file.flush()
                             self.get_logger().info(
                                 f"[{agent.config.drone_id}] MISSION DETECTION: "
-                                f"{v_id} at distance {dist:.1f}m "
+                                f"{v_id} at distance {dist:.1f}m (radius={self.detection_radius:.1f}m) "
                                 f"(drone@({wx:.1f},{wy:.1f}) victim@({victim.world_x:.1f},{victim.world_y:.1f}))"
                             )
 
@@ -141,14 +145,16 @@ class QMIXMissionController(Node):
 
         self.get_logger().info("QMIX Mission Controller initialized.")
 
-    def _initialize_grid_obstacles(self):
-        """Populates the grid with static buildings from generated_world_meta.json."""
-        # Robust project-relative resolution
+    def _initialize_grid_obstacles(self, meta_file=None):
+        """Populates the grid with static obstacles from metadata."""
         project_root = os.path.expanduser('~/capstone_project_antigravity')
-        meta_path = os.path.join(project_root, 'worlds', 'generated_world_meta.json')
+        if meta_file and os.path.exists(meta_file):
+            meta_path = meta_file
+        else:
+            meta_path = os.path.join(project_root, 'worlds', 'generated_world_meta.json')
 
         if not os.path.exists(meta_path):
-            raise RuntimeError(f"CRITICAL: Metadata file not found at {meta_path}. Run generate_world.py first.")
+            raise RuntimeError(f"CRITICAL: Metadata file not found at {meta_path}.")
 
         try:
             with open(meta_path, 'r') as f:
@@ -160,18 +166,22 @@ class QMIXMissionController(Node):
         drone_spawns = meta.get("drone_base", {}).get("spawns", [])
 
         METERS_PER_CELL = GridWorldTransform.METERS_PER_CELL
+        ORIGIN_X = GridWorldTransform.GRID_ORIGIN_X
+        ORIGIN_Y = GridWorldTransform.GRID_ORIGIN_Y
 
         # 1. Clear training obstacles and project geometric AABBs
         self.env.grid.fill(0)
         for gx in range(self.env.x_size):
             for gy in range(self.env.y_size):
-                cell_min_x = gx * METERS_PER_CELL
-                cell_max_x = (gx + 1) * METERS_PER_CELL
-                cell_min_y = gy * METERS_PER_CELL
-                cell_max_y = (gy + 1) * METERS_PER_CELL
+                cell_min_x = ORIGIN_X + gx * METERS_PER_CELL
+                cell_max_x = ORIGIN_X + (gx + 1) * METERS_PER_CELL
+                cell_min_y = ORIGIN_Y + gy * METERS_PER_CELL
+                cell_max_y = ORIGIN_Y + (gy + 1) * METERS_PER_CELL
 
                 for obs in obstacles:
-                    aabb = obs["aabb"]
+                    aabb = obs.get("aabb")
+                    if not aabb:
+                        continue
                     intersect_x = (aabb["max_x"] > cell_min_x) and (aabb["min_x"] < cell_max_x)
                     intersect_y = (aabb["max_y"] > cell_min_y) and (aabb["min_y"] < cell_max_y)
 
@@ -180,7 +190,14 @@ class QMIXMissionController(Node):
                         break
 
         # 2. Populate and strictly validate victims using VictimManager
-        map_id = os.environ.get("PX4_GZ_WORLD", "realistic_sar")
+        if self.meta_file and "forest_dense_candidate" in self.meta_file:
+            map_id = "forest_dense_candidate"
+        elif self.meta_file and "forest" in self.meta_file:
+            map_id = "forest_sar"
+        elif self.meta_file and "earthquake" in self.meta_file:
+            map_id = "earthquake_world"
+        else:
+            map_id = os.environ.get("PX4_GZ_WORLD", "realistic_sar")
         victim_seed = int(os.environ.get("VICTIM_SEED", "42"))
         self.victim_manager = VictimManager(self, meta, map_id, self.env, seed=victim_seed)
 
@@ -228,8 +245,14 @@ class QMIXMissionController(Node):
         for agent in self.agents:
             agent.tick()
 
-        # Continuous proximity-based mission detection (runs every tick at 20Hz)
+        # Continuous real-time FOV and proximity-based mission detection (runs every tick at 20Hz)
         if self.mission_active:
+            self.sync_env_state()
+            self.victim_manager.update()
+            self.sync_victims_to_env()
+            new_cells, _ = self.env._update_fov_and_victims()
+            if sum(new_cells) > 0:
+                self.env._update_global_bfs()
             self._check_proximity_detection()
 
         self.telemetry_tick_counter += 1
@@ -254,22 +277,55 @@ class QMIXMissionController(Node):
                     agent._log_transition(FlightState.LAND)
             return
 
-        # Synchronization block
+        # Simulation-Time Synchronization & Watchdog Block
         all_ready = True
-        for agent in self.agents:
+        active_agents = [a for a in self.agents if a.state not in (FlightState.FAILSAFE, FlightState.COMPLETE, FlightState.DISARM)]
+
+        sim_timeout = getattr(self.mission_config, 'waypoint_sim_timeout', 20.0)
+        wall_watchdog = getattr(self.mission_config, 'waypoint_wall_watchdog', 90.0)
+
+        for agent in active_agents:
             if agent.state == FlightState.WAYPOINT_NAVIGATION:
-                if agent.state_timer > self.mission_config.waypoint_timeout:
-                    self.get_logger().warn(f"[{agent.config.drone_id}] Action timed out! Forcing HOLD for resync.")
+                # 1. Stall detection: zero distance progress over threshold
+                if agent.is_stalled():
+                    self.get_logger().warn(
+                        f"[{agent.config.drone_id}] Drone stalled without forward progress! Forcing HOLD for resync."
+                    )
                     agent._log_transition(FlightState.HOLD)
+                # 2. Genuine simulation-time waypoint timeout
+                elif agent.elapsed_sim_time() >= sim_timeout:
+                    self.get_logger().warn(
+                        f"[{agent.config.drone_id}] Waypoint simulation timeout reached "
+                        f"({agent.elapsed_sim_time():.1f}s sim >= {sim_timeout:.1f}s)! Forcing HOLD for resync."
+                    )
+                    agent._log_transition(FlightState.HOLD)
+                # 3. Outer safety wall-clock watchdog to prevent deadlock
+                elif agent.elapsed_wall_time() >= wall_watchdog:
+                    self.get_logger().warn(
+                        f"[{agent.config.drone_id}] Waypoint wall-clock watchdog expired "
+                        f"({agent.elapsed_wall_time():.1f}s wall >= {wall_watchdog:.1f}s)! Forcing HOLD for resync."
+                    )
+                    agent._log_transition(FlightState.HOLD)
+
             if agent.state != FlightState.HOLD:
                 all_ready = False
 
-        if all_ready:
+        if active_agents and all_ready:
             self.global_step_state = "READY_FOR_NEXT_STEP"
             self.execute_global_step()
             self.global_step_state = "EXECUTING"
+        elif not active_agents:
+            if not self.land_commanded:
+                self.get_logger().info("All drones in terminal/failsafe states. Commanding landing.")
+                self.land_commanded = True
+                self.global_step_state = "COMPLETE"
         else:
-            self.global_step_state = "WAITING_FOR_AGENTS"
+            if any(a.state == FlightState.WAYPOINT_NAVIGATION for a in active_agents):
+                self.global_step_state = "NAVIGATING"
+            elif any(a.state == FlightState.HOLD for a in active_agents):
+                self.global_step_state = "SYNCHRONIZING"
+            else:
+                self.global_step_state = "WAITING_FOR_AGENTS"
 
     def _publish_telemetry(self, current_time):
         try:
@@ -278,6 +334,8 @@ class QMIXMissionController(Node):
                 mission_status = "RUNNING"
             if self.land_commanded:
                 mission_status = "LANDING"
+            if any(a.state == FlightState.FAILSAFE for a in self.agents):
+                mission_status = "FAILSAFE"
             if all(a.state == FlightState.COMPLETE for a in self.agents):
                 mission_status = "COMPLETE"
 
@@ -287,31 +345,35 @@ class QMIXMissionController(Node):
 
             drones_data = []
             for agent in self.agents:
-                lx, ly, lz = agent.px4.current_position
-                wx = lx + agent.config.world_spawn_x
-                wy = ly + agent.config.world_spawn_y
-                wz = lz
+                local_north, local_east, local_down = agent.px4.current_position
+                wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                    local_north, local_east, agent.config.world_spawn_x, agent.config.world_spawn_y
+                )
+                wz = -local_down + getattr(agent.config, 'world_spawn_z', 0.2)
                 gx, gy = GridWorldTransform.world_to_grid(wx, wy)
 
                 drone_id = agent.config.drone_id
 
-                # Actual runtime velocity from PX4 odometry (NED frame)
-                vx_ned, vy_ned, vz_ned = agent.px4.current_velocity
-                speed = math.sqrt(vx_ned**2 + vy_ned**2 + vz_ned**2)
+                # Actual runtime velocity from PX4 odometry (converted to ENU: vx=East, vy=North, vz=Up)
+                vn, ve, vd = agent.px4.current_velocity
+                vx_enu = ve
+                vy_enu = vn
+                vz_enu = -vd
+                speed = math.sqrt(vn**2 + ve**2 + vd**2)
 
                 drones_data.append({
                     "id": str(drone_id),
                     "state": agent.state.name,
                     "x": round(float(wx), 2),
                     "y": round(float(wy), 2),
-                    "z": round(-float(wz), 2),
+                    "z": round(float(wz), 2),
                     "grid_x": int(gx),
                     "grid_y": int(gy),
                     "action": self.last_actions.get(drone_id, "None"),
                     "safety_override": self.last_safety_overrides.get(drone_id, False),
-                    "vx": round(float(vx_ned), 3),
-                    "vy": round(float(vy_ned), 3),
-                    "vz": round(float(vz_ned), 3),
+                    "vx": round(float(vx_enu), 3),
+                    "vy": round(float(vy_enu), 3),
+                    "vz": round(float(vz_enu), 3),
                     "speed": round(float(speed), 2)
                 })
 
@@ -329,6 +391,9 @@ class QMIXMissionController(Node):
             # Calculate unique detections based on mission state
             unique_detected = sum(1 for v in self.victim_manager.victims.values() if v.state.value == "DETECTED" or v.state.value == "RESCUED")
 
+            # Calculate simulation time
+            sim_time = self.agents[0].get_current_sim_time() if self.agents else 0.0
+
             msg_dict = {
                 "type": "telemetry",
                 "timestamp": current_time,
@@ -337,6 +402,7 @@ class QMIXMissionController(Node):
                     "decision_count": self.decisions_made,
                     "max_decisions": self.max_decisions,
                     "global_step_state": getattr(self, 'global_step_state', "UNKNOWN"),
+                    "sim_time": round(float(sim_time), 2),
                     "coverage": round(float(coverage), 2),
                     "victims_detected": unique_detected,
                     "total_victims": len(self.victim_manager.victims),
@@ -365,9 +431,10 @@ class QMIXMissionController(Node):
     def sync_env_state(self):
         """Synchronizes continuous telemetry with the discrete SARGridEnv internal state."""
         for i, agent in enumerate(self.agents):
-            lx, ly, _ = agent.px4.current_position
-            wx = lx + agent.config.world_spawn_x
-            wy = ly + agent.config.world_spawn_y
+            local_north, local_east, _ = agent.px4.current_position
+            wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                local_north, local_east, agent.config.world_spawn_x, agent.config.world_spawn_y
+            )
 
             gx, gy = GridWorldTransform.world_to_grid(wx, wy)
 
@@ -522,14 +589,16 @@ class QMIXMissionController(Node):
                     self.natural_hover_count += 1
 
             target_wx, target_wy = GridWorldTransform.grid_to_world_center(safe_gx, safe_gy)
-            lx = target_wx - agent.config.world_spawn_x
-            ly = target_wy - agent.config.world_spawn_y
+            local_north, local_east = GridWorldTransform.world_enu_to_px4_ned(
+                target_wx, target_wy, agent.config.world_spawn_x, agent.config.world_spawn_y
+            )
             lz = agent.initial_pos[2] - agent.mission.takeoff_altitude
 
             is_hover = (action == 4)
-            agent.set_mission_goal_local(lx, ly, lz, require_min_dwell=is_hover)
-            agent.state_timer = 0
-            agent._log_transition(FlightState.WAYPOINT_NAVIGATION)
+            if agent.state not in (FlightState.FAILSAFE, FlightState.COMPLETE, FlightState.DISARM):
+                agent.set_mission_goal_local(local_north, local_east, lz, require_min_dwell=is_hover)
+                agent.state_timer = 0
+                agent._log_transition(FlightState.WAYPOINT_NAVIGATION)
 
             self.last_actions[agent.config.drone_id] = action_names[action]
             self.last_safety_overrides[agent.config.drone_id] = safety_override
@@ -546,9 +615,11 @@ class QMIXMissionController(Node):
             self.get_logger().info(f"[{agent.config.drone_id}] Action: {action_names[action]} -> Grid ({safe_gx},{safe_gy}) -> World ({target_wx:.1f}, {target_wy:.1f})")
 
     def log_decision(self, agent, gx, gy, action, action_name, tgt_gx, tgt_gy, tgt_wx, tgt_wy, inf_time, safety):
-        lx, ly, wz = agent.px4.current_position
-        curr_wx = lx + agent.config.world_spawn_x
-        curr_wy = ly + agent.config.world_spawn_y
+        local_north, local_east, local_down = agent.px4.current_position
+        curr_wx, curr_wy = GridWorldTransform.px4_ned_to_world_enu(
+            local_north, local_east, agent.config.world_spawn_x, agent.config.world_spawn_y
+        )
+        wz = -local_down + getattr(agent.config, 'world_spawn_z', 0.2)
 
         valid_cells = (self.env.grid != -1).sum()
         explored = (self.env.grid == 1).sum()

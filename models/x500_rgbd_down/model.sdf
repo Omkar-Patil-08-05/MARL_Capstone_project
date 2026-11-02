@@ -60,7 +60,7 @@
           </image>
           <clip>
             <near>0.1</near>
-            <far>3000</far>
+            <far>40.0</far>
           </clip>
         </camera>
         <always_on>1</always_on>

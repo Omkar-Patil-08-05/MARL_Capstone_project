@@ -1,0 +1,111 @@
+{
+    "manifest_name": "MARL_SAR_QMIX_BASELINE_FREEZE",
+    "created_at": "2026-10-21T16:58:00+05:30",
+    "git_revision": "4ca781c5b35db897a33f3cfa2cbce10ce45f98ae",
+    "git_branch": "main",
+    "checkpoint": {
+        "path": "models/qmix_sar_v4_align_best.pth",
+        "md5": "f74edd5763cb5e895836bbc58448fe2d",
+        "sha256": "f87d87528969ff3165a0cdfb299f5d228ad99502b974176d05b81479242a272d"
+    },
+    "environment": {
+        "map_id": "realistic_sar",
+        "world_file": "worlds/realistic_sar.sdf",
+        "grid_dimensions": [
+            25,
+            25
+        ],
+        "cell_size_meters": 4.0,
+        "total_cells": 625,
+        "obstacle_building_cells": 248,
+        "valid_searchable_cells": 377,
+        "drone_count": 2,
+        "victim_count": 3,
+        "initial_spawns": {
+            "drone_0": [
+                21.0,
+                25.0
+            ],
+            "drone_1": [
+                29.0,
+                25.0
+            ]
+        }
+    },
+    "experiment_parameters": {
+        "seed": 555,
+        "max_decisions_budget": 150,
+        "stopping_condition": "All victims found (3/3) and coverage saturation (>89%) or max_decisions",
+        "detection_rule": "Ground-truth proximity circle r = 1.5 * L_cell = 6.0 m",
+        "coverage_formula": "count(explored_valid_cells) / 377"
+    },
+    "baseline_run_metrics": {
+        "mission_id": "398731d3-6e33-4b9e-ae2b-d33788d05806",
+        "decisions_completed": 95,
+        "explored_cells": 336,
+        "coverage_percent": 89.1247,
+        "victims_detected": 3,
+        "total_victims": 3,
+        "safety_overrides": 0,
+        "collisions": 0,
+        "persisted_telemetry_rows": 2480,
+        "detection_events_count": 3,
+        "output_artifacts": {
+            "sqlite_database": "dashboard/backend/results/antigravity.db",
+            "qmix_decisions_csv": "dashboard/backend/results/h8_v4_physical_final/qmix_decisions.csv",
+            "victim_detection_csv": "dashboard/backend/results/h8_v4_physical_final/victim_detection.csv",
+            "trajectory_drone_0": "dashboard/backend/results/h8_v4_physical_final/trajectory_drone_0.csv",
+            "trajectory_drone_1": "dashboard/backend/results/h8_v4_physical_final/trajectory_drone_1.csv"
+        }
+    },
+    "software_stack": {
+        "os": "Ubuntu 24.04",
+        "ros2_distro": "Jazzy",
+        "gazebo_version": "Harmonic",
+        "python_version": "3.12",
+        "pytorch_version": "2.4.0",
+        "hardware_gpu": "NVIDIA GeForce RTX 3050 Laptop GPU (6 GB)"
+    },
+    "source_and_protected_file_hashes": {
+        "models/qmix_sar_v4_align_best.pth": {
+            "md5": "f74edd5763cb5e895836bbc58448fe2d",
+            "sha256": "f87d87528969ff3165a0cdfb299f5d228ad99502b974176d05b81479242a272d"
+        },
+        "drone_ws/src/swarm_controller/swarm_controller/qmix_mission_controller.py": {
+            "md5": "7514fb6a8195feb8f7e2fafe25322f46",
+            "sha256": "021000504035b564c3b11f18f9f503e105230dfde0fb19434037b46e44a65c14"
+        },
+        "drone_ws/src/swarm_controller/swarm_controller/victim_manager.py": {
+            "md5": "8479fc05b7dc15cd36425c417b329cde",
+            "sha256": "2d832409e671ebb93bafe53b5b91866ba7aa01a6f11884b53476ee51dd45bb54"
+        },
+        "dashboard/backend/main.py": {
+            "md5": "d8e219bf2d77a237489bdcd2f3a6a618",
+            "sha256": "1cfb0d958b2983693fa82361b7a446757dd8dc79f9ce0d01a2b2da62197d9bde"
+        },
+        "worlds/realistic_sar.sdf": {
+            "md5": "9d37afd087cb571e5c2cd2bea7830dd1",
+            "sha256": "b26f426b2a35c5e36bbcddd22a544a8bffaef6cfe1cb24f7706cb406a617c143"
+        },
+        "worlds/generated_world_meta.json": {
+            "md5": "7151f346480c68a131a932ed6c66c733",
+            "sha256": "358a88bd457fafc479f14265c5ee82184e1c24581d228f3df16738dc93e054a2"
+        },
+        "generated_worlds/forest_stage1_baseline.sdf": {
+            "md5": "c2d01d75be0e0f9e4fc9fbf0aab047f5",
+            "sha256": "1764f85afa71f47cc9472252043dffd5f0c28fcd4c2166603f8c954ede47f216"
+        },
+        "generated_worlds/forest_rescue_world.sdf": {
+            "md5": "7147545e7087ac3876fbe341d35cb193",
+            "sha256": "03e74fbb24d44ae17301260bd515748a95800beb0bade386cc1649e75522751d"
+        },
+        "generated_worlds/earthquake_world.sdf": {
+            "md5": "46c779ae4b0ff84acc6e7df3734646b0",
+            "sha256": "73c029c3883b52cba5a67b7963de22f5da9eb7334ef2ed208f0d9603cd11e6e2"
+        },
+        "worlds/earthquake_world.sdf": {
+            "md5": "04ffa518b71cfc5959f4c0e5d94ec207",
+            "sha256": "964ca1d9dee45d405992e1fbbb1d74fcb4f377fe341d9e69f90df19576332611"
+        }
+    }
+}

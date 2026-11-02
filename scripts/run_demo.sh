@@ -15,7 +15,14 @@ pkill -f "MicroXRCEAgent" || true
 pkill -f "px4" || true
 pkill -9 -f "gz sim" || true
 pkill -9 -f "ruby.*gz" || true
-pkill -f "qmix_drone_test" || true
+if [ -f /tmp/run_demo_controller.pid ]; then
+    OLD_PID=$(cat /tmp/run_demo_controller.pid 2>/dev/null || true)
+    if [ -n "$OLD_PID" ] && kill -0 $OLD_PID 2>/dev/null; then
+        pkill -TERM -P $OLD_PID 2>/dev/null || true
+        kill -TERM $OLD_PID 2>/dev/null || true
+    fi
+    rm -f /tmp/run_demo_controller.pid
+fi
 pkill -f "uvicorn" || true
 pkill -f "vite" || true
 sleep 2
@@ -29,7 +36,15 @@ cleanup() {
     echo "=================================================="
     for pid in "${PIDS[@]}"; do
         if kill -0 $pid 2>/dev/null; then
+            pkill -TERM -P $pid 2>/dev/null || true
             kill -TERM $pid 2>/dev/null || true
+        fi
+    done
+    sleep 1
+    for pid in "${PIDS[@]}"; do
+        if kill -0 $pid 2>/dev/null; then
+            pkill -KILL -P $pid 2>/dev/null || true
+            kill -KILL $pid 2>/dev/null || true
         fi
     done
     
@@ -38,9 +53,9 @@ cleanup() {
     pkill -f "px4" || true
     pkill -9 -f "gz sim" || true
     pkill -9 -f "ruby.*gz" || true
-    pkill -f "qmix_drone_test" || true
     pkill -f "uvicorn" || true
     pkill -f "vite" || true
+    rm -f /tmp/run_demo_controller.pid
     echo "Shutdown complete."
 }
 trap cleanup EXIT INT TERM
@@ -141,10 +156,11 @@ echo "[6/8] Starting QMIX Mission Controller..."
     source /opt/ros/jazzy/setup.bash
     source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash
     export ROS_LOCALHOST_ONLY=1
-    ros2 run swarm_controller qmix_drone_test > /tmp/qmix.log 2>&1
-) &
+    exec ros2 run swarm_controller swarm_runner --drones 2 --controller qmix
+) > /tmp/qmix.log 2>&1 &
 QMIX_PID=$!
 PIDS+=($QMIX_PID)
+echo $QMIX_PID > /tmp/run_demo_controller.pid
 
 echo "[7/8] Demonstration is running! View live telemetry in your browser."
 echo "Open in browser: http://localhost:5173"
