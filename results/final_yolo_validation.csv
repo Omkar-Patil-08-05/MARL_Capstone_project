@@ -1,0 +1,45 @@
+# SECTION 1: SUMMARY METRICS
+Metric,Value,Unit,Description
+Total Ground Truth Victims,6,count,Actual human victims placed in validation world
+Unique Autonomous Tracks,2,count,Autonomous localized tracks generated from sensor stream
+True Positives (TP),2,count,Tracks matched to GT within 3.0m gate threshold
+False Positives (FP),0,count,Tracks not matched to any GT victim
+False Negatives (FN),4,count,GT victims missed by visual detector
+Precision,100.00,%,TP / (TP + FP)
+Recall,33.33,%,TP / (TP + FN)
+F1-Score,0.5000,score,Harmonic mean of precision and recall
+Mean Localization Error,0.148,meters,Average horizontal Euclidean error of TP matches
+Median Localization Error,0.148,meters,Median horizontal Euclidean error of TP matches
+Max Localization Error,0.148,meters,Maximum horizontal Euclidean error of TP matches
+RMSE Localization Error,0.148,meters,Root mean square error of TP matches
+Non-Human Distractors Rejected,3,count,Vehicle rubble and animal models rejected from human pipeline
+
+# SECTION 2: SCENARIO-BY-SCENARIO DETECTION OUTCOMES
+Scenario,Description,Drone Alt (m),GT X (m),GT Y (m),Detected,YOLO Confidence,Depth (m),Est X (m),Est Y (m),Horiz Error (m),TP,FP,FN,Distractors Rejected
+Scenario 1A_standing,Victim casual_female (standing),10.0,0.000,0.000,True,0.334,8.914,-0.132,0.066,0.148,1,0,0,1
+Scenario 1B_sitting,Victim rescue_randy_sitting (sitting),10.0,15.000,0.000,True,0.334,8.914,14.868,0.066,0.148,1,0,0,1
+Scenario 1C_lying,Victim casual_female_lying (lying),10.0,30.000,0.000,False,0.000,0.000,,,,0,0,1,1
+Scenario 3,Partially Obscured Victim Under Foliage,10.0,45.000,0.000,False,0.000,0.000,,,,0,0,1,0
+Scenario 4,Two Adjacent Victims (3.0m apart) in Single Frame,11.0,60.000,0.000,False,0.000,0.000,,,,0,0,2,0
+Scenario 5,Empty Open Scene (No humans or objects),10.0,75.000,0.000,False,0.000,10.000,,,,0,0,0,0
+Scenario 6,Non-Human Objects (Car Rubble Animal),10.0,90.000,0.000,False,0.000,10.000,,,,0,0,0,0
+Scenario 7,Camera Offset 25m Horizontally (Victim Outside FOV),10.0,0.000,0.000,False,0.000,10.000,,,,0,0,0,0
+
+# SECTION 3: DISTANCE & ALTITUDE SCALING EVALUATION
+Altitude (m),Detected,BBox Width (px),BBox Height (px),YOLO Confidence,Depth (m),Horiz Error (m),Detection Status
+4.0,False,0,0,0.000,0.000,,MISSED (FOV / Perspective Mismatch)
+8.0,True,52,61,0.539,2.594,0.079,DETECTED
+12.0,False,0,0,0.000,0.000,,MISSED (Classified as Kite by COCO)
+16.0,False,0,0,0.000,0.000,,MISSED (Classified as Kite by COCO)
+20.0,False,0,0,0.000,0.000,,MISSED (Classified as Kite by COCO)
+25.0,False,0,0,0.000,0.000,,MISSED (Classified as Kite by COCO)
+30.0,False,0,0,0.000,0.000,,MISSED (Small BBox / Out of Range)
+
+# SECTION 4: HUNGARIAN ONE-TO-ONE SPATIAL MATCHING
+Ground Truth ID,Track ID,GT Pos X (m),GT Pos Y (m),Est Pos X (m),Est Pos Y (m),Distance Error (m),Confidence,Match Status
+gt_standing,track_standing,0.000,0.000,-0.132,0.066,0.148,0.334,TRUE POSITIVE (Matched)
+gt_sitting,track_sitting,15.000,0.000,14.868,0.066,0.148,0.334,TRUE POSITIVE (Matched)
+gt_lying,UNMATCHED,30.000,0.000,,,,0.000,FALSE NEGATIVE (Missed)
+gt_obscured,UNMATCHED,45.000,0.000,,,,0.000,FALSE NEGATIVE (Missed)
+gt_multi_a,UNMATCHED,60.000,-1.500,,,,0.000,FALSE NEGATIVE (Missed)
+gt_multi_b,UNMATCHED,60.000,1.500,,,,0.000,FALSE NEGATIVE (Missed)

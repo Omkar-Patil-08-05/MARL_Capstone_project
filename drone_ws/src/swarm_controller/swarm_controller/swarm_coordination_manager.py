@@ -1,25 +1,32 @@
 import math
 import time
+from typing import Optional, Dict, Tuple, List, Set
+
 from swarm_controller.grid_world_transform import GridWorldTransform
 from swarm_controller.drone_agent import FlightState
 from swarm_controller.victim_localizer import VictimLocalizer
+from swarm_controller.sar_task_allocator import TaskState, SARTaskAllocator, SARTask
+
 
 class SwarmCoordinationManager:
     """
-    Manages the shared global state and coordinated frontier search for deterministic agents (D2/D3)
-    while preserving the isolated QMIX state for D0/D1.
+    Manages the shared global state and coordinated frontier search and autonomous victim
+    task allocation for deterministic agents (D2/D3/D4/D5) while preserving the isolated
+    QMIX state for D0/D1.
 
     CRITICAL DESIGN PRINCIPLES:
     - Coverage is ONLY marked from actual physical drone position + FOV geometry.
     - Planning state (targets, reservations, corridors) NEVER marks coverage.
-    - D2/D3 MOCK perception runs here continuously, not gated by QMIX decisions.
+    - Clean Separation: Mission execution and task allocation use autonomously discovered
+      victims from VictimManager.tracked_victims via SARTaskAllocator; ground-truth victims
+      are strictly isolated for evaluation metrics.
+    - One-Task / One-Drone: Autonomous victim inspection tasks are allocated 1-to-1 without
+      multi-drone duplication.
     """
     # Safety radius in world meters (horizontal only)
     SAFETY_RADIUS_M = 3.0
 
     # MOCK perception: FOV half-widths at 15m altitude
-    # fov_h=60deg, fov_v=45deg => ground footprint = 2*15*tan(30)=17.3m x 2*15*tan(22.5)=12.4m
-    # But we use the simulated downward camera: detection radius = min(half_width) = ~6.2m
     MOCK_DETECTION_RADIUS = 6.0
 
     # Coverage logging interval in ticks (every ~5 seconds at 20Hz)
@@ -40,7 +47,7 @@ class SwarmCoordinationManager:
 
         self.det_coverage = set()
 
-        # Explicit target reservations: {drone_id: {"target_cell": (x, y), "status": str, "time": float}}
+        # Explicit target reservations: {drone_id: {"target_cell": (x, y), "status": str, "time": float, "task_id": Optional[str]}}
         self.reserved_targets = {}
 
         # Track safety state to log RESUME transitions {drone_id: conflict_drone_id}
@@ -53,15 +60,26 @@ class SwarmCoordinationManager:
         self.tick_count = 0
         self.perception_tick = 0
 
-        # Localizer for MOCK perception (same as used in qmix_mission_controller)
+        # Localizer for MOCK perception
         self.localizer = VictimLocalizer()
+
+    def get_sim_time(self) -> float:
+        """Returns the authoritative simulation time from ROS 2 clock, or falls back to wall time."""
+        if self.orchestrator is not None and hasattr(self.orchestrator, 'get_clock'):
+            try:
+                now_ns = self.orchestrator.get_clock().now().nanoseconds
+                if now_ns > 0:
+                    return now_ns * 1e-9
+            except Exception:
+                pass
+        return time.time()
 
     def dist(self, x1, y1, x2, y2):
         return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
     def update_global_coverage(self):
         """
-        Projects the FOV of deterministic agents (D2, D3) onto the shared environment grid.
+        Projects the FOV of deterministic agents (D2, D3, etc.) onto the shared environment grid.
         ONLY uses actual physical drone position. Never marks planned/reserved cells.
         """
         new_cells = 0
@@ -105,8 +123,7 @@ class SwarmCoordinationManager:
     def run_det_perception(self):
         """
         Runs MOCK perception for D2/D3 independently of the QMIX decision cycle.
-        This ensures victims are detected whenever a deterministic drone is physically near them,
-        not only when D0/D1 happen to synchronize.
+        Feeds visual detection to VictimManager when running without autonomous ROS 2 perception topics.
         """
         self.perception_tick += 1
         if self.perception_tick % self.PERCEPTION_CHECK_INTERVAL != 0:
@@ -142,13 +159,11 @@ class SwarmCoordinationManager:
                     cx_img = nx * 320.0 + 320.0
                     cy_img = ny * 240.0 + 240.0
 
-                    # Check if projected position is actually within image bounds
+                    # Check if projected position is within image bounds
                     if not (0 <= cx_img <= 640 and 0 <= cy_img <= 480):
-                        self.orchestrator.get_logger().info(f"[PERCEPTION] {drone_id} {v_id} OUT_OF_FOV (projected=({cx_img:.0f},{cy_img:.0f}))")
                         continue
 
                     bbox = [int(cx_img - 50), int(cy_img - 50), int(cx_img + 50), int(cy_img + 50)]
-                    self.orchestrator.get_logger().info(f"[PERCEPTION] {drone_id} bbox={bbox}")
 
                     loc_res = self.localizer.localize(
                         drone_world_x=wx,
@@ -158,10 +173,6 @@ class SwarmCoordinationManager:
                         img_w=640,
                         img_h=480,
                         bbox=bbox
-                    )
-
-                    self.orchestrator.get_logger().info(
-                        f"[PERCEPTION] {drone_id} localized=({loc_res['world_x']:.1f}, {loc_res['world_y']:.1f})"
                     )
 
                     self.orchestrator.victim_manager.process_visual_detection(
@@ -186,14 +197,30 @@ class SwarmCoordinationManager:
         return targets
 
     def tick_coordination(self):
+        """
+        Coordinates deterministic agents (D2..D5):
+        1. Updates physical coverage from FOV.
+        2. Syncs and updates autonomous victim task allocation.
+        3. Assigns pending victim inspection tasks to available drones.
+        4. Allocates frontier exploration to idle drones.
+        5. Enforces hard predictive safety collision interlocks.
+        """
         if any(a.initial_pos is None for a in self.det_agents):
             return
 
-        all_ready = all(a.get_state() in [FlightState.WAYPOINT_NAVIGATION, FlightState.HOLD] for a in self.det_agents)
-        if not all_ready:
+        startup_states = [
+            FlightState.WAIT_FOR_CONNECTION,
+            FlightState.WAIT_FOR_ESTIMATOR,
+            FlightState.STREAM_SETPOINTS,
+            FlightState.REQUEST_OFFBOARD,
+            FlightState.REQUEST_ARM,
+            FlightState.TAKEOFF
+        ]
+        if any(a.get_state() in startup_states for a in self.det_agents):
             return
 
         self.tick_count += 1
+        sim_time = self.get_sim_time()
 
         # 1. Update coverage from ACTUAL physical positions
         self.update_global_coverage()
@@ -201,34 +228,69 @@ class SwarmCoordinationManager:
         # 2. Run MOCK perception for D2/D3 independently of QMIX sync
         self.run_det_perception()
 
-        # 3. Collect current world positions for all drones
+        # 3. Collect current world positions and flight states for all drones
         current_world_pos = {}
+        drone_states = {}
         for a in self.qmix_agents + self.det_agents:
             local_north, local_east, _ = a.px4.current_position
             wx, wy = GridWorldTransform.px4_ned_to_world_enu(
                 local_north, local_east, a.config.world_spawn_x, a.config.world_spawn_y
             )
-            current_world_pos[a.config.drone_id] = (wx, wy)
+            d_id = a.config.drone_id
+            current_world_pos[d_id] = (wx, wy)
+            drone_states[d_id] = a.state.name if hasattr(a, 'state') else "UNKNOWN"
 
         target_world_pos = self.get_world_targets()
 
-        # 4. Update reservation statuses — release reached/expired reservations
+        # 4. Integrate SARTaskAllocator (Autonomous Discoveries -> Mission Tasks)
+        task_allocator: Optional[SARTaskAllocator] = getattr(self.orchestrator, 'task_allocator', None)
+        if task_allocator is not None:
+            # Sync autonomous tracked victims into task allocator
+            tracked_victims = getattr(self.orchestrator.victim_manager, 'tracked_victims', {})
+            task_allocator.sync_from_tracked_victims(tracked_victims, sim_time)
+
+            # Update lifecycle of active tasks (approach distance, investigation dwell, failure handling)
+            task_allocator.update_task_lifecycle(current_world_pos, drone_states, sim_time)
+
+            # Determine available drones eligible for task allocation (prefer det_agents, fallback to qmix_agents)
+            available_det_drones = {}
+            candidate_pool = self.det_agents if self.det_agents else self.qmix_agents
+            for a in candidate_pool:
+                d_id = a.config.drone_id
+                if a.get_state() in [FlightState.WAYPOINT_NAVIGATION, FlightState.HOLD]:
+                    if d_id not in task_allocator.drone_assignments:
+                        if d_id in current_world_pos:
+                            available_det_drones[d_id] = current_world_pos[d_id]
+
+            # Allocate tasks to closest available drones
+            if available_det_drones:
+                task_allocator.allocate_tasks(available_det_drones, sim_time)
+
+        # 5. Update reservation statuses — release reached/expired reservations
         for idx, a in enumerate(self.det_agents):
             drone_id = a.config.drone_id
-            cgx, cgy = GridWorldTransform.world_to_grid(*current_world_pos[drone_id])
 
             if drone_id in self.reserved_targets:
                 res = self.reserved_targets[drone_id]
                 rtx, rty = res["target_cell"]
+                task_id = res.get("task_id")
 
-                if self.env.grid[rtx, rty] == 1:
-                    res["status"] = "REACHED"
-                    del self.reserved_targets[drone_id]
-                    self.orchestrator.get_logger().info(f"[COORD] {drone_id} reservation ({rtx},{rty}) fulfilled/claimed.")
-                elif time.time() - res["time"] > 300.0:
-                    del self.reserved_targets[drone_id]
+                if task_id and task_allocator is not None:
+                    # Task reservation: release when task is completed or failed
+                    t = task_allocator.tasks.get(task_id)
+                    if t is None or t.state in (TaskState.COMPLETED, TaskState.FAILED) or t.assigned_drone_id != drone_id:
+                        del self.reserved_targets[drone_id]
+                        self.orchestrator.get_logger().info(f"[COORD] {drone_id} task {task_id} concluded/released.")
+                else:
+                    # Frontier reservation: release when cell is explored or times out
+                    if self.env.grid[rtx, rty] == 1:
+                        res["status"] = "REACHED"
+                        del self.reserved_targets[drone_id]
+                        self.orchestrator.get_logger().info(f"[COORD] {drone_id} reservation ({rtx},{rty}) fulfilled/claimed.")
+                    elif time.time() - res["time"] > 300.0:
+                        del self.reserved_targets[drone_id]
 
-        # 5. For each deterministic drone, plan or step
+        # 6. For each deterministic drone, plan step toward assigned task or frontier
         for idx, a in enumerate(self.det_agents):
             if a.get_state() not in [FlightState.WAYPOINT_NAVIGATION, FlightState.HOLD]:
                 continue
@@ -237,8 +299,22 @@ class SwarmCoordinationManager:
             curr_wx, curr_wy = current_world_pos[drone_id]
             cgx, cgy = GridWorldTransform.world_to_grid(curr_wx, curr_wy)
 
-            # Frontier Assignment — only when drone has no active reservation
-            if drone_id not in self.reserved_targets:
+            # Check if this drone has an active autonomous SAR task
+            assigned_task: Optional[SARTask] = None
+            if task_allocator is not None:
+                assigned_task = task_allocator.get_assigned_task_for_drone(drone_id)
+
+            if assigned_task is not None:
+                # Direct drone to the autonomous victim coordinates
+                tgt_cell = (assigned_task.grid_x, assigned_task.grid_y)
+                self.reserved_targets[drone_id] = {
+                    "target_cell": tgt_cell,
+                    "status": assigned_task.state.value,
+                    "task_id": assigned_task.task_id,
+                    "time": time.time()
+                }
+            elif drone_id not in self.reserved_targets:
+                # Frontier Assignment — only when drone has no active task and no active reservation
                 best_score = -999999.0
                 best_target = None
 
@@ -280,9 +356,12 @@ class SwarmCoordinationManager:
                                     if "drone_0" in str(other_id) or "drone_1" in str(other_id):
                                         if td < 8.0: score -= 300.0
 
-                            for (vx, vy), status in self.env.victims.items():
-                                if self.dist(vx, vy, x, y) < 5.0:
-                                    score += 150.0
+                            # Prioritize unassigned autonomous discoveries if any exist
+                            if task_allocator is not None:
+                                for t in task_allocator.tasks.values():
+                                    if t.state == TaskState.DISCOVERED:
+                                        if self.dist(t.grid_x, t.grid_y, x, y) < 4.0:
+                                            score += 150.0
 
                             if score > best_score:
                                 best_score = score
@@ -292,6 +371,7 @@ class SwarmCoordinationManager:
                     self.reserved_targets[drone_id] = {
                         "target_cell": best_target,
                         "status": "ASSIGNED",
+                        "task_id": None,
                         "time": time.time()
                     }
                     self.orchestrator.get_logger().info(f"[COORD] {drone_id} assigned frontier {best_target} with score {best_score:.1f}")
@@ -304,22 +384,24 @@ class SwarmCoordinationManager:
             self.reserved_targets[drone_id]["status"] = "ACTIVE"
             rtx, rty = self.reserved_targets[drone_id]["target_cell"]
 
-            # Calculate next 1-cell step toward reserved target
-            step_gx, step_gy = cgx, cgy
-            if rtx > cgx: step_gx += 1
-            elif rtx < cgx: step_gx -= 1
-            if rty > cgy: step_gy += 1
-            elif rty < cgy: step_gy -= 1
+            # If investigating an autonomous victim, maintain hover dwell at victim location
+            if assigned_task is not None and assigned_task.state == TaskState.INVESTIGATING:
+                step_gx, step_gy = cgx, cgy
+            else:
+                # Calculate next 1-cell step toward reserved target
+                step_gx, step_gy = cgx, cgy
+                if rtx > cgx: step_gx += 1
+                elif rtx < cgx: step_gx -= 1
+                if rty > cgy: step_gy += 1
+                elif rty < cgy: step_gy -= 1
 
             safe_gx, safe_gy, is_valid = GridWorldTransform.clamp_grid(step_gx, step_gy)
 
             # Obstacle sliding: if direct diagonal is blocked, try axis-aligned
             if not is_valid or self.env.grid[safe_gx, safe_gy] == -1:
-                # Try X-only
                 test_gx, test_gy = step_gx, cgy
                 _, _, val_x = GridWorldTransform.clamp_grid(test_gx, test_gy)
 
-                # Try Y-only
                 test_gx2, test_gy2 = cgx, step_gy
                 _, _, val_y = GridWorldTransform.clamp_grid(test_gx2, test_gy2)
 
@@ -328,15 +410,13 @@ class SwarmCoordinationManager:
                 elif val_y and self.env.grid[test_gx2, test_gy2] != -1 and test_gy2 != cgy:
                     safe_gx, safe_gy = test_gx2, test_gy2
                 else:
-                    # Completely blocked. Drop reservation but do NOT mark the target as explored.
-                    # The target remains unexplored — another drone approaching from a different
-                    # angle may be able to reach it. This drone will pick a different frontier.
+                    # Blocked: release reservation
                     if drone_id not in self.failed_targets:
                         self.failed_targets[drone_id] = set()
                     self.failed_targets[drone_id].add((rtx, rty))
 
                     del self.reserved_targets[drone_id]
-                    self.orchestrator.get_logger().info(f"[COORD] {drone_id} HOLD: target ({rtx},{rty}) unreachable from current position, releasing.")
+                    self.orchestrator.get_logger().info(f"[COORD] {drone_id} HOLD: target ({rtx},{rty}) unreachable, releasing.")
                     if a.get_state() != FlightState.HOLD:
                         a._log_transition(FlightState.HOLD)
                     continue
@@ -347,7 +427,6 @@ class SwarmCoordinationManager:
             is_unsafe = False
             conflict_drone = None
 
-            # Check proposed step against every other drone's current position
             for other_id, (owx, owy) in current_world_pos.items():
                 if other_id != drone_id:
                     if self.dist(twx, twy, owx, owy) < self.SAFETY_RADIUS_M:
@@ -355,7 +434,6 @@ class SwarmCoordinationManager:
                         conflict_drone = other_id
                         break
 
-            # Check proposed step against every other drone's target position and corridor midpoint
             if not is_unsafe:
                 for other_id, otwx, otwy in target_world_pos:
                     if other_id != drone_id:
@@ -389,7 +467,7 @@ class SwarmCoordinationManager:
                 twx, twy, a.config.world_spawn_x, a.config.world_spawn_y
             )
 
-            is_hover = (safe_gx == cgx and safe_gy == cgy)
+            is_hover = (safe_gx == cgx and safe_gy == cgy) or (assigned_task is not None and assigned_task.state == TaskState.INVESTIGATING)
             a.set_mission_goal_local(float(local_north), float(local_east), a.initial_pos[2] - a.mission.takeoff_altitude, require_min_dwell=is_hover)
 
             if a.get_state() != FlightState.WAYPOINT_NAVIGATION:

@@ -28,6 +28,16 @@ export function useTelemetry() {
             .then(data => setMapRegistry(data))
             .catch(err => console.error("Failed to load map registry", err));
 
+        // Load historical / persisted mission events on initialization
+        fetch(`${API_URL}/events`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    setAlerts(data);
+                }
+            })
+            .catch(err => console.error("Failed to load mission events", err));
+
         const pollStatus = () => {
             fetch(`${API_URL}/mission/status`)
                 .then(res => res.json())
@@ -123,8 +133,9 @@ export function useTelemetry() {
         const prev = prevTelemetry.current;
 
         if (current.mission.status === 'RUNNING' || current.mission.status === 'QMIX_STARTING') {
-            if (!missionStartTime.current) {
+            if (!missionStartTime.current || current.timestamp < missionStartTime.current) {
                 missionStartTime.current = current.timestamp;
+                setCoverageHistory([{ time: 0, coverage: current.mission.coverage }]);
             }
         }
 
@@ -157,13 +168,20 @@ export function useTelemetry() {
 
         // 1b. Update Coverage History
         if (missionStartTime.current) {
-            const timeSec = current.timestamp - missionStartTime.current;
+            const timeSec = Math.max(0, current.timestamp - missionStartTime.current);
             setCoverageHistory(old => {
-                const last = old[old.length - 1];
-                if (!last || timeSec - last.time >= 1.0) {
-                    return [...old, { time: timeSec, coverage: current.mission.coverage }];
+                if (old.length === 0) {
+                    return [{ time: 0, coverage: current.mission.coverage }];
                 }
-                return old;
+                const last = old[old.length - 1];
+                if (timeSec - last.time >= 1.0) {
+                    return [...old, { time: timeSec, coverage: current.mission.coverage }];
+                } else {
+                    // Update latest data point in place with the current live coverage
+                    const updated = [...old];
+                    updated[updated.length - 1] = { time: Math.max(last.time, timeSec), coverage: current.mission.coverage };
+                    return updated;
+                }
             });
         }
 
@@ -234,7 +252,40 @@ export function useTelemetry() {
             });
 
             if (newAlerts.length > 0) {
-                setAlerts(old => [...newAlerts, ...old].slice(0, 30)); // keep last 30
+                setAlerts(old => {
+                    const existingIds = new Set(old.map(a => a.id));
+                    const fresh = newAlerts.filter(a => !existingIds.has(a.id));
+                    return [...fresh, ...old].slice(0, 30);
+                });
+            }
+        } else {
+            // First telemetry frame after connect/refresh:
+            // If any victims or tracked victims are already detected, ensure they are represented in alerts
+            const initAlerts: AlertEvent[] = [];
+            (current.victims || []).forEach(v => {
+                if (v.detected || v.state === 'DETECTED') {
+                    initAlerts.push({
+                        id: `init_det_${v.id}`,
+                        timestamp: v.detection_time || current.timestamp,
+                        message: `MISSION DETECTION: VICTIM ${v.id.replace('victim_', '').toUpperCase()} LOCATED`,
+                        type: 'success'
+                    });
+                }
+            });
+            (current.tracked_victims || []).forEach(tv => {
+                initAlerts.push({
+                    id: `init_tv_${tv.id}`,
+                    timestamp: tv.sim_time || current.timestamp,
+                    message: `AUTONOMOUS DETECTION: ${tv.id.toUpperCase()} CONFIRMED`,
+                    type: 'success'
+                });
+            });
+            if (initAlerts.length > 0) {
+                setAlerts(old => {
+                    const existingIds = new Set(old.map(a => a.id));
+                    const fresh = initAlerts.filter(a => !existingIds.has(a.id));
+                    return [...fresh, ...old].slice(0, 30);
+                });
             }
         }
 

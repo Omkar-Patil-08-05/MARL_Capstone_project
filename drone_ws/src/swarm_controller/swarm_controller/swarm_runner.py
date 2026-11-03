@@ -8,6 +8,7 @@ from std_msgs.msg import String
 from swarm_controller.configs import DroneConfig, MissionConfig
 from swarm_controller.drone_agent import DroneAgent, FlightState
 from swarm_controller.qmix_mission_controller import QMIXMissionController
+from swarm_controller.sar_task_allocator import SARTaskAllocator, TaskState
 
 from swarm_controller.grid_world_transform import GridWorldTransform
 
@@ -25,19 +26,6 @@ class SwarmOrchestratorNode(QMIXMissionController):
         # Instantiate the new Swarm Coordination Manager
         from swarm_controller.swarm_coordination_manager import SwarmCoordinationManager
         self.coordination_manager = SwarmCoordinationManager(self)
-
-        # Explicitly subscribe to D2/D3 perception to feed the global VictimManager
-        from std_msgs.msg import String
-        self.detection_subs = []
-        for agent in self.det_agents:
-            topic = f'/drone_{agent.config.drone_id}/camera/detection_data'
-            sub = self.create_subscription(
-                String,
-                topic,
-                lambda msg, d_id=agent.config.drone_id: self.detection_callback(msg, d_id),
-                10
-            )
-            self.detection_subs.append(sub)
 
     def tick(self):
         super().tick()
@@ -58,14 +46,20 @@ class SwarmOrchestratorNode(QMIXMissionController):
         original_publish = self.telemetry_pub.publish
         def intercept_publish(msg):
             data = json.loads(msg.data)
+            tasks_list = [t.get_dict() for t in self.task_allocator.tasks.values()]
             data["coordination"] = {
-                "active_frontiers": {str(k): list(v["target_cell"]) for k, v in self.coordination_manager.reserved_targets.items()},
+                "active_frontiers": {str(k): list(v["target_cell"]) for k, v in self.coordination_manager.reserved_targets.items() if not v.get("task_id")},
+                "active_tasks": {str(k): v.get("task_id") for k, v in self.coordination_manager.reserved_targets.items() if v.get("task_id")},
                 "safety_holds": {str(k): str(v) for k, v in self.coordination_manager.safety_holds.items()},
                 "qmix_drones": len([a for a in original_agents]),
-                "coord_drones": len([a for a in self.det_agents])
+                "coord_drones": len([a for a in self.det_agents]),
+                "task_assignments": dict(self.task_allocator.drone_assignments),
+                "tasks": tasks_list
             }
             # Inject safety overrides count into mission
             data["mission"]["safety_overrides"] = len(self.coordination_manager.safety_holds)
+            data["task_allocation"] = self.task_allocator.get_telemetry()
+            data["tasks"] = tasks_list
             msg.data = json.dumps(data)
             original_publish(msg)
 
@@ -92,6 +86,7 @@ class StandaloneDeterministicNode(Node):
         self.timer = self.create_timer(1.0 / mission_config.control_rate_hz, self.tick)
         self.start_time = self.get_clock().now().nanoseconds / 1e9
 
+        self.task_allocator = SARTaskAllocator(node=self)
         self.det_phase = 0
         self.det_timer = 0
 
@@ -145,7 +140,7 @@ class StandaloneDeterministicNode(Node):
                     self.det_phase = 0
                     self.det_timer = 0
 
-        # Publish dummy telemetry
+        # Publish telemetry
         from swarm_controller.grid_world_transform import GridWorldTransform
         import json
 
@@ -170,6 +165,7 @@ class StandaloneDeterministicNode(Node):
                 "safety_override": False
             })
 
+        tasks_list = [t.get_dict() for t in self.task_allocator.tasks.values()]
         msg_dict = {
             "type": "telemetry",
             "timestamp": current_time,
@@ -182,6 +178,8 @@ class StandaloneDeterministicNode(Node):
             "drones": drones_data,
             "victims_state": [],
             "tracked_victims_state": [],
+            "task_allocation": self.task_allocator.get_telemetry(),
+            "tasks": tasks_list,
             "unique_victims_detected": 0,
             "coverage_percent": 0.0,
             "explored_cells": []
@@ -209,7 +207,7 @@ def main(args=None):
         mission_config = MissionConfig(
             enable_apf=False,
             control_rate_hz=20,
-            takeoff_altitude=15.0,
+            takeoff_altitude=float(os.environ.get("TAKEOFF_ALTITUDE", "15.0")),
             goal_tolerance=1.9,
             min_waypoint_dwell_ticks=2,
             estimator_timeout=900,
@@ -221,12 +219,10 @@ def main(args=None):
     elif parsed.map == "forest_dense_candidate":
         meta_file = os.path.join(workspace_dir, "worlds/forest_dense_candidate_meta.json")
         GridWorldTransform.set_bounds(width=25, height=25, meters_per_cell=8.0, origin_x=-180.0, origin_y=-20.0)
-        # Dense Forest Candidate: rapid waypoint progression (3.2m goal tolerance for 8m cells, 0.1s dwell)
-        # for high-speed continuous coverage without idle halts
         mission_config = MissionConfig(
             enable_apf=False,
             control_rate_hz=20,
-            takeoff_altitude=15.0,
+            takeoff_altitude=float(os.environ.get("TAKEOFF_ALTITUDE", "15.0")),
             goal_tolerance=3.2,
             min_waypoint_dwell_ticks=2,
             estimator_timeout=900,
@@ -238,12 +234,10 @@ def main(args=None):
     elif parsed.map == "forest_sar":
         meta_file = os.path.join(workspace_dir, "worlds/forest_sar_meta.json")
         GridWorldTransform.set_bounds(width=25, height=25, meters_per_cell=8.0, origin_x=-180.0, origin_y=-20.0)
-        # Forest SAR: rapid waypoint progression (3.2m goal tolerance for 8m cells, 0.1s dwell)
-        # for high-speed continuous coverage without idle halts
         mission_config = MissionConfig(
             enable_apf=False,
             control_rate_hz=20,
-            takeoff_altitude=15.0,
+            takeoff_altitude=float(os.environ.get("TAKEOFF_ALTITUDE", "15.0")),
             goal_tolerance=3.2,
             min_waypoint_dwell_ticks=2,
             estimator_timeout=900,
@@ -258,7 +252,7 @@ def main(args=None):
         mission_config = MissionConfig(
             enable_apf=False,
             control_rate_hz=20,
-            takeoff_altitude=15.0,
+            takeoff_altitude=float(os.environ.get("TAKEOFF_ALTITUDE", "15.0")),
             goal_tolerance=1.9,
             min_waypoint_dwell_ticks=2,
             estimator_timeout=900,
@@ -292,14 +286,14 @@ def main(args=None):
 
     if parsed.drones == 1:
         node = StandaloneDeterministicNode(mission_config, all_configs)
-    elif parsed.controller == 'qmix':
-        # Pure QMIX scaling for N drones
-        node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300, meta_file=meta_file)
     elif parsed.drones == 2:
-        # Strictly identical to qmix_drone_test.py for 2 drones baseline
-        node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300, meta_file=meta_file)
+        if parsed.controller == 'qmix':
+            node = QMIXMissionController(mission_config, all_configs, checkpoint_path, max_decisions=300, meta_file=meta_file)
+        else:
+            qmix_configs = all_configs[0:2]
+            det_configs = []
+            node = SwarmOrchestratorNode(mission_config, qmix_configs, det_configs, checkpoint_path, max_decisions=300, meta_file=meta_file)
     else:
-        # 3+ drones -> orchestrator delegates 0,1 to QMIX and 2+ to Deterministic
         qmix_configs = all_configs[0:2]
         det_configs = all_configs[2:]
         node = SwarmOrchestratorNode(mission_config, qmix_configs, det_configs, checkpoint_path, max_decisions=300, meta_file=meta_file)

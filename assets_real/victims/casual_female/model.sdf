@@ -3,6 +3,8 @@
     <model name="casual_female">
         <static>true</static>
         <link name="link">
+            <!-- Standing casual female. Mesh height ~1.77m, width ~0.76m, depth ~0.33m.
+                 Collision box keeps the model spawnable and detectable. -->
             <collision name="box">
                 <pose>0 0 0.9 0 0 0</pose>
                 <geometry>
@@ -18,6 +20,9 @@
                         <uri>meshes/casual_female.dae</uri>
                     </mesh>
                 </geometry>
+                <!-- gz-sim-thermal-system attaches a heat signature to this visual element.
+                     Updated to Gazebo Harmonic plugin name (gz-sim-thermal-system).
+                     max_temp=310 K = 36.85°C, representing human core body temperature. -->
                 <plugin filename="gz-sim-thermal-system" name="gz::sim::systems::Thermal">
                     <heat_signature>materials/textures/RescueRandy_Thermal.png</heat_signature>
                     <max_temp>310</max_temp>

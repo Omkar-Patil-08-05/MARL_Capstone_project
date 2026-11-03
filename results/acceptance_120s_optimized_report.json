@@ -1,0 +1,1110 @@
+{
+  "actual_running_sec": 119.42027378082275,
+  "actual_sim_sec": 179.1399998664856,
+  "measured_rtf": 1.5000802978836665,
+  "total_decisions": 10,
+  "decision_events": [
+    {
+      "decision_index": 1,
+      "timestamp": 1791710521.8669598,
+      "sim_time": 1791710462.98,
+      "elapsed_running": 0.0,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.92,
+          "y": 140.04,
+          "z": 14.56,
+          "grid_x": 1,
+          "grid_y": 20,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -131.91,
+          "y": 140.03,
+          "z": 14.6,
+          "grid_x": 6,
+          "grid_y": 20,
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision_index": 2,
+      "timestamp": 1791710532.868281,
+      "sim_time": 1791710533.61,
+      "elapsed_running": 11.001321077346802,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.48,
+          "y": 136.6,
+          "z": 14.78,
+          "grid_x": 1,
+          "grid_y": 19,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -124.47,
+          "y": 141.36,
+          "z": 14.94,
+          "grid_x": 6,
+          "grid_y": 20,
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision_index": 3,
+      "timestamp": 1791710551.304733,
+      "sim_time": 1791710552.14,
+      "elapsed_running": 29.43777322769165,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.93,
+          "y": 129.94,
+          "z": 15.02,
+          "grid_x": 1,
+          "grid_y": 18,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -119.92,
+          "y": 144.15,
+          "z": 14.99,
+          "grid_x": 7,
+          "grid_y": 20,
+          "action": "+Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 4,
+      "timestamp": 1791710560.9449058,
+      "sim_time": 1791710555.33,
+      "elapsed_running": 39.077945947647095,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.94,
+          "y": 122.06,
+          "z": 15.07,
+          "grid_x": 1,
+          "grid_y": 17,
+          "action": "+X"
+        },
+        {
+          "id": "drone_1",
+          "x": -119.75,
+          "y": 149.99,
+          "z": 14.98,
+          "grid_x": 7,
+          "grid_y": 21,
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 5,
+      "timestamp": 1791710577.1739736,
+      "sim_time": 1791710557.42,
+      "elapsed_running": 55.307013750076294,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -160.6,
+          "y": 119.59,
+          "z": 15.11,
+          "grid_x": 2,
+          "grid_y": 17,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -120.76,
+          "y": 146.1,
+          "z": 15.18,
+          "grid_x": 7,
+          "grid_y": 20,
+          "action": "+Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 6,
+      "timestamp": 1791710589.9977448,
+      "sim_time": 1791710559.13,
+      "elapsed_running": 68.13078498840332,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -159.46,
+          "y": 113.55,
+          "z": 15.05,
+          "grid_x": 2,
+          "grid_y": 16,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -119.86,
+          "y": 149.95,
+          "z": 15.1,
+          "grid_x": 7,
+          "grid_y": 21,
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 7,
+      "timestamp": 1791710604.4632788,
+      "sim_time": 1791710560.93,
+      "elapsed_running": 82.59631896018982,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -160.12,
+          "y": 104.82,
+          "z": 14.99,
+          "grid_x": 2,
+          "grid_y": 15,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -120.74,
+          "y": 146.0,
+          "z": 15.17,
+          "grid_x": 7,
+          "grid_y": 20,
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 8,
+      "timestamp": 1791710614.133212,
+      "sim_time": 1791710562.42,
+      "elapsed_running": 92.26625227928162,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -159.99,
+          "y": 97.63,
+          "z": 15.0,
+          "grid_x": 2,
+          "grid_y": 14,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -120.22,
+          "y": 137.88,
+          "z": 15.14,
+          "grid_x": 7,
+          "grid_y": 19,
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 9,
+      "timestamp": 1791710624.304319,
+      "sim_time": 1791710563.82,
+      "elapsed_running": 102.43735909461975,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -160.12,
+          "y": 90.05,
+          "z": 15.01,
+          "grid_x": 2,
+          "grid_y": 13,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -120.0,
+          "y": 130.1,
+          "z": 15.08,
+          "grid_x": 7,
+          "grid_y": 18,
+          "action": "+Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 10,
+      "timestamp": 1791710635.4660606,
+      "sim_time": 1791710635.88,
+      "elapsed_running": 113.59910082817078,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -160.08,
+          "y": 81.81,
+          "z": 15.0,
+          "grid_x": 2,
+          "grid_y": 12,
+          "action": "+Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -120.04,
+          "y": 131.07,
+          "z": 14.85,
+          "grid_x": 7,
+          "grid_y": 18,
+          "action": "+Y"
+        }
+      ]
+    }
+  ],
+  "waypoint_arrival_events": {
+    "0": [
+      {
+        "timestamp": 1791710528.3497515,
+        "sim_time": 1791710463.98,
+        "elapsed_running": 6.4827916622161865,
+        "decision_step": 1,
+        "pos": [
+          -168.3,
+          138.32,
+          14.77
+        ],
+        "speed": 3.09
+      },
+      {
+        "timestamp": 1791710549.8899062,
+        "sim_time": 1791710550.95,
+        "elapsed_running": 28.02294635772705,
+        "decision_step": 2,
+        "pos": [
+          -167.93,
+          130.45,
+          14.99
+        ],
+        "speed": 5.28
+      },
+      {
+        "timestamp": 1791710573.4080234,
+        "sim_time": 1791710556.93,
+        "elapsed_running": 51.5410635471344,
+        "decision_step": 4,
+        "pos": [
+          -162.25,
+          119.26,
+          15.05
+        ],
+        "speed": 4.88
+      },
+      {
+        "timestamp": 1791710588.458327,
+        "sim_time": 1791710558.92,
+        "elapsed_running": 66.59136724472046,
+        "decision_step": 5,
+        "pos": [
+          -159.4,
+          114.45,
+          15.03
+        ],
+        "speed": 4.9
+      },
+      {
+        "timestamp": 1791710599.9317145,
+        "sim_time": 1791710560.53,
+        "elapsed_running": 78.06475472450256,
+        "decision_step": 6,
+        "pos": [
+          -160.07,
+          106.4,
+          15.04
+        ],
+        "speed": 5.19
+      },
+      {
+        "timestamp": 1791710613.5967352,
+        "sim_time": 1791710562.33,
+        "elapsed_running": 91.72977542877197,
+        "decision_step": 7,
+        "pos": [
+          -159.98,
+          98.08,
+          14.99
+        ],
+        "speed": 4.97
+      },
+      {
+        "timestamp": 1791710623.8184993,
+        "sim_time": 1791710563.73,
+        "elapsed_running": 101.95153951644897,
+        "decision_step": 8,
+        "pos": [
+          -160.11,
+          90.54,
+          15.01
+        ],
+        "speed": 5.45
+      },
+      {
+        "timestamp": 1791710634.972814,
+        "sim_time": 1791710635.42,
+        "elapsed_running": 113.10585427284241,
+        "decision_step": 9,
+        "pos": [
+          -160.08,
+          82.32,
+          15.0
+        ],
+        "speed": 5.34
+      }
+    ],
+    "1": [
+      {
+        "timestamp": 1791710539.9014337,
+        "sim_time": 1791710539.77,
+        "elapsed_running": 18.03447389602661,
+        "decision_step": 2,
+        "pos": [
+          -121.68,
+          142.69,
+          15.0
+        ],
+        "speed": 5.34
+      },
+      {
+        "timestamp": 1791710560.5397341,
+        "sim_time": 1791710555.22,
+        "elapsed_running": 38.67277431488037,
+        "decision_step": 3,
+        "pos": [
+          -119.75,
+          149.45,
+          14.94
+        ],
+        "speed": 5.29
+      },
+      {
+        "timestamp": 1791710576.6051598,
+        "sim_time": 1791710557.33,
+        "elapsed_running": 54.738199949264526,
+        "decision_step": 4,
+        "pos": [
+          -120.75,
+          146.45,
+          15.15
+        ],
+        "speed": 4.29
+      },
+      {
+        "timestamp": 1791710588.8688276,
+        "sim_time": 1791710559.02,
+        "elapsed_running": 67.00186777114868,
+        "decision_step": 5,
+        "pos": [
+          -119.87,
+          149.51,
+          15.06
+        ],
+        "speed": 4.56
+      },
+      {
+        "timestamp": 1791710602.038168,
+        "sim_time": 1791710560.82,
+        "elapsed_running": 80.17120814323425,
+        "decision_step": 6,
+        "pos": [
+          -120.72,
+          146.44,
+          15.15
+        ],
+        "speed": 4.56
+      },
+      {
+        "timestamp": 1791710613.5967352,
+        "sim_time": 1791710562.33,
+        "elapsed_running": 91.72977542877197,
+        "decision_step": 7,
+        "pos": [
+          -120.26,
+          138.35,
+          15.14
+        ],
+        "speed": 5.4
+      },
+      {
+        "timestamp": 1791710640.6163867,
+        "sim_time": 1791710641.38,
+        "elapsed_running": 118.74942684173584,
+        "decision_step": 10,
+        "pos": [
+          -119.92,
+          133.75,
+          15.11
+        ],
+        "speed": 4.24
+      }
+    ]
+  },
+  "drone_metrics": {
+    "drone_0": {
+      "total_dist_m": 67.75,
+      "peak_speed_ms": 6.58,
+      "mean_reported_speed_ms": 4.49,
+      "physical_mean_speed_ms": 0.57,
+      "active_motion_speed_ms": 0.65,
+      "nav_time_sec": 103.9,
+      "hold_time_sec": 15.5,
+      "arrivals": 8
+    },
+    "drone_1": {
+      "total_dist_m": 61.96,
+      "peak_speed_ms": 7.71,
+      "mean_reported_speed_ms": 4.03,
+      "physical_mean_speed_ms": 0.52,
+      "active_motion_speed_ms": 0.6,
+      "nav_time_sec": 103.1,
+      "hold_time_sec": 16.3,
+      "arrivals": 7
+    }
+  },
+  "rtf_samples": [],
+  "hardware_samples": [
+    {
+      "time": 1791710179.3918498,
+      "cpu_percent": 22.3,
+      "gpu_util_percent": null,
+      "vram_used_mb": null,
+      "vram_total_mb": null
+    },
+    {
+      "time": 1791710186.6595824,
+      "cpu_percent": 32.2,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 11.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710192.7994473,
+      "cpu_percent": 25.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 11.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710198.8436778,
+      "cpu_percent": 18.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 11.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710205.0326738,
+      "cpu_percent": 25.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 11.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710211.0717518,
+      "cpu_percent": 12.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 11.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710216.4896438,
+      "cpu_percent": 43.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 11.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710222.979396,
+      "cpu_percent": 56.3,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 95.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710229.1933644,
+      "cpu_percent": 68.2,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 273.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710235.2683947,
+      "cpu_percent": 49.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 429.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710241.3299375,
+      "cpu_percent": 53.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 478.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710247.5304365,
+      "cpu_percent": 59.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 478.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710253.6243367,
+      "cpu_percent": 62.1,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 580.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710259.7899315,
+      "cpu_percent": 34.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 718.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710265.9692883,
+      "cpu_percent": 26.7,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 835.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710271.3056488,
+      "cpu_percent": 28.6,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710276.735338,
+      "cpu_percent": 41.2,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710281.9067695,
+      "cpu_percent": 43.2,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710288.3502483,
+      "cpu_percent": 42.0,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710294.716599,
+      "cpu_percent": 26.7,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710300.9727333,
+      "cpu_percent": 23.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710307.1943536,
+      "cpu_percent": 30.3,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710313.6108735,
+      "cpu_percent": 30.1,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710320.0076246,
+      "cpu_percent": 30.1,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710325.091435,
+      "cpu_percent": 30.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710330.392687,
+      "cpu_percent": 41.6,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710336.7696698,
+      "cpu_percent": 28.2,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710341.897713,
+      "cpu_percent": 25.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710348.1044016,
+      "cpu_percent": 30.1,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710353.262691,
+      "cpu_percent": 26.5,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710359.4812734,
+      "cpu_percent": 26.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710365.9457393,
+      "cpu_percent": 26.0,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710372.2049575,
+      "cpu_percent": 26.6,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710378.7030172,
+      "cpu_percent": 25.5,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710383.7166529,
+      "cpu_percent": 27.5,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710389.9466257,
+      "cpu_percent": 29.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710394.9842007,
+      "cpu_percent": 28.5,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710401.340059,
+      "cpu_percent": 27.7,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710407.8354197,
+      "cpu_percent": 24.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710414.335277,
+      "cpu_percent": 26.7,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710419.4835875,
+      "cpu_percent": 41.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710424.6650963,
+      "cpu_percent": 32.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710429.7728674,
+      "cpu_percent": 24.0,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710434.976509,
+      "cpu_percent": 32.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 840.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710440.3633635,
+      "cpu_percent": 26.5,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1007.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710445.6706412,
+      "cpu_percent": 28.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710451.256888,
+      "cpu_percent": 26.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710456.9254487,
+      "cpu_percent": 25.9,
+      "gpu_util_percent": 5.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710462.5621965,
+      "cpu_percent": 35.5,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710468.1500735,
+      "cpu_percent": 25.1,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710473.586313,
+      "cpu_percent": 23.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710478.6106875,
+      "cpu_percent": 32.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710483.990623,
+      "cpu_percent": 37.3,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710489.6349168,
+      "cpu_percent": 31.1,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710495.7811723,
+      "cpu_percent": 33.5,
+      "gpu_util_percent": 5.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710501.400777,
+      "cpu_percent": 30.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710506.9425704,
+      "cpu_percent": 23.2,
+      "gpu_util_percent": 5.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710512.361385,
+      "cpu_percent": 23.5,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710517.6779714,
+      "cpu_percent": 24.7,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1271.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710522.8630278,
+      "cpu_percent": 25.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710527.8899155,
+      "cpu_percent": 22.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710533.9633799,
+      "cpu_percent": 29.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710539.9014337,
+      "cpu_percent": 47.7,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710546.1968195,
+      "cpu_percent": 45.0,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710551.304733,
+      "cpu_percent": 38.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710556.3218505,
+      "cpu_percent": 23.6,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710561.7518663,
+      "cpu_percent": 30.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710567.5790646,
+      "cpu_percent": 25.5,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710573.4080234,
+      "cpu_percent": 29.3,
+      "gpu_util_percent": 4.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710578.46374,
+      "cpu_percent": 28.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710583.8202486,
+      "cpu_percent": 24.3,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710588.8688276,
+      "cpu_percent": 24.6,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710594.0518332,
+      "cpu_percent": 28.2,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710599.5954957,
+      "cpu_percent": 23.7,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710604.8766487,
+      "cpu_percent": 34.8,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710610.0532162,
+      "cpu_percent": 25.2,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710615.1384902,
+      "cpu_percent": 23.7,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710620.3622134,
+      "cpu_percent": 22.4,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710625.9480066,
+      "cpu_percent": 24.9,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710631.1552768,
+      "cpu_percent": 28.2,
+      "gpu_util_percent": 2.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    },
+    {
+      "time": 1791710636.4376934,
+      "cpu_percent": 27.0,
+      "gpu_util_percent": 0.0,
+      "vram_used_mb": 1301.0,
+      "vram_total_mb": 6144.0
+    }
+  ],
+  "camera_results": [
+    {
+      "drone_id": 0,
+      "frames_received": 29,
+      "fps": 9.7,
+      "dimensions": "640x480",
+      "has_frames": true
+    },
+    {
+      "drone_id": 1,
+      "frames_received": 29,
+      "fps": 9.6,
+      "dimensions": "640x480",
+      "has_frames": true
+    }
+  ],
+  "coverage_start": 3.3,
+  "coverage_end": 10.14,
+  "coverage_delta": 6.84,
+  "explored_cells_delta": 29,
+  "victims": [
+    {
+      "id": "victim_0",
+      "x": 4,
+      "y": 2,
+      "world_x": -146.484375,
+      "world_y": -1.953125,
+      "world_z": 16.433211822509765,
+      "detected": false,
+      "state": "UNDETECTED",
+      "movement_state": "RESTING",
+      "detected_by": null,
+      "detection_distance": null,
+      "detection_time": null
+    },
+    {
+      "id": "victim_1",
+      "x": 16,
+      "y": 15,
+      "world_x": -50.265190187824956,
+      "world_y": 101.10446556795311,
+      "world_z": 16.28260185241699,
+      "detected": false,
+      "state": "UNDETECTED",
+      "movement_state": "MOVING",
+      "detected_by": null,
+      "detection_distance": null,
+      "detection_time": null
+    },
+    {
+      "id": "victim_2",
+      "x": 8,
+      "y": 8,
+      "world_x": -110.36818930420056,
+      "world_y": 44.00464425672329,
+      "world_z": 16.77860595703125,
+      "detected": false,
+      "state": "UNDETECTED",
+      "movement_state": "RESTING",
+      "detected_by": null,
+      "detection_distance": null,
+      "detection_time": null
+    }
+  ]
+}

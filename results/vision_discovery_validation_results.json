@@ -1,0 +1,105 @@
+{
+  "5hz": {
+    "target_hz": 5,
+    "color_frames_received": 8,
+    "depth_frames_received": 12,
+    "detection_messages_received": 5,
+    "discovery_events_received": 1,
+    "depth_stats": {
+      "min_m": 0.1,
+      "mean_m": 1.47,
+      "median_m": 1.73,
+      "max_m": 2.04
+    },
+    "direct_yolo_detections": [
+      {
+        "class": "bird",
+        "class_id": 14,
+        "confidence": 0.459,
+        "bbox": [
+          163,
+          142,
+          473,
+          479
+        ]
+      },
+      {
+        "class": "person",
+        "class_id": 0,
+        "confidence": 0.336,
+        "bbox": [
+          163,
+          141,
+          472,
+          479
+        ]
+      }
+    ],
+    "discovery_events": [
+      {
+        "event_type": "VICTIM_DISCOVERED",
+        "timestamp": 5.0,
+        "victim_track_id": 1,
+        "confirming_drone_id": 0,
+        "world_x": -46.9062452352159,
+        "world_y": 99.6107607314472,
+        "grid_x": -12,
+        "grid_y": 24,
+        "grid_cell_size_m": 4.0,
+        "confidence": 0.6955209970474243,
+        "median_depth_estimate": 0.10268664360046387,
+        "confirmation_count": 2,
+        "confirmation_window": 3,
+        "depth_valid_samples": 3121,
+        "depth_spread": 0.0017336036544293165
+      }
+    ],
+    "sample_image": "/tmp/victim_view_5hz.png"
+  },
+  "2hz": {
+    "target_hz": 2,
+    "color_frames_received": 7,
+    "depth_frames_received": 7,
+    "detection_messages_received": 5,
+    "discovery_events_received": 1,
+    "depth_stats": {
+      "min_m": 0.1,
+      "mean_m": 1.46,
+      "median_m": 1.73,
+      "max_m": 2.04
+    },
+    "direct_yolo_detections": [
+      {
+        "class": "person",
+        "class_id": 0,
+        "confidence": 0.834,
+        "bbox": [
+          164,
+          142,
+          471,
+          479
+        ]
+      }
+    ],
+    "discovery_events": [
+      {
+        "event_type": "VICTIM_DISCOVERED",
+        "timestamp": 5.0,
+        "victim_track_id": 1,
+        "confirming_drone_id": 0,
+        "world_x": -46.90625150024619,
+        "world_y": 99.61114136956282,
+        "grid_x": -12,
+        "grid_y": 24,
+        "grid_cell_size_m": 4.0,
+        "confidence": 0.5355502367019653,
+        "median_depth_estimate": 0.10271115601062775,
+        "confirmation_count": 2,
+        "confirmation_window": 3,
+        "depth_valid_samples": 3076,
+        "depth_spread": 0.0017199288122355938
+      }
+    ],
+    "sample_image": "/tmp/victim_view_2hz.png"
+  }
+}

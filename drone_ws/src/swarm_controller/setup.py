@@ -26,7 +26,8 @@ setup(
         'console_scripts': [
             'swarm_runner = swarm_controller.swarm_runner:main',
             'yolo_human_detection = swarm_controller.yolo_human_detection:main',
-            'swarm_perception_node = swarm_controller.swarm_perception_node:main'
+            'swarm_perception_node = swarm_controller.swarm_perception_node:main',
+            'rgb_thermal_fusion_verifier = swarm_controller.rgb_thermal_fusion_verifier:main'
         ],
     },
 )

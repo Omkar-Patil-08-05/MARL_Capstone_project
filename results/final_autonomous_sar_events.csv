@@ -1,0 +1,5 @@
+wall_time,sim_time,event_type,drone_id,details
+216.05,53.11,AUTONOMOUS_VICTIM_DISCOVERY,drone_0,"{""event_type"": ""VICTIM_DISCOVERED"", ""timestamp"": 53.0, ""victim_track_id"": 2, ""confirming_drone_id"": 0, ""world_x"": 13.55, ""world_y"": 95.42, ""grid_x"": 3, ""grid_y"": 23, ""grid_cell_size_m"": 4.0, ""confidence"": 0.562, ""median_depth_estimate"": 9.74, ""confirmation_count"": 3, ""confirmation_window"": 6, ""consensus_span_sec"": 1.4, ""depth_valid_samples"": 60, ""depth_spread"": 0.63, ""verification_mode"": ""RGBD"", ""thermal_peak_k"": null, ""thermal_delta_k"": null}"
+216.25,53.17,SAR_TASK_ASSIGNED,drone_0,"{""task_id"": ""task_victim_1"", ""type"": ""ASSIGNED"", ""drone_id"": ""drone_0"", ""sim_time"": 53.168, ""target"": [13.55, 95.42]}"
+216.72,53.26,SAR_INVESTIGATING_STARTED,drone_0,"{""task_id"": ""task_victim_1"", ""drone_id"": ""drone_0"", ""sim_time"": 53.264, ""progress"": 0.1}"
+236.96,58.17,SAR_TASK_COMPLETED,drone_0,"{""task_id"": ""task_victim_1"", ""drone_id"": ""drone_0"", ""sim_time"": 58.168}"

@@ -30,6 +30,50 @@ export interface MissionTelemetry {
     camera_enabled?: boolean;
 }
 
+export interface SARTaskTelemetry {
+    task_id: string;
+    victim_id: string;
+    world_x: number;
+    world_y: number;
+    grid_x?: number;
+    grid_y?: number;
+    state: string; // 'DISCOVERED' | 'ASSIGNED' | 'APPROACHING' | 'INVESTIGATING' | 'COMPLETED' | 'FAILED'
+    assigned_drone_id?: string | null;
+    confidence?: number;
+    verification_mode?: string;
+    evidence_state?: string;
+    created_sim_time?: number;
+    updated_sim_time?: number;
+    assigned_sim_time?: number | null;
+    investigation_start_sim_time?: number | null;
+    completed_sim_time?: number | null;
+    failed_sim_time?: number | null;
+    failure_reason?: string | null;
+    reassignment_count?: number;
+    investigation_progress_sec?: number;
+    investigation_duration?: number;
+}
+
+export interface TaskAllocationSummary {
+    total_tasks?: number;
+    active_tasks?: number;
+    completed_tasks?: number;
+    failed_tasks?: number;
+    state_counts?: Record<string, number>;
+    active_assignments?: Record<string, string>;
+    assignments?: Record<string, string>;
+    counts?: {
+        total?: number;
+        discovered?: number;
+        assigned?: number;
+        approaching?: number;
+        investigating?: number;
+        completed?: number;
+        failed?: number;
+    };
+    tasks?: SARTaskTelemetry[];
+}
+
 export interface VictimState {
     id: string;
     x: number;
@@ -46,6 +90,12 @@ export interface VictimState {
     observations?: number;
     detection_distance?: number;
     detection_time?: number;
+    verification_mode?: string;
+    evidence_state?: string;
+    confirming_drone?: string;
+    confirmation_count?: number;
+    sim_timestamp?: number;
+    sim_time?: number;
 }
 
 export interface ExploredCell {
@@ -61,6 +111,9 @@ export interface TelemetryPayload {
     explored_cells: ExploredCell[];
     victims: VictimState[];
     tracked_victims?: VictimState[];
+    tasks?: SARTaskTelemetry[];
+    task_allocation?: TaskAllocationSummary;
+    evaluation?: EvaluationMetrics;
     active_map_id?: string;
     backend_status?: string;
     camera_enabled?: boolean;
@@ -69,7 +122,25 @@ export interface TelemetryPayload {
         safety_holds: Record<string, string>;
         qmix_drones: number;
         coord_drones: number;
+        task_assignments?: Record<string, string>;
     };
+}
+
+export interface EvaluationMetrics {
+    total_ground_truth_victims?: number;
+    total_autonomous_tracks?: number;
+    true_positives?: number;
+    false_positives?: number;
+    false_negatives?: number;
+    precision?: number;
+    recall?: number;
+    f1_score?: number;
+    mean_localization_error_m?: number;
+    median_localization_error_m?: number;
+    max_localization_error_m?: number;
+    rmse_localization_error_m?: number;
+    matching_threshold_m?: number;
+    per_drone_detections?: Record<string, number>;
 }
 
 export interface MissionResult {

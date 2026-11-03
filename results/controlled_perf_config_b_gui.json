@@ -1,0 +1,446 @@
+{
+  "config_label": "config_b_gui",
+  "timestamp": 1792600367.4318159,
+  "wall_elapsed_sec": 35.16,
+  "sim_elapsed_sec": 5.0,
+  "measured_rtf": 0.1422,
+  "decisions_completed": 4,
+  "initial_decision": 1,
+  "final_decision": 4,
+  "decisions_per_wall_min": 5.12,
+  "coverage_start": 3.32,
+  "coverage_end": 6.16,
+  "coverage_gain": 2.84,
+  "coverage_gain_per_wall_min": 4.85,
+  "valid_cells_explored_gain": 12,
+  "valid_cells_per_wall_min": 20.48,
+  "navigating_wall_sec": 34.6,
+  "synchronizing_wall_sec": 0.0,
+  "decision_history": [
+    {
+      "decision": 1,
+      "wall_time": 1792600321.65,
+      "sim_time": 16.7,
+      "coverage": 3.32,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.94,
+          "y": 140.08,
+          "z": 14.55,
+          "vx": -0.09,
+          "vy": 0.01,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -131.98,
+          "y": 140.03,
+          "z": 14.57,
+          "vx": -0.04,
+          "vy": 0.01,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision": 2,
+      "wall_time": 1792600336.75,
+      "sim_time": 18.8,
+      "coverage": 4.03,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.11,
+          "y": 135.95,
+          "z": 14.8,
+          "vx": 0.53,
+          "vy": -0.94,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -121.76,
+          "y": 142.54,
+          "z": 14.97,
+          "vx": 4.73,
+          "vy": 2.57,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "+Y"
+        }
+      ]
+    },
+    {
+      "decision": 3,
+      "wall_time": 1792600346.53,
+      "sim_time": 20.3,
+      "coverage": 4.98,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.96,
+          "y": 130.11,
+          "z": 14.85,
+          "vx": -0.65,
+          "vy": -4.76,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -119.54,
+          "y": 150.33,
+          "z": 14.96,
+          "vx": -0.1,
+          "vy": 5.36,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "+Y"
+        }
+      ]
+    },
+    {
+      "decision": 4,
+      "wall_time": 1792600356.81,
+      "sim_time": 21.7,
+      "coverage": 6.16,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.11,
+          "y": 122.19,
+          "z": 15.12,
+          "vx": 0.04,
+          "vy": -5.44,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "+Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -119.92,
+          "y": 158.32,
+          "z": 14.99,
+          "vx": -0.65,
+          "vy": 4.95,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "+Y"
+        }
+      ]
+    }
+  ],
+  "state_transitions": [
+    {
+      "wall_time": 1792600213.82,
+      "sim_time": 1.8,
+      "decision": 0,
+      "from_state": null,
+      "to_state": "INITIALIZING"
+    },
+    {
+      "wall_time": 1792600321.65,
+      "sim_time": 16.7,
+      "decision": 1,
+      "from_state": "INITIALIZING",
+      "to_state": "NAVIGATING"
+    },
+    {
+      "wall_time": 1792600336.75,
+      "sim_time": 18.8,
+      "decision": 2,
+      "from_state": "NAVIGATING",
+      "to_state": "EXECUTING"
+    },
+    {
+      "wall_time": 1792600337.31,
+      "sim_time": 18.9,
+      "decision": 2,
+      "from_state": "EXECUTING",
+      "to_state": "NAVIGATING"
+    },
+    {
+      "wall_time": 1792600356.81,
+      "sim_time": 21.7,
+      "decision": 4,
+      "from_state": "NAVIGATING",
+      "to_state": "EXECUTING"
+    }
+  ],
+  "cameras": [
+    {
+      "drone_id": 0,
+      "frames": 29,
+      "fps": 9.59,
+      "sample_duration_sec": 3.02
+    },
+    {
+      "drone_id": 1,
+      "frames": 30,
+      "fps": 9.7,
+      "sample_duration_sec": 3.09
+    }
+  ],
+  "hardware_usage": [
+    {
+      "wall_time": 1792600144.9,
+      "metrics": {
+        "system_cpu_percent": 40.5,
+        "gz_cpu_percent": 0.0,
+        "px4_cpu_percent": 0.0,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 0.0
+      }
+    },
+    {
+      "wall_time": 1792600153.6,
+      "metrics": {
+        "system_cpu_percent": 23.1,
+        "gz_cpu_percent": 0.0,
+        "px4_cpu_percent": 0.0,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 11.0
+      }
+    },
+    {
+      "wall_time": 1792600162.1,
+      "metrics": {
+        "system_cpu_percent": 20.6,
+        "gz_cpu_percent": 0.0,
+        "px4_cpu_percent": 0.0,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 11.0
+      }
+    },
+    {
+      "wall_time": 1792600170.2,
+      "metrics": {
+        "system_cpu_percent": 22.2,
+        "gz_cpu_percent": 0.0,
+        "px4_cpu_percent": 0.0,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 0.0
+      }
+    },
+    {
+      "wall_time": 1792600179.0,
+      "metrics": {
+        "system_cpu_percent": 23.2,
+        "gz_cpu_percent": 100.1,
+        "px4_cpu_percent": 0.0,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 11.0
+      }
+    },
+    {
+      "wall_time": 1792600187.1,
+      "metrics": {
+        "system_cpu_percent": 44.7,
+        "gz_cpu_percent": 111.9,
+        "px4_cpu_percent": 0.0,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 11.0
+      }
+    },
+    {
+      "wall_time": 1792600195.3,
+      "metrics": {
+        "system_cpu_percent": 44.8,
+        "gz_cpu_percent": 106.4,
+        "px4_cpu_percent": 51.4,
+        "gpu_util_percent": 10.0,
+        "vram_used_mb": 273.0
+      }
+    },
+    {
+      "wall_time": 1792600203.4,
+      "metrics": {
+        "system_cpu_percent": 30.7,
+        "gz_cpu_percent": 102.6,
+        "px4_cpu_percent": 106.0,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 478.0
+      }
+    },
+    {
+      "wall_time": 1792600211.6,
+      "metrics": {
+        "system_cpu_percent": 32.5,
+        "gz_cpu_percent": 103.1,
+        "px4_cpu_percent": 128.1,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 721.0
+      }
+    },
+    {
+      "wall_time": 1792600220.6,
+      "metrics": {
+        "system_cpu_percent": 35.7,
+        "gz_cpu_percent": 137.7,
+        "px4_cpu_percent": 75.6,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1116.0
+      }
+    },
+    {
+      "wall_time": 1792600229.4,
+      "metrics": {
+        "system_cpu_percent": 28.7,
+        "gz_cpu_percent": 137.9,
+        "px4_cpu_percent": 63.3,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1244.0
+      }
+    },
+    {
+      "wall_time": 1792600237.6,
+      "metrics": {
+        "system_cpu_percent": 23.0,
+        "gz_cpu_percent": 133.3,
+        "px4_cpu_percent": 61.3,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1244.0
+      }
+    },
+    {
+      "wall_time": 1792600246.2,
+      "metrics": {
+        "system_cpu_percent": 25.9,
+        "gz_cpu_percent": 137.9,
+        "px4_cpu_percent": 58.4,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1244.0
+      }
+    },
+    {
+      "wall_time": 1792600254.9,
+      "metrics": {
+        "system_cpu_percent": 24.7,
+        "gz_cpu_percent": 137.3,
+        "px4_cpu_percent": 59.5,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1244.0
+      }
+    },
+    {
+      "wall_time": 1792600263.5,
+      "metrics": {
+        "system_cpu_percent": 26.8,
+        "gz_cpu_percent": 137.1,
+        "px4_cpu_percent": 60.6,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1244.0
+      }
+    },
+    {
+      "wall_time": 1792600271.7,
+      "metrics": {
+        "system_cpu_percent": 29.9,
+        "gz_cpu_percent": 135.7,
+        "px4_cpu_percent": 61.0,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1244.0
+      }
+    },
+    {
+      "wall_time": 1792600280.2,
+      "metrics": {
+        "system_cpu_percent": 26.1,
+        "gz_cpu_percent": 138.6,
+        "px4_cpu_percent": 61.9,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1244.0
+      }
+    },
+    {
+      "wall_time": 1792600288.4,
+      "metrics": {
+        "system_cpu_percent": 28.3,
+        "gz_cpu_percent": 142.2,
+        "px4_cpu_percent": 64.1,
+        "gpu_util_percent": 6.0,
+        "vram_used_mb": 1245.0
+      }
+    },
+    {
+      "wall_time": 1792600296.9,
+      "metrics": {
+        "system_cpu_percent": 31.2,
+        "gz_cpu_percent": 152.9,
+        "px4_cpu_percent": 65.6,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1245.0
+      }
+    },
+    {
+      "wall_time": 1792600305.1,
+      "metrics": {
+        "system_cpu_percent": 27.9,
+        "gz_cpu_percent": 141.8,
+        "px4_cpu_percent": 64.3,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1245.0
+      }
+    },
+    {
+      "wall_time": 1792600314.0,
+      "metrics": {
+        "system_cpu_percent": 28.8,
+        "gz_cpu_percent": 144.6,
+        "px4_cpu_percent": 62.5,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1245.0
+      }
+    },
+    {
+      "wall_time": 1792600322.5,
+      "metrics": {
+        "system_cpu_percent": 25.8,
+        "gz_cpu_percent": 143.7,
+        "px4_cpu_percent": 63.3,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1275.0
+      }
+    },
+    {
+      "wall_time": 1792600330.9,
+      "metrics": {
+        "system_cpu_percent": 24.2,
+        "gz_cpu_percent": 137.7,
+        "px4_cpu_percent": 62.7,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1275.0
+      }
+    },
+    {
+      "wall_time": 1792600339.3,
+      "metrics": {
+        "system_cpu_percent": 25.9,
+        "gz_cpu_percent": 138.3,
+        "px4_cpu_percent": 60.5,
+        "gpu_util_percent": 6.0,
+        "vram_used_mb": 1275.0
+      }
+    },
+    {
+      "wall_time": 1792600347.5,
+      "metrics": {
+        "system_cpu_percent": 24.1,
+        "gz_cpu_percent": 138.6,
+        "px4_cpu_percent": 61.4,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1275.0
+      }
+    },
+    {
+      "wall_time": 1792600356.4,
+      "metrics": {
+        "system_cpu_percent": 30.6,
+        "gz_cpu_percent": 143.7,
+        "px4_cpu_percent": 64.7,
+        "gpu_util_percent": 0.0,
+        "vram_used_mb": 1275.0
+      }
+    }
+  ]
+}

@@ -1,10 +1,12 @@
 import React from 'react';
+import { formatCoverage, getCoveragePercent } from '../utils/formatters';
 
 interface CoverageGraphProps {
     history: { time: number; coverage: number }[];
+    currentCoverage?: number;
 }
 
-export function CoverageGraph({ history }: CoverageGraphProps) {
+export function CoverageGraph({ history, currentCoverage }: CoverageGraphProps) {
     const [isExpanded, setIsExpanded] = React.useState(false);
 
     // If modal is active, listen for escape key
@@ -34,7 +36,10 @@ export function CoverageGraph({ history }: CoverageGraphProps) {
 
         // Convert data to SVG coordinates
         const getX = (t: number) => paddingLeft + ((t - minTime) / maxTime) * (svgWidth - paddingLeft - padding);
-        const getY = (c: number) => svgHeight - paddingBottom - (c / 100) * (svgHeight - paddingBottom - padding);
+        const getY = (c: number) => {
+            const pct = getCoveragePercent(c);
+            return svgHeight - paddingBottom - (pct / 100) * (svgHeight - paddingBottom - padding);
+        };
 
         // Build the SVG path
         const pathData = `M ${getX(history[0].time)} ${getY(history[0].coverage)} ` +
@@ -74,15 +79,15 @@ export function CoverageGraph({ history }: CoverageGraphProps) {
                 <path d={pathData} fill="none" stroke="var(--accent-cyan)" strokeWidth={2} />
 
                 {/* Current Data Point */}
-                <circle cx={getX(latest.time)} cy={getY(latest.coverage)} r={4} fill="var(--accent-cyan)" />
-                <text x={getX(latest.time)} y={getY(latest.coverage) - 10} fill="var(--accent-cyan)" fontSize={12} fontWeight="bold" textAnchor="middle">
-                    {latest.coverage.toFixed(1)}%
+                <circle cx={getX(latest.time)} cy={getY(currentCoverage !== undefined ? currentCoverage : latest.coverage)} r={4} fill="var(--accent-cyan)" />
+                <text x={getX(latest.time)} y={getY(currentCoverage !== undefined ? currentCoverage : latest.coverage) - 10} fill="var(--accent-cyan)" fontSize={12} fontWeight="bold" textAnchor="middle">
+                    {formatCoverage(currentCoverage !== undefined ? currentCoverage : latest.coverage, 2)}
                 </text>
             </svg>
         );
     };
 
-    const latestCov = history[history.length - 1].coverage;
+    const latestCov = currentCoverage !== undefined ? currentCoverage : history[history.length - 1].coverage;
 
     return (
         <>
@@ -125,7 +130,7 @@ export function CoverageGraph({ history }: CoverageGraphProps) {
                             {renderGraphSvg(1000, 500)}
                         </div>
                         <div style={{ position: 'absolute', bottom: '24px', right: '24px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent-cyan)' }}>
-                            Final coverage: {latestCov.toFixed(1)}%
+                            Final coverage: {formatCoverage(latestCov, 2)}
                         </div>
                     </div>
                 </div>

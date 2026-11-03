@@ -66,166 +66,17 @@ class RGBDGeometricLocalizer:
         
         return world_x, world_y
 
-class EventConfirmer:
-    def __init__(
-        self,
-        window_size=6,
-        consensus_needed=4,
-        proximity_threshold=3.0,
-        grid_cell_size=8.0,
-        min_confidence=0.45,
-        min_time_span=0.4,
-        min_depth=4.0,
-        max_depth=32.0,
-        min_valid_samples=15,
-        max_depth_spread=2.5,
-        dedup_radius=6.0
-    ):
-        self.window_size = window_size
-        self.consensus_needed = consensus_needed
-        self.proximity_threshold = proximity_threshold
-        self.grid_cell_size = grid_cell_size
-        self.min_confidence = min_confidence
-        self.min_time_span = min_time_span
-        self.min_depth = min_depth
-        self.max_depth = max_depth
-        self.min_valid_samples = min_valid_samples
-        self.max_depth_spread = max_depth_spread
-        self.dedup_radius = dedup_radius
-        
-        self.tracks = {}
-        self.next_track_id = 1
-        self.confirmed_victims = []  # List of {'track_id': id, 'x': x, 'y': y, 'ts': timestamp}
+try:
+    from swarm_controller.temporal_event_confirmer import TemporalEventConfirmer
+except ImportError:
+    try:
+        from .temporal_event_confirmer import TemporalEventConfirmer
+    except ImportError:
+        from temporal_event_confirmer import TemporalEventConfirmer
 
-    def is_valid_observation(self, world_x, world_y, confidence, median_depth, valid_samples, depth_spread):
-        """Validates a single observation against coordinate bounds, confidence, and depth plausibility."""
-        # 1. Search-grid / world-coordinate validity
-        if not GridWorldTransform.is_within_world_bounds(world_x, world_y):
-            return False, "OUT_OF_BOUNDS"
+# Canonical alias preserving existing localizer interface
+EventConfirmer = TemporalEventConfirmer
 
-        # 2. Confidence threshold
-        if confidence < self.min_confidence:
-            return False, "LOW_CONFIDENCE"
-
-        # 3. Depth plausibility & sample quality
-        if not (self.min_depth <= median_depth <= self.max_depth):
-            return False, "INVALID_DEPTH_RANGE"
-        if valid_samples < self.min_valid_samples:
-            return False, "INSUFFICIENT_DEPTH_SAMPLES"
-        if depth_spread > self.max_depth_spread:
-            return False, "HIGH_DEPTH_SPREAD"
-
-        # 4. Duplicate discovery check against already confirmed victims
-        for cv in self.confirmed_victims:
-            dist = math.hypot(world_x - cv['x'], world_y - cv['y'])
-            if dist < self.dedup_radius:
-                return False, "DUPLICATE_NEAR_CONFIRMED"
-
-        return True, "VALID"
-
-    def add_observation(self, drone_id, timestamp, world_x, world_y, confidence, median_depth, valid_samples, depth_spread):
-        # Validate observation
-        is_valid, reason = self.is_valid_observation(world_x, world_y, confidence, median_depth, valid_samples, depth_spread)
-        if not is_valid:
-            return None, None
-
-        best_track_id = None
-        min_dist = self.proximity_threshold
-        
-        for track_id, track in self.tracks.items():
-            if not track['history']:
-                continue
-            last_obs = track['history'][-1]
-            dist = math.hypot(world_x - last_obs['x'], world_y - last_obs['y'])
-            if dist < min_dist:
-                min_dist = dist
-                best_track_id = track_id
-                
-        if best_track_id is None:
-            best_track_id = self.next_track_id
-            self.next_track_id += 1
-            self.tracks[best_track_id] = {
-                'history': deque(maxlen=self.window_size),
-                'discovered': False,
-                'last_discovered': 0
-            }
-            
-        track = self.tracks[best_track_id]
-        
-        grid_x, grid_y = GridWorldTransform.world_to_grid(world_x, world_y)
-        
-        track['history'].append({
-            'x': world_x,
-            'y': world_y,
-            'gx': grid_x,
-            'gy': grid_y,
-            'ts': timestamp,
-            'conf': confidence,
-            'depth': median_depth,
-            'samples': valid_samples,
-            'spread': depth_spread,
-            'drone': drone_id
-        })
-        
-        discovery_event = None
-        
-        if not track['discovered'] and len(track['history']) >= self.consensus_needed:
-            # Check candidate consensus observations in the window (latest consensus_needed observations)
-            recent_obs = list(track['history'])[-self.consensus_needed:]
-            
-            # Check temporal consensus: time span must be >= min_time_span
-            time_span = recent_obs[-1]['ts'] - recent_obs[0]['ts']
-            if time_span < self.min_time_span:
-                # Observations arrived in a single instant burst, await multi-frame temporal confirmation
-                return best_track_id, None
-
-            # Check average confidence
-            avg_conf = sum(o['conf'] for o in recent_obs) / len(recent_obs)
-            if avg_conf < self.min_confidence:
-                return best_track_id, None
-
-            # Calculate robust centroid from consensus observations
-            mean_x = sum(o['x'] for o in recent_obs) / len(recent_obs)
-            mean_y = sum(o['y'] for o in recent_obs) / len(recent_obs)
-
-            # Check deduplication on the computed centroid
-            for cv in self.confirmed_victims:
-                if math.hypot(mean_x - cv['x'], mean_y - cv['y']) < self.dedup_radius:
-                    track['discovered'] = True  # Suppress duplicate without emitting event
-                    return best_track_id, None
-
-            # Representative observation (latest)
-            winning_obs = recent_obs[-1]
-            rep_gx, rep_gy = GridWorldTransform.world_to_grid(mean_x, mean_y)
-
-            track['discovered'] = True
-            self.confirmed_victims.append({
-                'track_id': best_track_id,
-                'x': mean_x,
-                'y': mean_y,
-                'ts': float(timestamp)
-            })
-
-            discovery_event = {
-                "event_type": "VICTIM_DISCOVERED",
-                "timestamp": float(timestamp),
-                "victim_track_id": int(best_track_id),
-                "confirming_drone_id": int(drone_id),
-                "world_x": round(float(mean_x), 2),
-                "world_y": round(float(mean_y), 2),
-                "grid_x": int(rep_gx),
-                "grid_y": int(rep_gy),
-                "grid_cell_size_m": float(self.grid_cell_size),
-                "confidence": round(float(avg_conf), 3),
-                "median_depth_estimate": round(float(winning_obs['depth']), 2),
-                "confirmation_count": int(self.consensus_needed),
-                "confirmation_window": int(self.window_size),
-                "consensus_span_sec": round(float(time_span), 3),
-                "depth_valid_samples": int(winning_obs['samples']),
-                "depth_spread": round(float(winning_obs['spread']), 2)
-            }
-                
-        return best_track_id, discovery_event
 
 class RGBDVictimLocalizerNode(Node):
     def __init__(self):
@@ -234,7 +85,7 @@ class RGBDVictimLocalizerNode(Node):
         self.localizer = RGBDGeometricLocalizer()
 
         # Initialize GridWorldTransform bounds from environment metadata if present
-        meta_file = os.environ.get("WORLD_META_PATH", "/home/capstone/capstone_project_antigravity/worlds/forest_dense_candidate_meta.json")
+        meta_file = os.environ.get("WORLD_META_PATH", "/home/capstone/capstone_project_antigravity/worlds/generated_world_meta.json")
         if os.path.exists(meta_file):
             try:
                 with open(meta_file, 'r') as f:
@@ -242,9 +93,9 @@ class RGBDVictimLocalizerNode(Node):
                 w_cfg = meta.get('search_area') or meta.get('world') or {}
                 width = int(w_cfg.get('grid_width', 25))
                 height = int(w_cfg.get('grid_height', 25))
-                meters_per_cell = float(w_cfg.get('meters_per_cell', 8.0))
-                origin_x = float(w_cfg.get('origin_x', w_cfg.get('grid_origin_x', -180.0)))
-                origin_y = float(w_cfg.get('origin_y', w_cfg.get('grid_origin_y', -20.0)))
+                meters_per_cell = float(w_cfg.get('meters_per_cell', 4.0))
+                origin_x = float(w_cfg.get('origin_x', w_cfg.get('grid_origin_x', 0.0)))
+                origin_y = float(w_cfg.get('origin_y', w_cfg.get('grid_origin_y', 0.0)))
                 GridWorldTransform.set_bounds(
                     width=width,
                     height=height,
@@ -257,13 +108,13 @@ class RGBDVictimLocalizerNode(Node):
                 self.get_logger().warn(f"Failed to load world bounds from {meta_file}: {e}")
 
         self.confirmer = EventConfirmer(
-            window_size=6,
-            consensus_needed=4,
-            proximity_threshold=3.0,
+            window_size=int(os.environ.get("LOCALIZER_WINDOW_SIZE", "6")),
+            consensus_needed=int(os.environ.get("LOCALIZER_CONSENSUS_NEEDED", "2")),
+            proximity_threshold=float(os.environ.get("LOCALIZER_PROXIMITY_THRESHOLD", "3.0")),
             grid_cell_size=GridWorldTransform.METERS_PER_CELL,
-            min_confidence=0.45,
-            min_time_span=0.4,
-            dedup_radius=6.0
+            min_confidence=float(os.environ.get("LOCALIZER_MIN_CONFIDENCE", "0.28")),
+            min_time_span=float(os.environ.get("LOCALIZER_MIN_TIME_SPAN", "0.15")),
+            dedup_radius=float(os.environ.get("LOCALIZER_DEDUP_RADIUS", "6.0"))
         )
         
         self.depth_buffers = {i: [] for i in range(6)}
@@ -346,6 +197,12 @@ class RGBDVictimLocalizerNode(Node):
         drone_x, drone_y, drone_z, drone_yaw = pose
             
         for det in detections:
+            # Defensive strict check: only process candidates classified as 'person'
+            det_cls = str(det.get('class', 'person')).strip().lower()
+            if det_cls != 'person':
+                self.get_logger().warn(f'Drone {drone_id}: Ignoring non-person detection class="{det_cls}"')
+                continue
+
             x1, y1, x2, y2 = det['bbox']
             conf = det['confidence']
             w = x2 - x1

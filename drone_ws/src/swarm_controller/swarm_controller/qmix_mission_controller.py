@@ -2,6 +2,7 @@ import os
 import csv
 import time
 import math
+import rclpy
 from rclpy.node import Node
 import sys
 from std_msgs.msg import String
@@ -11,6 +12,7 @@ from swarm_controller.drone_agent import DroneAgent, FlightState
 from swarm_controller.grid_world_transform import GridWorldTransform
 from swarm_controller.qmix_ros2_adapter import QMIXAdapter
 from swarm_controller.victim_manager import VictimManager
+from swarm_controller.sar_task_allocator import SARTaskAllocator, TaskState
 
 sys.path.append('/home/capstone/capstone_project_antigravity')
 from marl_drone_project.env.sar_env import SARGridEnv
@@ -86,6 +88,9 @@ class QMIXMissionController(Node):
         self.start_time = time.time()
         self.global_step_state = "INITIALIZING"
 
+        # Modular SAR Task Allocator for autonomous discoveries
+        self.task_allocator = SARTaskAllocator(node=self)
+
         self.setup_telemetry()
 
         # Create control loop timer
@@ -143,7 +148,78 @@ class QMIXMissionController(Node):
         self.last_actions = {a.config.drone_id: "None" for a in self.agents}
         self.last_safety_overrides = {a.config.drone_id: False for a in self.agents}
 
+        # Autonomous victim discovery ingestion
+        self.discovery_sub = self.create_subscription(
+            String,
+            '/sar/victim_discovery',
+            self.discovery_callback,
+            10
+        )
+
         self.get_logger().info("QMIX Mission Controller initialized.")
+
+    def discovery_callback(self, msg: String):
+        """Callback for /sar/victim_discovery events from autonomous perception.
+        
+        Enforces mandatory publisher fields:
+          - event_type == 'VICTIM_DISCOVERED'
+          - timestamp (finite float >= 0.0)
+          - victim_track_id (non-negative integer)
+          - confirming_drone_id (non-negative integer)
+          - world_x (finite float)
+          - world_y (finite float)
+          - confidence (finite float in [0.0, 1.0])
+        
+        Rejects missing or invalid mandatory fields with diagnostic warnings.
+        Validates optional metadata strictly (finite checks, non-negative constraints).
+        Preserves source, source_track_id, and verification_mode independently.
+        Uses UNKNOWN_AUTONOMOUS_SOURCE when source is absent from publisher payload.
+        Synchronizes confirmed discoveries into SARTaskAllocator.
+        """
+        try:
+            if not msg.data:
+                return
+            data = json.loads(msg.data)
+            if not isinstance(data, dict):
+                self.get_logger().warn("[QMIX Discovery] Non-dict payload received on /sar/victim_discovery.")
+                return
+
+            is_valid, parsed_data, reason = self.victim_manager.validate_event_payload(data)
+            if not is_valid or parsed_data is None:
+                self.get_logger().warn(f"[QMIX Discovery] Rejected invalid discovery event: {reason}")
+                return
+
+            # Ingest validated event into VictimManager
+            self.victim_manager.process_discovery_event(
+                world_x=parsed_data["world_x"],
+                world_y=parsed_data["world_y"],
+                source=parsed_data["source"],
+                confidence=parsed_data["confidence"],
+                drone_id=parsed_data["drone_id"],
+                sim_time=parsed_data["sim_time"],
+                source_track_id=parsed_data["source_track_id"],
+                verification_mode=parsed_data["verification_mode"],
+                evidence_state=parsed_data["evidence_state"],
+                thermal_peak_k=parsed_data["thermal_peak_k"],
+                thermal_delta_k=parsed_data["thermal_delta_k"],
+                confirmation_count=parsed_data["confirmation_count"],
+                confirmation_window=parsed_data["confirmation_window"],
+                consensus_span_sec=parsed_data["consensus_span_sec"],
+                median_depth_estimate=parsed_data["median_depth_estimate"],
+                depth_valid_samples=parsed_data["depth_valid_samples"],
+                depth_spread=parsed_data["depth_spread"]
+            )
+
+            # Sync autonomous discoveries into Task Allocator
+            self.task_allocator.sync_from_tracked_victims(
+                self.victim_manager.tracked_victims,
+                parsed_data["sim_time"]
+            )
+        except json.JSONDecodeError as err:
+            self.get_logger().warn(f"[QMIX Discovery] Malformed JSON message on /sar/victim_discovery: {err}")
+        except Exception as e:
+            self.get_logger().error(f"[QMIX Discovery] Error processing discovery event: {e}")
+
 
     def _initialize_grid_obstacles(self, meta_file=None):
         """Populates the grid with static obstacles from metadata."""
@@ -254,6 +330,37 @@ class QMIXMissionController(Node):
             if sum(new_cells) > 0:
                 self.env._update_global_bfs()
             self._check_proximity_detection()
+
+            # Update autonomous task allocator lifecycle
+            current_sim_time = self.agents[0].get_current_sim_time() if self.agents else 0.0
+            self.task_allocator.sync_from_tracked_victims(self.victim_manager.tracked_victims, current_sim_time)
+            drone_positions = {}
+            drone_states = {}
+            # Track all active agents (both QMIX and deterministic if present)
+            all_tracked_agents = list(self.agents) + getattr(self, 'det_agents', [])
+            for a in all_tracked_agents:
+                local_north, local_east, _ = a.px4.current_position
+                wx, wy = GridWorldTransform.px4_ned_to_world_enu(
+                    local_north, local_east, a.config.world_spawn_x, a.config.world_spawn_y
+                )
+                drone_positions[str(a.config.drone_id)] = (wx, wy)
+                drone_states[str(a.config.drone_id)] = a.state.name
+            self.task_allocator.update_task_lifecycle(drone_positions, drone_states, current_sim_time)
+
+            # Allocate unassigned tasks to available drones
+            # In 6-drone mode (det_agents present), det_agents are preferred for SAR tasks.
+            # In 2-drone mode (det_agents empty), QMIX agents are eligible.
+            det_agents = getattr(self, 'det_agents', [])
+            eligible_pool = det_agents if det_agents else self.agents
+            available_drones = {}
+            for a in eligible_pool:
+                d_id = str(a.config.drone_id)
+                if a.get_state() in [FlightState.WAYPOINT_NAVIGATION, FlightState.HOLD]:
+                    if d_id not in self.task_allocator.drone_assignments:
+                        if d_id in drone_positions:
+                            available_drones[d_id] = drone_positions[d_id]
+            if available_drones:
+                self.task_allocator.allocate_tasks(available_drones, current_sim_time)
 
         self.telemetry_tick_counter += 1
         if self.telemetry_tick_counter % 2 == 0:
@@ -384,6 +491,14 @@ class QMIXMissionController(Node):
                     if self.env.grid[gx, gy] == 1:
                         explored_cells.append({"x": int(gx), "y": int(gy)})
 
+            # Online Ground-Truth Evaluation (Strict one-to-one Hungarian matching)
+            eval_metrics = {}
+            if hasattr(self.victim_manager, 'get_evaluation_metrics'):
+                try:
+                    eval_metrics = self.victim_manager.get_evaluation_metrics()
+                except Exception as e:
+                    self.get_logger().debug(f"Evaluation metrics calculation error: {e}")
+
             # Build victim state list from VictimManager
             victims_state = [v.get_dict() for v in self.victim_manager.victims.values()]
             tracked_victims_state = [t.get_dict() for t in self.victim_manager.tracked_victims.values()]
@@ -393,6 +508,10 @@ class QMIXMissionController(Node):
 
             # Calculate simulation time
             sim_time = self.agents[0].get_current_sim_time() if self.agents else 0.0
+
+            # Task allocation state
+            task_alloc_data = self.task_allocator.get_telemetry()
+            tasks_list = [t.get_dict() for t in self.task_allocator.tasks.values()]
 
             msg_dict = {
                 "type": "telemetry",
@@ -414,11 +533,16 @@ class QMIXMissionController(Node):
                 "explored_cells": explored_cells,
                 "victims": victims_state,
                 "tracked_victims": tracked_victims_state,
+                "task_allocation": task_alloc_data,
+                "tasks": tasks_list,
+                "evaluation": eval_metrics,
                 "coordination": {
                     "qmix_drones": len(self.agents),
                     "coord_drones": 0,
                     "active_frontiers": {},
-                    "safety_holds": {str(a.config.drone_id): "HOLD" for a in self.agents if getattr(a, 'state', None) and a.state.name == "HOLD"}
+                    "safety_holds": {str(a.config.drone_id): "HOLD" for a in self.agents if getattr(a, 'state', None) and a.state.name == "HOLD"},
+                    "task_assignments": dict(self.task_allocator.drone_assignments),
+                    "tasks": tasks_list
                 }
             }
 
@@ -426,12 +550,13 @@ class QMIXMissionController(Node):
             msg.data = json.dumps(msg_dict)
             self.telemetry_pub.publish(msg)
         except Exception as e:
-            self.get_logger().error(f"Telemetry error: {e}")
+            self.get_logger().error(f"Error publishing telemetry: {e}")
 
     def sync_env_state(self):
-        """Synchronizes continuous telemetry with the discrete SARGridEnv internal state."""
+        """Authoritatively synchronizes the SARGridEnv state from physical PX4 drone locations."""
         for i, agent in enumerate(self.agents):
             local_north, local_east, _ = agent.px4.current_position
+
             wx, wy = GridWorldTransform.px4_ned_to_world_enu(
                 local_north, local_east, agent.config.world_spawn_x, agent.config.world_spawn_y
             )
@@ -447,16 +572,13 @@ class QMIXMissionController(Node):
         """Executes a fully synchronous RL step for all active agents simultaneously."""
         self.sync_env_state()
 
-        # Phase N5: Update moving victims
+        # Update moving victims
         self.victim_manager.update()
-
-        # Removed Mock Perception
 
         self.sync_victims_to_env()
 
         new_cells, _ = self.env._update_fov_and_victims()
 
-        # PHASE 1: BFS SEMANTIC FIX
         if sum(new_cells) > 0:
             self.env._update_global_bfs()
 
@@ -478,19 +600,39 @@ class QMIXMissionController(Node):
         # ============================================================
         # QMIX + Rule-Based Safety Shield (Multi-Agent Occupancy)
         # ============================================================
-        # Phase A: Compute all proposed targets BEFORE dispatching any action.
-        # This ensures deterministic conflict resolution independent of
-        # processing order.
         proposed = []  # List of (curr_gx, curr_gy, target_gx, target_gy, action)
         for idx, agent in enumerate(self.agents):
-            action = actions[idx]
             curr_gx, curr_gy = self.env.drone_positions[idx]
             target_gx, target_gy = curr_gx, curr_gy
 
-            if action == 0: target_gx += 1
-            elif action == 1: target_gx -= 1
-            elif action == 2: target_gy += 1
-            elif action == 3: target_gy -= 1
+            # Check if this agent is assigned an active autonomous SAR task
+            assigned_task = self.task_allocator.get_assigned_task_for_drone(agent.config.drone_id)
+            if assigned_task is not None and assigned_task.state in (TaskState.ASSIGNED, TaskState.APPROACHING, TaskState.INVESTIGATING):
+                if assigned_task.state == TaskState.INVESTIGATING:
+                    # Hover dwell over victim
+                    target_gx, target_gy = curr_gx, curr_gy
+                    action = 4
+                else:
+                    # Steer 1-cell step toward autonomous victim grid coordinates (4-connected)
+                    tgt_gx, tgt_gy = assigned_task.grid_x, assigned_task.grid_y
+                    step_gx, step_gy = curr_gx, curr_gy
+                    dx = tgt_gx - curr_gx
+                    dy = tgt_gy - curr_gy
+                    if abs(dx) >= abs(dy) and dx != 0:
+                        if dx > 0: action = 0; step_gx += 1
+                        else: action = 1; step_gx -= 1
+                    elif dy != 0:
+                        if dy > 0: action = 2; step_gy += 1
+                        else: action = 3; step_gy -= 1
+                    else:
+                        action = 4
+                    target_gx, target_gy = step_gx, step_gy
+            else:
+                action = actions[idx]
+                if action == 0: target_gx += 1
+                elif action == 1: target_gx -= 1
+                elif action == 2: target_gy += 1
+                elif action == 3: target_gy -= 1
 
             # Clamp to grid bounds
             safe_gx, safe_gy, is_valid = GridWorldTransform.clamp_grid(target_gx, target_gy)
@@ -500,27 +642,25 @@ class QMIXMissionController(Node):
 
             # Obstacle check
             if self.env.grid[safe_gx, safe_gy] == -1:
-                safe_gx, safe_gy = curr_gx, curr_gy
-                action = 4  # Override to hover on obstacle
+                if assigned_task is not None and assigned_task.state in (TaskState.ASSIGNED, TaskState.APPROACHING, TaskState.INVESTIGATING):
+                    # Aerial drones at flight altitude (10m+) can fly over ground rubble to investigate victims
+                    pass
+                else:
+                    safe_gx, safe_gy = curr_gx, curr_gy
+                    action = 4  # Override to hover on obstacle
 
             proposed.append((curr_gx, curr_gy, safe_gx, safe_gy, action))
 
-        # Phase B: Detect cell-swap conflicts.
-        # If drone A wants to move from X→Y and drone B wants to move from Y→X,
-        # both are overridden to hover to prevent mid-air crossing collision.
+        # Detect cell-swap conflicts
         swap_overrides = set()
         for i in range(len(proposed)):
             for j in range(i + 1, len(proposed)):
                 ci, cj = proposed[i], proposed[j]
-                # i: curr=(ci[0],ci[1]) -> target=(ci[2],ci[3])
-                # j: curr=(cj[0],cj[1]) -> target=(cj[2],cj[3])
                 if (ci[2], ci[3]) == (cj[0], cj[1]) and (cj[2], cj[3]) == (ci[0], ci[1]):
                     swap_overrides.add(i)
                     swap_overrides.add(j)
 
-        # Phase C: Apply occupancy claims with deterministic priority (lower index first).
-        # claimed_cells tracks all cells that will be occupied after this step.
-        # Start by claiming current positions of drones that are hovering.
+        # Apply occupancy claims with deterministic priority (lower index first)
         claimed_cells = set()
         final_actions = []  # (safe_gx, safe_gy, action, safety_override)
 
@@ -567,10 +707,8 @@ class QMIXMissionController(Node):
                 safe_gx, safe_gy = curr_gx, curr_gy
                 action = 4
                 safety_override = True
-                # If even the current cell is claimed (shouldn't happen normally),
-                # still allow it — drone is physically there already
                 if (safe_gx, safe_gy) in claimed_cells:
-                    pass  # Can't move, can't stay unclaimed — accept overlap at current pos
+                    pass
 
             claimed_cells.add((safe_gx, safe_gy))
             final_actions.append((safe_gx, safe_gy, action, safety_override))
@@ -588,19 +726,30 @@ class QMIXMissionController(Node):
                 if action == 4:
                     self.natural_hover_count += 1
 
-            target_wx, target_wy = GridWorldTransform.grid_to_world_center(safe_gx, safe_gy)
+            assigned_task = self.task_allocator.get_assigned_task_for_drone(agent.config.drone_id)
+            if assigned_task is not None and assigned_task.state in (TaskState.ASSIGNED, TaskState.APPROACHING, TaskState.INVESTIGATING):
+                dist_grid = math.hypot(curr_gx - assigned_task.grid_x, curr_gy - assigned_task.grid_y)
+                if dist_grid <= 1.5 or (safe_gx == assigned_task.grid_x and safe_gy == assigned_task.grid_y) or assigned_task.state == TaskState.INVESTIGATING:
+                    target_wx, target_wy = assigned_task.world_x, assigned_task.world_y
+                else:
+                    target_wx, target_wy = GridWorldTransform.grid_to_world_center(safe_gx, safe_gy)
+                is_hover = (action == 4) or (assigned_task.state == TaskState.INVESTIGATING)
+            else:
+                target_wx, target_wy = GridWorldTransform.grid_to_world_center(safe_gx, safe_gy)
+                is_hover = (action == 4)
+
             local_north, local_east = GridWorldTransform.world_enu_to_px4_ned(
                 target_wx, target_wy, agent.config.world_spawn_x, agent.config.world_spawn_y
             )
             lz = agent.initial_pos[2] - agent.mission.takeoff_altitude
 
-            is_hover = (action == 4)
             if agent.state not in (FlightState.FAILSAFE, FlightState.COMPLETE, FlightState.DISARM):
                 agent.set_mission_goal_local(local_north, local_east, lz, require_min_dwell=is_hover)
                 agent.state_timer = 0
                 agent._log_transition(FlightState.WAYPOINT_NAVIGATION)
 
-            self.last_actions[agent.config.drone_id] = action_names[action]
+            log_action_name = f"SAR_{assigned_task.state.value}:{action_names[action]}" if (assigned_task is not None and assigned_task.state in (TaskState.ASSIGNED, TaskState.APPROACHING, TaskState.INVESTIGATING)) else action_names[action]
+            self.last_actions[agent.config.drone_id] = log_action_name
             self.last_safety_overrides[agent.config.drone_id] = safety_override
 
             # Use original QMIX target for logging (before safety override)
@@ -611,8 +760,8 @@ class QMIXMissionController(Node):
             elif orig_action == 2: orig_tgt_gy += 1
             elif orig_action == 3: orig_tgt_gy -= 1
 
-            self.log_decision(agent, curr_gx, curr_gy, action, action_names[action], orig_tgt_gx, orig_tgt_gy, target_wx, target_wy, latencies[idx], safety_override)
-            self.get_logger().info(f"[{agent.config.drone_id}] Action: {action_names[action]} -> Grid ({safe_gx},{safe_gy}) -> World ({target_wx:.1f}, {target_wy:.1f})")
+            self.log_decision(agent, curr_gx, curr_gy, action, log_action_name, orig_tgt_gx, orig_tgt_gy, target_wx, target_wy, latencies[idx], safety_override)
+            self.get_logger().info(f"[{agent.config.drone_id}] Action: {log_action_name} -> Grid ({safe_gx},{safe_gy}) -> World ({target_wx:.1f}, {target_wy:.1f})")
 
     def log_decision(self, agent, gx, gy, action, action_name, tgt_gx, tgt_gy, tgt_wx, tgt_wy, inf_time, safety):
         local_north, local_east, local_down = agent.px4.current_position
@@ -647,11 +796,52 @@ class QMIXMissionController(Node):
             self.trajectory_writers[drone_id_str].writerow([t, curr_wx, curr_wy, wz, gx, gy])
             self.trajectory_files[drone_id_str].flush()
 
-        # Note: Proximity detection has been moved to _check_proximity_detection() in tick() for continuous checking
-
     def destroy_node(self):
         self.log_file.close()
         for f in self.trajectory_files.values():
             f.close()
         self.victim_file.close()
         super().destroy_node()
+
+
+def main(args=None):
+    """
+    ROS 2 executable entry point for QMIXMissionController.
+    Initializes rclpy, spins the controller node, and cleanly shuts down.
+    """
+    rclpy.init(args=args)
+    node = None
+    try:
+        from swarm_controller.configs import DroneConfig, MissionConfig
+        project_root = os.path.expanduser('~/capstone_project_antigravity')
+        meta_file = os.path.join(project_root, 'worlds', 'earthquake_world_meta.json')
+        checkpoint_path = os.path.join(project_root, 'models', 'qmix_sar_v4_align_best.pth')
+        mission_config = MissionConfig()
+        drone_configs = [DroneConfig(
+            drone_id="drone_0",
+            namespace="drone_0",
+            system_id=1,
+            world_spawn_x=0.0,
+            world_spawn_y=0.0,
+            world_spawn_z=0.2,
+            world_yaw=0.0
+        )]
+        node = QMIXMissionController(
+            mission_config=mission_config,
+            drone_configs=drone_configs,
+            checkpoint_path=checkpoint_path,
+            max_decisions=1,
+            meta_file=meta_file
+        )
+        rclpy.spin(node)
+    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
+        pass
+    finally:
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

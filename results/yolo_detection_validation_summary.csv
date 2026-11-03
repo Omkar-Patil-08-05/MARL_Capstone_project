@@ -1,0 +1,13 @@
+Metric,Value,Unit / Notes
+Total Ground Truth Victims,6,Victims placed in Gazebo scenarios
+True Positives (TP),2,Correctly detected & localized
+False Positives (FP),0,Incorrect person confirmations
+False Negatives (FN),4,Missed visible victims
+Precision,100.00%,TP / (TP + FP)
+Recall,33.33%,TP / (TP + FN)
+F1-Score,0.5000,Harmonic mean of Precision and Recall
+Mean Localization Error,0.148,Meters
+Median Localization Error,0.148,Meters
+Max Localization Error,0.148,Meters
+RMSE Localization Error,0.148,Meters
+Non-Human Distractors Rejected,3,"Vehicles, animals, rubble"

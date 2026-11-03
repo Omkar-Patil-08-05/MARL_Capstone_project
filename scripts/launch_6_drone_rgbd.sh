@@ -48,7 +48,7 @@ source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash
 
 export PYTHONUNBUFFERED=1
 
-ros2 run swarm_controller swarm_runner --drones ${DRONE_COUNT} --controller qmix &
+ros2 run swarm_controller swarm_runner --drones ${DRONE_COUNT} --controller hybrid &
 RUNNER_PID=$!
 
 echo "=================================================="

@@ -1,0 +1,83 @@
+{
+    "manifest_version": "1.0.0",
+    "manifest_name": "MARL_CAPSTONE_FINAL_RESEARCH_PACKAGE",
+    "timestamp": "2026-10-21T17:40:00+05:30",
+    "authoritative_git_commit": "4ca781c5b35db897a33f3cfa2cbce10ce45f98ae",
+    "git_branch": "main",
+    "system_architecture": {
+        "operating_system": "Ubuntu 24.04 LTS (x86_64, Linux kernel 6.8.0)",
+        "ros2_distribution": "Jazzy Jalisco",
+        "gazebo_simulator": "Gazebo Harmonic (gz-sim 8)",
+        "autopilot_firmware": "PX4 Autopilot SITL v1.14+",
+        "python_version": "3.12.3",
+        "pytorch_version": "2.4.0+cu121",
+        "hardware_accelerator": "NVIDIA GeForce RTX 3050 Laptop GPU (6 GB VRAM)"
+    },
+    "checkpoint_provenance": {
+        "path": "models/qmix_sar_v4_align_best.pth",
+        "md5": "f74edd5763cb5e895836bbc58448fe2d",
+        "sha256": "f87d87528969ff3165a0cdfb299f5d228ad99502b974176d05b81479242a272d",
+        "parameters_count": 39429,
+        "input_dimension": 29,
+        "rnn_hidden_dimension": 64,
+        "action_dimension": 5
+    },
+    "protected_baseline_world_hashes": {
+        "generated_worlds/forest_stage1_baseline.sdf": "c2d01d75be0e0f9e4fc9fbf0aab047f5",
+        "generated_worlds/forest_stage1_baseline_metadata.json": "9975d3d844fb108455289393b2b5632a",
+        "generated_worlds/forest_rescue_world.sdf": "7147545e7087ac3876fbe341d35cb193",
+        "generated_worlds/forest_rescue_metadata.json": "2fe08eb542508df4045dbac3c120541f",
+        "generated_worlds/earthquake_world.sdf": "46c779ae4b0ff84acc6e7df3734646b0",
+        "worlds/earthquake_world.sdf": "04ffa518b71cfc5959f4c0e5d94ec207"
+    },
+    "experimental_parameters": {
+        "city_benchmark": {
+            "map_id": "realistic_sar",
+            "world_file": "worlds/realistic_sar.sdf",
+            "metadata_file": "worlds/generated_world_meta.json",
+            "grid_size": [25, 25],
+            "cell_size_m": 4.0,
+            "valid_cells": 377,
+            "obstacle_cells": 248,
+            "drone_count": 2,
+            "victim_count": 3,
+            "detection_radius_m": 6.0,
+            "evaluation_seeds": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+            "decision_budget": 150
+        },
+        "forest_validation": {
+            "map_id": "forest_sar",
+            "world_file": "worlds/forest_sar.sdf",
+            "metadata_file": "worlds/forest_sar_meta.json",
+            "grid_size": [25, 25],
+            "cell_size_m": 8.0,
+            "origin_m": [-180.0, -20.0],
+            "valid_cells": 422,
+            "obstacle_cells": 203,
+            "drone_count": 2,
+            "victim_count": 3,
+            "detection_radius_m": 12.0,
+            "evaluation_seeds": [201, 202, 203, 204, 205],
+            "decision_budget": 150
+        },
+        "live_sitl_flight": {
+            "map_id": "realistic_sar",
+            "mission_id": "398731d3-6e33-4b9e-ae2b-d33788d05806",
+            "seed": 555,
+            "decisions_completed": 95,
+            "final_coverage_pct": 89.1247,
+            "victims_detected": 3,
+            "total_victims": 3,
+            "safety_overrides": 0,
+            "collisions": 0,
+            "persisted_telemetry_rows": 2480
+        }
+    },
+    "reproduction_commands": {
+        "regenerate_research_package": "python3 scripts/generate_final_research_package.py",
+        "run_city_benchmark": "python3 scripts/run_multi_seed_evaluation.py",
+        "run_forest_benchmark": "python3 scripts/run_forest_simulation_validation.py",
+        "verify_sim_time_sync": "python3 scripts/test_sim_time_sync.py",
+        "verify_protected_baselines": "python3 scripts/validate_forest_integration.py"
+    }
+}

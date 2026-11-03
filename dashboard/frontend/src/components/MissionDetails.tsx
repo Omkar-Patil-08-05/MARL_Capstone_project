@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { TelemetryTable } from './TelemetryTable';
 import type { Mission } from './ExperimentList';
+import { formatCoverage } from '../utils/formatters';
 
 interface Episode {
     id: string;
@@ -112,7 +113,7 @@ export function MissionDetails({ missionId, onBack }: Props) {
                     </div>
                     <div>
                         <div className="text-muted" style={{ fontSize: '0.8rem' }}>Final Coverage</div>
-                        <div style={{ color: 'var(--accent-cyan)' }}>{mission.final_coverage !== null ? `${mission.final_coverage}%` : 'N/A'}</div>
+                        <div style={{ color: 'var(--accent-cyan)' }}>{mission.final_coverage !== null && mission.final_coverage !== undefined ? formatCoverage(mission.final_coverage) : 'N/A'}</div>
                     </div>
                     <div>
                         <div className="text-muted" style={{ fontSize: '0.8rem' }}>Duration</div>
@@ -168,7 +169,7 @@ export function MissionDetails({ missionId, onBack }: Props) {
                                     <tr key={e.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                         <td style={{ padding: '8px 4px' }}>{e.episode_number ?? 'N/A'}</td>
                                         <td style={{ padding: '8px 4px' }}>{e.duration?.toFixed(1) ?? 'N/A'}s</td>
-                                        <td style={{ padding: '8px 4px', color: 'var(--accent-cyan)' }}>{e.coverage?.toFixed(2) ?? 'N/A'}%</td>
+                                        <td style={{ padding: '8px 4px', color: 'var(--accent-cyan)' }}>{e.coverage !== null && e.coverage !== undefined ? formatCoverage(e.coverage) : 'N/A'}</td>
                                         <td style={{ padding: '8px 4px', color: 'var(--accent-green)' }}>{e.victims_found ?? 0}</td>
                                         <td style={{ padding: '8px 4px' }}>{e.invalid_flag ? 'Yes' : 'No'}</td>
                                         <td style={{ padding: '8px 4px' }}>{e.timeout_count ?? 0}</td>

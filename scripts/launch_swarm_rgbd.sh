@@ -38,6 +38,7 @@ sleep 2
 # Map parameterization
 MAP_ID=${1:-realistic_sar}
 DRONE_COUNT=${2:-1}
+DRONE_MODEL=${3:-${DRONE_MODEL:-x500_rgbd_down}}
 
 if [ "$DRONE_COUNT" -lt 1 ] || [ "$DRONE_COUNT" -gt 6 ]; then
     echo "Error: Unsupported drone count: $DRONE_COUNT. Must be 1-6."
@@ -155,8 +156,8 @@ for ((i=0; i<$DRONE_COUNT; i++)); do
     (
         cd /tmp/px4_instance_$i
         export PX4_GZ_WORLD="$PX4_GZ_WORLD"
-        # NEW: RGB-D down model instead of standard x500
-        export PX4_GZ_MODEL="x500_rgbd_down"
+        # Drone model selection: x500_rgbd_down (default) or x500_multispectral
+        export PX4_GZ_MODEL="$DRONE_MODEL"
         export PX4_GZ_MODEL_POSE="${DRONE_X[$i]},${DRONE_Y[$i]},${DRONE_Z[$i]},0,0,0"
         export PX4_UXRCE_DDS_NS="drone_$i"
         ${BUILD_DIR}/bin/px4 -i $i -d ${BUILD_DIR}/etc > out.log 2> err.log
@@ -167,20 +168,30 @@ for ((i=0; i<$DRONE_COUNT; i++)); do
     fi
 done
 
-# START RGB-D PERCEPTION INFRASTRUCTURE IMMEDIATELY
-echo "Starting ROS-Gazebo Bridge for $DRONE_COUNT drones..."
+# START RGB-D & MULTISPECTRAL PERCEPTION INFRASTRUCTURE IMMEDIATELY
+echo "Starting ROS-Gazebo Bridge for $DRONE_COUNT drones (model: $DRONE_MODEL)..."
 BRIDGE_TOPICS="/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock /world_camera/image@sensor_msgs/msg/Image[gz.msgs.Image /world/${PX4_GZ_WORLD}/model/world_overview_camera/link/link/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image "
 BRIDGE_REMAPS="--ros-args -r /world/${PX4_GZ_WORLD}/model/world_overview_camera/link/link/sensor/camera/image:=/world_camera/image "
 for ((i=0; i<$DRONE_COUNT; i++)); do
-    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image "
-    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image "
-    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo "
-    BRIDGE_TOPICS+="/model/x500_rgbd_down_${i}/pose@geometry_msgs/msg/PoseStamped[gz.msgs.Pose "
+    # Core RGB-D perception topics (common to x500_rgbd_down and x500_multispectral)
+    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image "
+    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image "
+    BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo "
+    BRIDGE_TOPICS+="/model/${DRONE_MODEL}_${i}/pose@geometry_msgs/msg/PoseStamped[gz.msgs.Pose "
     
-    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/image:=/drone_${i}/camera/image "
-    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/depth_image:=/drone_${i}/camera/depth_image "
-    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/x500_rgbd_down_${i}/link/camera_link/sensor/camera/camera_info:=/drone_${i}/camera/camera_info "
-    BRIDGE_REMAPS+="-r /model/x500_rgbd_down_${i}/pose:=/model/drone_${i}/pose "
+    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/camera/image:=/drone_${i}/camera/image "
+    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/camera/depth_image:=/drone_${i}/camera/depth_image "
+    BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/camera/camera_info:=/drone_${i}/camera/camera_info "
+    BRIDGE_REMAPS+="-r /model/${DRONE_MODEL}_${i}/pose:=/model/drone_${i}/pose "
+
+    # Multispectral Thermal Infrared sensor topics (enabled when x500_multispectral is active)
+    if [ "$DRONE_MODEL" == "x500_multispectral" ]; then
+        BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/thermal_camera/image@sensor_msgs/msg/Image[gz.msgs.Image "
+        BRIDGE_TOPICS+="/world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/thermal_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo "
+
+        BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/thermal_camera/image:=/drone_${i}/thermal/image_raw "
+        BRIDGE_REMAPS+="-r /world/${PX4_GZ_WORLD}/model/${DRONE_MODEL}_${i}/link/camera_link/sensor/thermal_camera/camera_info:=/drone_${i}/thermal/camera_info "
+    fi
 done
 
 source /opt/ros/jazzy/setup.bash
@@ -201,8 +212,13 @@ echo "Starting Centralized YOLO Perception Node..."
 bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && ~/yolo_venv/bin/python3 /home/capstone/capstone_project_antigravity/drone_ws/src/swarm_controller/swarm_controller/swarm_perception_node.py" > /tmp/central_yolo.log 2>&1 &
 sleep 2
 
-echo "Starting RGB-D Victim Localizer..."
-bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export WORLD_META_PATH=\"$META_FILE\" && export DEPTH_SYNC_TOLERANCE=0.6 && python3 /home/capstone/capstone_project_antigravity/drone_ws/src/swarm_controller/swarm_controller/rgbd_victim_localizer.py" > /tmp/localizer.log 2>&1 &
+if [ "$DRONE_MODEL" == "x500_multispectral" ]; then
+    echo "Starting Multispectral RGB-Thermal Fusion Verifier..."
+    bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export WORLD_META_PATH=\"$META_FILE\" && python3 /home/capstone/capstone_project_antigravity/drone_ws/src/swarm_controller/swarm_controller/rgb_thermal_fusion_verifier.py" > /tmp/localizer.log 2>&1 &
+else
+    echo "Starting RGB-D Victim Localizer..."
+    bash -c "source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export WORLD_META_PATH=\"$META_FILE\" && export DEPTH_SYNC_TOLERANCE=0.6 && python3 /home/capstone/capstone_project_antigravity/drone_ws/src/swarm_controller/swarm_controller/rgbd_victim_localizer.py" > /tmp/localizer.log 2>&1 &
+fi
 
 echo "All instances started. Press Ctrl+C to stop."
 sleep infinity

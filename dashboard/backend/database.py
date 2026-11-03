@@ -19,6 +19,7 @@ class EventType(Enum):
     TELEMETRY = "TELEMETRY"
     PERFORMANCE = "PERFORMANCE"
     SAFETY = "SAFETY"
+    TASK = "TASK"
 
 class DatabaseWriter(threading.Thread):
     def __init__(self, db_path=DB_PATH, max_qsize=50000, batch_size=1000):
@@ -110,7 +111,7 @@ class DatabaseWriter(threading.Thread):
         )
         """)
         
-        # VICTIMS
+        # GROUND TRUTH VICTIMS
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS victims (
             id TEXT PRIMARY KEY,
@@ -123,7 +124,7 @@ class DatabaseWriter(threading.Thread):
         )
         """)
         
-        # DETECTION EVENTS
+        # DETECTION EVENTS (Ground Truth Proximity & Autonomous Perception)
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS detection_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,6 +141,32 @@ class DatabaseWriter(threading.Thread):
             confidence REAL,
             confirmation_count INTEGER,
             UNIQUE(mission_id, victim_id, detection_source)
+        )
+        """)
+
+        # SAR TASKS (Autonomous Lifecycle & Allocation)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS sar_tasks (
+            id TEXT PRIMARY KEY,
+            mission_id TEXT REFERENCES missions(id) ON DELETE CASCADE,
+            victim_id TEXT,
+            world_x REAL,
+            world_y REAL,
+            grid_x INTEGER,
+            grid_y INTEGER,
+            state TEXT,
+            assigned_drone_id TEXT,
+            confidence REAL,
+            verification_mode TEXT,
+            evidence_state TEXT,
+            created_sim_time REAL,
+            updated_sim_time REAL,
+            assigned_sim_time REAL,
+            investigation_start_sim_time REAL,
+            completed_sim_time REAL,
+            failed_sim_time REAL,
+            failure_reason TEXT,
+            reassignment_count INTEGER
         )
         """)
         
@@ -190,6 +217,8 @@ class DatabaseWriter(threading.Thread):
         # Indexes for fast querying
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_mission ON telemetry(mission_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_drone ON telemetry(drone_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_sar_tasks_mission ON sar_tasks(mission_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_detection_events_mission ON detection_events(mission_id)")
         
         self.conn.commit()
         
@@ -270,10 +299,60 @@ class DatabaseWriter(threading.Thread):
                         (data['id'], data['mission_id'], data.get('world_x'), data.get('world_y'), data.get('grid_x'), data.get('grid_y'), data.get('detection_status'))
                     )
                 elif event_type == EventType.DETECTION:
-                    cursor.execute(
-                        "INSERT OR IGNORE INTO detection_events (mission_id, episode_id, victim_id, drone_id, timestamp, detection_source, detection_world_x, detection_world_y, detection_world_z, euclidean_distance, confidence, confirmation_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        (data['mission_id'], data.get('episode_id'), data['victim_id'], data.get('drone_id'), data.get('timestamp'), data.get('detection_source'), data.get('detection_world_x'), data.get('detection_world_y'), data.get('detection_world_z'), data.get('euclidean_distance'), data.get('confidence'), data.get('confirmation_count'))
-                    )
+                    cursor.execute("""
+                        INSERT INTO detection_events (
+                            mission_id, episode_id, victim_id, drone_id, timestamp,
+                            detection_source, detection_world_x, detection_world_y, detection_world_z,
+                            euclidean_distance, confidence, confirmation_count
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(mission_id, victim_id, detection_source) DO UPDATE SET
+                            detection_world_x = excluded.detection_world_x,
+                            detection_world_y = excluded.detection_world_y,
+                            confidence = max(detection_events.confidence, excluded.confidence),
+                            confirmation_count = max(coalesce(detection_events.confirmation_count, 1), coalesce(excluded.confirmation_count, 1)),
+                            timestamp = max(detection_events.timestamp, excluded.timestamp)
+                    """, (
+                        data['mission_id'], data.get('episode_id'), data['victim_id'], data.get('drone_id'),
+                        data.get('timestamp'), data.get('detection_source'), data.get('detection_world_x'),
+                        data.get('detection_world_y'), data.get('detection_world_z', 0.1),
+                        data.get('euclidean_distance'), data.get('confidence', 1.0), data.get('confirmation_count', 1)
+                    ))
+                elif event_type == EventType.TASK:
+                    cursor.execute("""
+                        INSERT INTO sar_tasks (
+                            id, mission_id, victim_id, world_x, world_y, grid_x, grid_y, state,
+                            assigned_drone_id, confidence, verification_mode, evidence_state,
+                            created_sim_time, updated_sim_time, assigned_sim_time,
+                            investigation_start_sim_time, completed_sim_time, failed_sim_time,
+                            failure_reason, reassignment_count
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET
+                            world_x = excluded.world_x,
+                            world_y = excluded.world_y,
+                            grid_x = excluded.grid_x,
+                            grid_y = excluded.grid_y,
+                            state = excluded.state,
+                            assigned_drone_id = excluded.assigned_drone_id,
+                            confidence = max(sar_tasks.confidence, excluded.confidence),
+                            verification_mode = coalesce(excluded.verification_mode, sar_tasks.verification_mode),
+                            evidence_state = excluded.evidence_state,
+                            updated_sim_time = excluded.updated_sim_time,
+                            assigned_sim_time = coalesce(excluded.assigned_sim_time, sar_tasks.assigned_sim_time),
+                            investigation_start_sim_time = coalesce(excluded.investigation_start_sim_time, sar_tasks.investigation_start_sim_time),
+                            completed_sim_time = coalesce(excluded.completed_sim_time, sar_tasks.completed_sim_time),
+                            failed_sim_time = coalesce(excluded.failed_sim_time, sar_tasks.failed_sim_time),
+                            failure_reason = excluded.failure_reason,
+                            reassignment_count = excluded.reassignment_count
+                    """, (
+                        data['id'], data.get('mission_id'), data.get('victim_id'),
+                        data.get('world_x'), data.get('world_y'), data.get('grid_x'), data.get('grid_y'),
+                        data.get('state'), data.get('assigned_drone_id'), data.get('confidence', 1.0),
+                        data.get('verification_mode'), data.get('evidence_state', 'TEMPORALLY_CONFIRMED'),
+                        data.get('created_sim_time', 0.0), data.get('updated_sim_time', 0.0),
+                        data.get('assigned_sim_time'), data.get('investigation_start_sim_time'),
+                        data.get('completed_sim_time'), data.get('failed_sim_time'),
+                        data.get('failure_reason'), data.get('reassignment_count', 0)
+                    ))
                 elif event_type == EventType.SAFETY:
                     cursor.execute(
                         "INSERT INTO safety_events (timestamp, mission_id, episode_id, drone_ids, conflict_type, action_taken, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)",

@@ -1,0 +1,1954 @@
+{
+  "config_a_headless_5hz": [
+    {
+      "config_key": "config_a_headless_5hz",
+      "rep_index": 1,
+      "seed": 201,
+      "wall_elapsed_sec": 110.2,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.0481,
+      "dec_count": 3,
+      "decisions_per_wall_min": 1.63,
+      "coverage_start": 3.26,
+      "coverage_end": 5.81,
+      "coverage_gain": 2.55,
+      "valid_cells_gain": 11,
+      "valid_cells_per_wall_min": 5.99,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 26,
+          "fps": 8.42,
+          "sample_duration_sec": 3.09
+        },
+        {
+          "drone_id": 1,
+          "frames": 29,
+          "fps": 9.54,
+          "sample_duration_sec": 3.04
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 47.3,
+        "system_cpu_max": 65.8,
+        "gz_cpu_mean": 153.5,
+        "gz_cpu_max": 161.2,
+        "px4_cpu_mean": 89.1,
+        "px4_cpu_max": 92.9,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 1275.0
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792604999.2,
+          "sim_time": 16.8,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.96,
+              "y": 140.05,
+              "z": 14.56,
+              "vx": -0.07,
+              "vy": -0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.97,
+              "y": 140.08,
+              "z": 14.55,
+              "vx": -0.06,
+              "vy": -0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792605043.85,
+          "sim_time": 18.9,
+          "coverage": 4.19,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.1,
+              "y": 135.99,
+              "z": 14.82,
+              "vx": 0.51,
+              "vy": -0.93,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.79,
+              "y": 142.47,
+              "z": 14.96,
+              "vx": 4.74,
+              "vy": 2.62,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792605079.13,
+          "sim_time": 20.5,
+          "coverage": 5.12,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -161.95,
+              "y": 135.63,
+              "z": 15.05,
+              "vx": 4.67,
+              "vy": 0.35,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.48,
+              "y": 150.82,
+              "z": 15.0,
+              "vx": -0.21,
+              "vy": 4.95,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792605109.4,
+          "sim_time": 22.1,
+          "coverage": 5.81,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.54,
+              "y": 129.97,
+              "z": 15.08,
+              "vx": -0.28,
+              "vy": -4.58,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.04,
+              "y": 159.27,
+              "z": 14.96,
+              "vx": -0.49,
+              "vy": 3.88,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "config_key": "config_a_headless_5hz",
+      "rep_index": 2,
+      "seed": 201,
+      "wall_elapsed_sec": 107.25,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.0494,
+      "dec_count": 3,
+      "decisions_per_wall_min": 1.68,
+      "coverage_start": 3.26,
+      "coverage_end": 6.05,
+      "coverage_gain": 2.79,
+      "valid_cells_gain": 12,
+      "valid_cells_per_wall_min": 6.71,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 25,
+          "fps": 8.21,
+          "sample_duration_sec": 3.05
+        },
+        {
+          "drone_id": 1,
+          "frames": 29,
+          "fps": 9.64,
+          "sample_duration_sec": 3.01
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 47.7,
+        "system_cpu_max": 81.7,
+        "gz_cpu_mean": 152.2,
+        "gz_cpu_max": 161.1,
+        "px4_cpu_mean": 84.5,
+        "px4_cpu_max": 88.3,
+        "gpu_util_mean": 0.1,
+        "vram_mb_mean": 1305.0
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792606835.17,
+          "sim_time": 22.85,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.96,
+              "y": 140.05,
+              "z": 14.64,
+              "vx": -0.08,
+              "vy": -0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.99,
+              "y": 140.11,
+              "z": 14.63,
+              "vx": -0.08,
+              "vy": -0.02,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792606875.19,
+          "sim_time": 24.95,
+          "coverage": 4.42,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.09,
+              "y": 135.94,
+              "z": 14.89,
+              "vx": 0.53,
+              "vy": -0.91,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.76,
+              "y": 142.47,
+              "z": 15.03,
+              "vx": 4.85,
+              "vy": 2.59,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792606907.78,
+          "sim_time": 26.55,
+          "coverage": 5.35,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -161.93,
+              "y": 135.61,
+              "z": 15.13,
+              "vx": 4.69,
+              "vy": 0.37,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.48,
+              "y": 150.71,
+              "z": 15.07,
+              "vx": -0.3,
+              "vy": 5.0,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792606942.42,
+          "sim_time": 28.15,
+          "coverage": 6.05,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.49,
+              "y": 129.9,
+              "z": 15.15,
+              "vx": -0.33,
+              "vy": -4.58,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.06,
+              "y": 159.23,
+              "z": 15.04,
+              "vx": -0.47,
+              "vy": 3.95,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "config_key": "config_a_headless_5hz",
+      "rep_index": 3,
+      "seed": 201,
+      "wall_elapsed_sec": 112.88,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.047,
+      "dec_count": 3,
+      "decisions_per_wall_min": 1.59,
+      "coverage_start": 3.26,
+      "coverage_end": 5.81,
+      "coverage_gain": 2.55,
+      "valid_cells_gain": 11,
+      "valid_cells_per_wall_min": 5.85,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 29,
+          "fps": 9.52,
+          "sample_duration_sec": 3.05
+        },
+        {
+          "drone_id": 1,
+          "frames": 29,
+          "fps": 9.57,
+          "sample_duration_sec": 3.03
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 46.9,
+        "system_cpu_max": 60.6,
+        "gz_cpu_mean": 152.1,
+        "gz_cpu_max": 162.5,
+        "px4_cpu_mean": 87.0,
+        "px4_cpu_max": 90.3,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 1301.0
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792607489.61,
+          "sim_time": 22.6,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.93,
+              "y": 140.05,
+              "z": 14.61,
+              "vx": -0.03,
+              "vy": -0.0,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -132.0,
+              "y": 140.05,
+              "z": 14.57,
+              "vx": -0.05,
+              "vy": -0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792607535.89,
+          "sim_time": 24.7,
+          "coverage": 4.19,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.14,
+              "y": 135.95,
+              "z": 14.79,
+              "vx": 0.55,
+              "vy": -0.92,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.78,
+              "y": 142.57,
+              "z": 14.98,
+              "vx": 4.81,
+              "vy": 2.6,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792607569.38,
+          "sim_time": 26.3,
+          "coverage": 5.12,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -161.98,
+              "y": 135.62,
+              "z": 15.06,
+              "vx": 4.72,
+              "vy": 0.33,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.53,
+              "y": 150.67,
+              "z": 15.02,
+              "vx": -0.27,
+              "vy": 4.97,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792607602.49,
+          "sim_time": 27.9,
+          "coverage": 5.81,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.44,
+              "y": 129.92,
+              "z": 15.09,
+              "vx": -0.31,
+              "vy": -4.61,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.07,
+              "y": 159.22,
+              "z": 15.0,
+              "vx": -0.47,
+              "vy": 3.97,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "config_d_physics_only": [
+    {
+      "config_key": "config_d_physics_only",
+      "rep_index": 1,
+      "seed": 201,
+      "wall_elapsed_sec": 74.25,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.0714,
+      "dec_count": 3,
+      "decisions_per_wall_min": 2.42,
+      "coverage_start": 3.26,
+      "coverage_end": 5.81,
+      "coverage_gain": 2.55,
+      "valid_cells_gain": 11,
+      "valid_cells_per_wall_min": 8.89,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "status": "disabled_physics_only"
+        },
+        {
+          "drone_id": 1,
+          "status": "disabled_physics_only"
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 49.8,
+        "system_cpu_max": 66.3,
+        "gz_cpu_mean": 125.0,
+        "gz_cpu_max": 129.2,
+        "px4_cpu_mean": 92.7,
+        "px4_cpu_max": 103.1,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 143.0
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792607884.92,
+          "sim_time": 25.3,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.99,
+              "y": 140.09,
+              "z": 14.58,
+              "vx": -0.06,
+              "vy": -0.03,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.97,
+              "y": 140.03,
+              "z": 14.55,
+              "vx": -0.01,
+              "vy": 0.0,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792607908.99,
+          "sim_time": 27.4,
+          "coverage": 4.19,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.12,
+              "y": 135.98,
+              "z": 14.85,
+              "vx": 0.56,
+              "vy": -0.97,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.74,
+              "y": 142.55,
+              "z": 14.95,
+              "vx": 4.78,
+              "vy": 2.61,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792607937.55,
+          "sim_time": 29.0,
+          "coverage": 5.12,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -161.96,
+              "y": 135.67,
+              "z": 15.04,
+              "vx": 4.7,
+              "vy": 0.32,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.48,
+              "y": 150.67,
+              "z": 14.99,
+              "vx": -0.26,
+              "vy": 4.95,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792607959.17,
+          "sim_time": 30.6,
+          "coverage": 5.81,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.44,
+              "y": 129.86,
+              "z": 15.07,
+              "vx": -0.25,
+              "vy": -4.6,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.07,
+              "y": 159.25,
+              "z": 14.96,
+              "vx": -0.46,
+              "vy": 3.91,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "config_key": "config_d_physics_only",
+      "rep_index": 2,
+      "seed": 201,
+      "wall_elapsed_sec": 75.79,
+      "sim_elapsed_sec": 5.4,
+      "measured_rtf": 0.0712,
+      "dec_count": 3,
+      "decisions_per_wall_min": 2.37,
+      "coverage_start": 3.95,
+      "coverage_end": 6.74,
+      "coverage_gain": 2.79,
+      "valid_cells_gain": 12,
+      "valid_cells_per_wall_min": 9.5,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "status": "disabled_physics_only"
+        },
+        {
+          "drone_id": 1,
+          "status": "disabled_physics_only"
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 48.8,
+        "system_cpu_max": 75.4,
+        "gz_cpu_mean": 124.6,
+        "gz_cpu_max": 129.1,
+        "px4_cpu_mean": 91.5,
+        "px4_cpu_max": 103.9,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 143.0
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792608241.8,
+          "sim_time": 25.55,
+          "coverage": 3.95,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.98,
+              "y": 140.1,
+              "z": 14.55,
+              "vx": -0.08,
+              "vy": 0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.92,
+              "y": 140.0,
+              "z": 14.55,
+              "vx": -0.04,
+              "vy": 0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792608267.93,
+          "sim_time": 27.65,
+          "coverage": 5.12,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.11,
+              "y": 135.9,
+              "z": 14.83,
+              "vx": 0.49,
+              "vy": -0.96,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -122.18,
+              "y": 135.84,
+              "z": 14.95,
+              "vx": 5.35,
+              "vy": -0.84,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792608294.5,
+          "sim_time": 29.25,
+          "coverage": 5.81,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -161.95,
+              "y": 135.68,
+              "z": 15.03,
+              "vx": 4.67,
+              "vy": 0.38,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -113.49,
+              "y": 136.14,
+              "z": 14.96,
+              "vx": 4.48,
+              "vy": 0.16,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792608317.59,
+          "sim_time": 30.95,
+          "coverage": 6.74,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.51,
+              "y": 129.45,
+              "z": 15.07,
+              "vx": -0.33,
+              "vy": -4.22,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -111.66,
+              "y": 130.18,
+              "z": 15.04,
+              "vx": -0.67,
+              "vy": -4.46,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "config_key": "config_d_physics_only",
+      "rep_index": 3,
+      "seed": 201,
+      "wall_elapsed_sec": 66.7,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.0795,
+      "dec_count": 3,
+      "decisions_per_wall_min": 2.7,
+      "coverage_start": 3.26,
+      "coverage_end": 6.05,
+      "coverage_gain": 2.79,
+      "valid_cells_gain": 12,
+      "valid_cells_per_wall_min": 10.79,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "status": "disabled_physics_only"
+        },
+        {
+          "drone_id": 1,
+          "status": "disabled_physics_only"
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 45.3,
+        "system_cpu_max": 67.9,
+        "gz_cpu_mean": 124.0,
+        "gz_cpu_max": 127.1,
+        "px4_cpu_mean": 88.4,
+        "px4_cpu_max": 97.9,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 143.0
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792608591.06,
+          "sim_time": 25.6,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.0,
+              "y": 140.05,
+              "z": 14.61,
+              "vx": -0.03,
+              "vy": -0.04,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.99,
+              "y": 140.04,
+              "z": 14.54,
+              "vx": -0.08,
+              "vy": -0.04,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792608615.2,
+          "sim_time": 27.8,
+          "coverage": 4.42,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.04,
+              "y": 135.93,
+              "z": 14.93,
+              "vx": 0.49,
+              "vy": -0.86,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.6,
+              "y": 142.63,
+              "z": 14.98,
+              "vx": 4.64,
+              "vy": 2.51,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792608635.74,
+          "sim_time": 29.3,
+          "coverage": 5.35,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -162.22,
+              "y": 135.65,
+              "z": 15.12,
+              "vx": 4.86,
+              "vy": 0.34,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.5,
+              "y": 150.42,
+              "z": 15.01,
+              "vx": -0.23,
+              "vy": 5.17,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792608657.76,
+          "sim_time": 30.9,
+          "coverage": 6.05,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.42,
+              "y": 130.13,
+              "z": 15.15,
+              "vx": -0.22,
+              "vy": -4.8,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.07,
+              "y": 158.99,
+              "z": 14.99,
+              "vx": -0.48,
+              "vy": 4.21,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "config_c_headless_2hz": [
+    {
+      "config_key": "config_c_headless_2hz",
+      "rep_index": 1,
+      "seed": 201,
+      "wall_elapsed_sec": 73.19,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.0724,
+      "dec_count": 3,
+      "decisions_per_wall_min": 2.46,
+      "coverage_start": 3.26,
+      "coverage_end": 5.81,
+      "coverage_gain": 2.55,
+      "valid_cells_gain": 11,
+      "valid_cells_per_wall_min": 9.02,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 29,
+          "fps": 9.61,
+          "sample_duration_sec": 3.02
+        },
+        {
+          "drone_id": 1,
+          "frames": 28,
+          "fps": 9.07,
+          "sample_duration_sec": 3.09
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 41.0,
+        "system_cpu_max": 55.3,
+        "gz_cpu_mean": 138.4,
+        "gz_cpu_max": 156.1,
+        "px4_cpu_mean": 80.8,
+        "px4_cpu_max": 86.9,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 1305.0
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792609015.09,
+          "sim_time": 22.25,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.04,
+              "y": 140.0,
+              "z": 14.59,
+              "vx": 0.02,
+              "vy": -0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.95,
+              "y": 140.06,
+              "z": 14.51,
+              "vx": -0.06,
+              "vy": 0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792609041.08,
+          "sim_time": 24.45,
+          "coverage": 4.19,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.09,
+              "y": 135.94,
+              "z": 14.89,
+              "vx": 0.53,
+              "vy": -0.82,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.53,
+              "y": 142.75,
+              "z": 14.94,
+              "vx": 4.5,
+              "vy": 2.45,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792609067.2,
+          "sim_time": 25.95,
+          "coverage": 5.12,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -162.16,
+              "y": 135.69,
+              "z": 15.1,
+              "vx": 4.88,
+              "vy": 0.31,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.51,
+              "y": 150.44,
+              "z": 14.97,
+              "vx": -0.23,
+              "vy": 5.14,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792609088.28,
+          "sim_time": 27.55,
+          "coverage": 5.81,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.41,
+              "y": 130.19,
+              "z": 15.1,
+              "vx": -0.29,
+              "vy": -4.84,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.06,
+              "y": 159.0,
+              "z": 14.98,
+              "vx": -0.49,
+              "vy": 4.17,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "config_key": "config_c_headless_2hz",
+      "rep_index": 2,
+      "seed": 201,
+      "wall_elapsed_sec": 100.93,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.0525,
+      "dec_count": 3,
+      "decisions_per_wall_min": 1.78,
+      "coverage_start": 3.26,
+      "coverage_end": 5.81,
+      "coverage_gain": 2.55,
+      "valid_cells_gain": 11,
+      "valid_cells_per_wall_min": 6.54,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 29,
+          "fps": 9.53,
+          "sample_duration_sec": 3.04
+        },
+        {
+          "drone_id": 1,
+          "frames": 27,
+          "fps": 8.85,
+          "sample_duration_sec": 3.05
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 44.8,
+        "system_cpu_max": 63.0,
+        "gz_cpu_mean": 142.9,
+        "gz_cpu_max": 160.7,
+        "px4_cpu_mean": 88.0,
+        "px4_cpu_max": 91.4,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 1301.0
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792609526.79,
+          "sim_time": 22.5,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.99,
+              "y": 140.08,
+              "z": 14.6,
+              "vx": -0.05,
+              "vy": -0.04,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.93,
+              "y": 140.03,
+              "z": 14.65,
+              "vx": -0.08,
+              "vy": -0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792609570.95,
+          "sim_time": 24.6,
+          "coverage": 4.19,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.07,
+              "y": 135.95,
+              "z": 14.87,
+              "vx": 0.48,
+              "vy": -0.91,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.72,
+              "y": 142.53,
+              "z": 15.06,
+              "vx": 4.77,
+              "vy": 2.59,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792609601.09,
+          "sim_time": 26.2,
+          "coverage": 5.12,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -161.93,
+              "y": 135.71,
+              "z": 15.09,
+              "vx": 4.68,
+              "vy": 0.34,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.51,
+              "y": 150.71,
+              "z": 15.09,
+              "vx": -0.3,
+              "vy": 4.95,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792609627.72,
+          "sim_time": 27.8,
+          "coverage": 5.81,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.47,
+              "y": 129.9,
+              "z": 15.13,
+              "vx": -0.3,
+              "vy": -4.65,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.07,
+              "y": 159.23,
+              "z": 15.05,
+              "vx": -0.45,
+              "vy": 3.93,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "config_key": "config_c_headless_2hz",
+      "rep_index": 3,
+      "seed": 201,
+      "wall_elapsed_sec": 108.24,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.049,
+      "dec_count": 3,
+      "decisions_per_wall_min": 1.66,
+      "coverage_start": 3.26,
+      "coverage_end": 6.05,
+      "coverage_gain": 2.79,
+      "valid_cells_gain": 12,
+      "valid_cells_per_wall_min": 6.65,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 26,
+          "fps": 8.44,
+          "sample_duration_sec": 3.08
+        },
+        {
+          "drone_id": 1,
+          "frames": 29,
+          "fps": 9.56,
+          "sample_duration_sec": 3.03
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 44.6,
+        "system_cpu_max": 64.0,
+        "gz_cpu_mean": 143.4,
+        "gz_cpu_max": 164.9,
+        "px4_cpu_mean": 89.8,
+        "px4_cpu_max": 93.3,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 1299.9
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792610118.09,
+          "sim_time": 22.3,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.97,
+              "y": 140.1,
+              "z": 14.61,
+              "vx": -0.08,
+              "vy": -0.02,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -132.0,
+              "y": 140.06,
+              "z": 14.59,
+              "vx": -0.04,
+              "vy": -0.02,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792610160.82,
+          "sim_time": 24.5,
+          "coverage": 4.42,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.08,
+              "y": 135.9,
+              "z": 14.91,
+              "vx": 0.51,
+              "vy": -0.87,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.52,
+              "y": 142.65,
+              "z": 15.02,
+              "vx": 4.52,
+              "vy": 2.57,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792610191.61,
+          "sim_time": 26.0,
+          "coverage": 5.35,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -162.16,
+              "y": 135.66,
+              "z": 15.11,
+              "vx": 4.84,
+              "vy": 0.33,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.49,
+              "y": 150.49,
+              "z": 15.04,
+              "vx": -0.27,
+              "vy": 5.14,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792610226.33,
+          "sim_time": 27.6,
+          "coverage": 6.05,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.49,
+              "y": 130.12,
+              "z": 15.13,
+              "vx": -0.21,
+              "vy": -4.76,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.08,
+              "y": 159.05,
+              "z": 15.05,
+              "vx": -0.5,
+              "vy": 4.17,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "config_b_gui_5hz": [
+    {
+      "config_key": "config_b_gui_5hz",
+      "rep_index": 1,
+      "seed": 201,
+      "wall_elapsed_sec": 127.18,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.0417,
+      "dec_count": 3,
+      "decisions_per_wall_min": 1.42,
+      "coverage_start": 3.26,
+      "coverage_end": 5.81,
+      "coverage_gain": 2.55,
+      "valid_cells_gain": 11,
+      "valid_cells_per_wall_min": 5.19,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 29,
+          "fps": 9.63,
+          "sample_duration_sec": 3.01
+        },
+        {
+          "drone_id": 1,
+          "frames": 29,
+          "fps": 9.66,
+          "sample_duration_sec": 3.0
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 49.0,
+        "system_cpu_max": 61.8,
+        "gz_cpu_mean": 249.6,
+        "gz_cpu_max": 280.0,
+        "px4_cpu_mean": 78.7,
+        "px4_cpu_max": 82.7,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 1311.5
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792610659.5,
+          "sim_time": 24.0,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.98,
+              "y": 140.05,
+              "z": 14.7,
+              "vx": -0.06,
+              "vy": -0.01,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.98,
+              "y": 140.08,
+              "z": 14.69,
+              "vx": -0.06,
+              "vy": -0.04,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792610711.97,
+          "sim_time": 26.2,
+          "coverage": 4.19,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.05,
+              "y": 135.88,
+              "z": 14.99,
+              "vx": 0.48,
+              "vy": -0.76,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.38,
+              "y": 142.7,
+              "z": 15.1,
+              "vx": 4.28,
+              "vy": 2.54,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792610748.26,
+          "sim_time": 27.7,
+          "coverage": 5.12,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -162.17,
+              "y": 135.71,
+              "z": 15.19,
+              "vx": 4.86,
+              "vy": 0.32,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.48,
+              "y": 150.52,
+              "z": 15.14,
+              "vx": -0.26,
+              "vy": 5.14,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792610786.68,
+          "sim_time": 29.3,
+          "coverage": 5.81,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.46,
+              "y": 130.11,
+              "z": 15.19,
+              "vx": -0.25,
+              "vy": -4.8,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.06,
+              "y": 159.04,
+              "z": 15.15,
+              "vx": -0.53,
+              "vy": 4.15,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "config_key": "config_b_gui_5hz",
+      "rep_index": 2,
+      "seed": 201,
+      "wall_elapsed_sec": 108.83,
+      "sim_elapsed_sec": 5.3,
+      "measured_rtf": 0.0487,
+      "dec_count": 3,
+      "decisions_per_wall_min": 1.65,
+      "coverage_start": 3.26,
+      "coverage_end": 5.81,
+      "coverage_gain": 2.55,
+      "valid_cells_gain": 11,
+      "valid_cells_per_wall_min": 6.06,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 25,
+          "fps": 8.27,
+          "sample_duration_sec": 3.02
+        },
+        {
+          "drone_id": 1,
+          "frames": 29,
+          "fps": 9.65,
+          "sample_duration_sec": 3.0
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 50.5,
+        "system_cpu_max": 73.8,
+        "gz_cpu_mean": 248.6,
+        "gz_cpu_max": 268.2,
+        "px4_cpu_mean": 85.3,
+        "px4_cpu_max": 88.3,
+        "gpu_util_mean": 0.0,
+        "vram_mb_mean": 1306.4
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792678011.5,
+          "sim_time": 23.0,
+          "coverage": 3.26,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.98,
+              "y": 140.04,
+              "z": 14.59,
+              "vx": -0.05,
+              "vy": 0.03,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.95,
+              "y": 140.09,
+              "z": 14.62,
+              "vx": -0.04,
+              "vy": -0.0,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792678051.08,
+          "sim_time": 25.1,
+          "coverage": 4.19,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -168.13,
+              "y": 135.96,
+              "z": 14.83,
+              "vx": 0.52,
+              "vy": -0.98,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.72,
+              "y": 142.59,
+              "z": 15.01,
+              "vx": 4.76,
+              "vy": 2.55,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792678082.88,
+          "sim_time": 26.7,
+          "coverage": 5.12,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -161.95,
+              "y": 135.73,
+              "z": 15.07,
+              "vx": 4.72,
+              "vy": 0.34,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -119.51,
+              "y": 150.69,
+              "z": 15.04,
+              "vx": -0.29,
+              "vy": 4.96,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792678120.33,
+          "sim_time": 28.3,
+          "coverage": 5.81,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -159.47,
+              "y": 129.9,
+              "z": 15.1,
+              "vx": -0.28,
+              "vy": -4.63,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.05,
+              "y": 159.17,
+              "z": 15.03,
+              "vx": -0.46,
+              "vy": 3.99,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "config_key": "config_b_gui_5hz",
+      "rep_index": 3,
+      "seed": 201,
+      "wall_elapsed_sec": 143.62,
+      "sim_elapsed_sec": 5.7,
+      "measured_rtf": 0.0397,
+      "dec_count": 3,
+      "decisions_per_wall_min": 1.25,
+      "coverage_start": 3.49,
+      "coverage_end": 6.28,
+      "coverage_gain": 2.79,
+      "valid_cells_gain": 12,
+      "valid_cells_per_wall_min": 5.01,
+      "victims_detected": 0,
+      "safety_overrides": 0,
+      "cameras": [
+        {
+          "drone_id": 0,
+          "frames": 29,
+          "fps": 9.57,
+          "sample_duration_sec": 3.03
+        },
+        {
+          "drone_id": 1,
+          "frames": 30,
+          "fps": 9.68,
+          "sample_duration_sec": 3.1
+        }
+      ],
+      "hardware_summary": {
+        "system_cpu_mean": 54.5,
+        "system_cpu_max": 72.8,
+        "gz_cpu_mean": 252.0,
+        "gz_cpu_max": 303.4,
+        "px4_cpu_mean": 77.2,
+        "px4_cpu_max": 81.0,
+        "gpu_util_mean": 0.9,
+        "vram_mb_mean": 1311.8
+      },
+      "decision_events": [
+        {
+          "decision": 1,
+          "wall_time": 1792678690.12,
+          "sim_time": 22.25,
+          "coverage": 3.49,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -167.96,
+              "y": 139.97,
+              "z": 14.58,
+              "vx": 0.0,
+              "vy": 0.02,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -131.98,
+              "y": 140.01,
+              "z": 14.58,
+              "vx": -0.06,
+              "vy": 0.02,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        },
+        {
+          "decision": 2,
+          "wall_time": 1792678744.92,
+          "sim_time": 24.45,
+          "coverage": 4.19,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -160.81,
+              "y": 135.76,
+              "z": 14.97,
+              "vx": 3.02,
+              "vy": -0.55,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            },
+            {
+              "id": "drone_1",
+              "x": -121.54,
+              "y": 142.66,
+              "z": 14.99,
+              "vx": 4.51,
+              "vy": 2.58,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            }
+          ]
+        },
+        {
+          "decision": 3,
+          "wall_time": 1792678788.9,
+          "sim_time": 26.25,
+          "coverage": 5.35,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -152.67,
+              "y": 136.09,
+              "z": 15.0,
+              "vx": 3.32,
+              "vy": 0.12,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.05,
+              "y": 138.37,
+              "z": 15.01,
+              "vx": -0.65,
+              "vy": -4.35,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "-Y"
+            }
+          ]
+        },
+        {
+          "decision": 4,
+          "wall_time": 1792678833.74,
+          "sim_time": 27.95,
+          "coverage": 6.28,
+          "victims_detected": 0,
+          "safety_overrides": 0,
+          "drones": [
+            {
+              "id": "drone_0",
+              "x": -151.74,
+              "y": 130.28,
+              "z": 15.07,
+              "vx": -0.64,
+              "vy": -4.69,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+Y"
+            },
+            {
+              "id": "drone_1",
+              "x": -120.41,
+              "y": 129.66,
+              "z": 15.07,
+              "vx": -0.01,
+              "vy": -4.63,
+              "state": "WAYPOINT_NAVIGATION",
+              "action": "+X"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

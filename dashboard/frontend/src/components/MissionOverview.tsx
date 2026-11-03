@@ -1,6 +1,7 @@
 import React from 'react';
 import { Target, Search, Users, ShieldAlert } from 'lucide-react';
 import type { MissionTelemetry, VictimState } from '../types/telemetry';
+import { formatCoverage, getCoveragePercent } from '../utils/formatters';
 
 interface MissionOverviewProps {
     telemetry: MissionTelemetry | null;
@@ -18,7 +19,7 @@ export function MissionOverview({ telemetry, victims }: MissionOverviewProps) {
                     <Search className="text-blue" size={24} />
                     <div className="value-display">
                         <span className="value-label">Search Coverage</span>
-                        <span className="value-text">{telemetry.coverage.toFixed(1)}%</span>
+                        <span className="value-text">{formatCoverage(telemetry.coverage, 2)}</span>
                     </div>
                 </div>
                 {telemetry.explored_count != null && telemetry.valid_count != null && (
@@ -27,7 +28,7 @@ export function MissionOverview({ telemetry, victims }: MissionOverviewProps) {
                             {telemetry.explored_count} / {telemetry.valid_count} cells
                         </div>
                         <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${Math.min(100, telemetry.coverage)}%`, background: 'var(--accent-blue)', transition: 'width 0.5s ease' }} />
+                            <div style={{ height: '100%', width: `${getCoveragePercent(telemetry.coverage)}%`, background: 'var(--accent-blue)', transition: 'width 0.5s ease' }} />
                         </div>
                     </>
                 )}
@@ -39,7 +40,7 @@ export function MissionOverview({ telemetry, victims }: MissionOverviewProps) {
                     <Users className="text-green" size={24} />
                     <div className="value-display">
                         <span className="value-label">Victims Detected</span>
-                        <span className="value-text">{telemetry.victims_detected} / {telemetry.total_victims}</span>
+                        <span className="value-text">{telemetry.victims_detected ?? 0} / {telemetry.total_victims ?? 5}</span>
                     </div>
                 </div>
                 {/* Victim dot tracker */}
@@ -60,7 +61,7 @@ export function MissionOverview({ telemetry, victims }: MissionOverviewProps) {
                         </div>
                     ))}
                     {/* Fallback if no victim state yet */}
-                    {victims.length === 0 && Array.from({ length: telemetry.total_victims }, (_, i) => (
+                    {victims.length === 0 && Array.from({ length: telemetry.total_victims ?? 5 }, (_, i) => (
                         <div key={i} style={{
                             width: 18, height: 18, borderRadius: '50%',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -77,7 +78,7 @@ export function MissionOverview({ telemetry, victims }: MissionOverviewProps) {
                     <Target className="text-cyan" size={24} />
                     <div className="value-display">
                         <span className="value-label">QMIX Decisions</span>
-                        <span className="value-text">{telemetry.decision_count} / {telemetry.max_decisions}</span>
+                        <span className="value-text">{telemetry.decision_count ?? 0} / {telemetry.max_decisions ?? 300}</span>
                         {telemetry.global_step_state && (
                             <span style={{
                                 fontSize: '0.65rem',
@@ -97,10 +98,10 @@ export function MissionOverview({ telemetry, victims }: MissionOverviewProps) {
             {/* Safety */}
             <div className="panel flex-1 flex-row items-center justify-between">
                 <div className="flex-row items-center gap-4">
-                    <ShieldAlert className={telemetry.safety_overrides > 0 ? "text-red" : "text-muted"} size={24} />
+                    <ShieldAlert className={(telemetry.safety_overrides ?? 0) > 0 ? "text-red" : "text-muted"} size={24} />
                     <div className="value-display">
                         <span className="value-label">Safety Overrides</span>
-                        <span className="value-text">{telemetry.safety_overrides}</span>
+                        <span className="value-text">{telemetry.safety_overrides ?? 0}</span>
                     </div>
                 </div>
             </div>

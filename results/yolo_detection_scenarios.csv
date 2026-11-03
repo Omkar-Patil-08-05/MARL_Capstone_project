@@ -1,0 +1,9 @@
+scenario,description,drone_alt_m,ground_truth_x,ground_truth_y,detected,yolo_conf,measured_depth_m,est_x,est_y,horiz_error_m,tp,fp,fn,non_person_filtered
+Scenario 1A_standing,Victim casual_female (standing),10.0,0.0,0.0,True,0.334,8.914,-0.132,0.066,0.148,1,0,0,1
+Scenario 1B_sitting,Victim rescue_randy_sitting (sitting),10.0,15.0,0.0,True,0.334,8.914,14.868,0.066,0.148,1,0,0,1
+Scenario 1C_lying,Victim casual_female_lying (lying),10.0,30.0,0.0,False,0.0,0.0,,,,0,0,1,1
+Scenario 3,Partially Obscured Victim Under Foliage,10.0,45.0,0.0,False,0.0,0.0,,,,0,0,1,0
+Scenario 4,Two Adjacent Victims (3.0m apart) in Single Frame,11.0,60.0,0.0,False,0.0,0.0,,,,0,0,2,0
+Scenario 5,Empty Open Scene (No humans or objects),10.0,75.0,0.0,False,0.0,10.0,,,,0,0,0,0
+Scenario 6,"Non-Human Objects (Car, Rubble, Animal)",10.0,90.0,0.0,False,0.0,10.0,,,,0,0,0,0
+Scenario 7,Camera Offset 25m Horizontally (Victim Outside FOV),10.0,0.0,0.0,False,0.0,10.0,,,,0,0,0,0

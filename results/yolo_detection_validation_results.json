@@ -1,0 +1,309 @@
+{
+  "evaluation_timestamp": "2026-11-03 11:15:36",
+  "yolo_model": "yolov8n.pt",
+  "detector_device": "cuda:0",
+  "target_class_ids": [
+    0
+  ],
+  "total_gt_victims": 6,
+  "true_positives": 2,
+  "false_positives": 0,
+  "false_negatives": 4,
+  "precision": 1.0,
+  "recall": 0.3333,
+  "f1_score": 0.5,
+  "localization_error_m": {
+    "mean": 0.148,
+    "median": 0.148,
+    "max": 0.148,
+    "rmse": 0.148
+  },
+  "non_human_distractors_filtered": 3,
+  "scenarios": [
+    {
+      "scenario": "Scenario 1A_standing",
+      "description": "Victim casual_female (standing)",
+      "drone_alt_m": 10.0,
+      "ground_truth_x": 0.0,
+      "ground_truth_y": 0.0,
+      "detected": true,
+      "yolo_conf": 0.334,
+      "measured_depth_m": 8.914,
+      "est_x": -0.132,
+      "est_y": 0.066,
+      "horiz_error_m": 0.148,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "non_person_filtered": 1
+    },
+    {
+      "scenario": "Scenario 1B_sitting",
+      "description": "Victim rescue_randy_sitting (sitting)",
+      "drone_alt_m": 10.0,
+      "ground_truth_x": 15.0,
+      "ground_truth_y": 0.0,
+      "detected": true,
+      "yolo_conf": 0.334,
+      "measured_depth_m": 8.914,
+      "est_x": 14.868,
+      "est_y": 0.066,
+      "horiz_error_m": 0.148,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "non_person_filtered": 1
+    },
+    {
+      "scenario": "Scenario 1C_lying",
+      "description": "Victim casual_female_lying (lying)",
+      "drone_alt_m": 10.0,
+      "ground_truth_x": 30.0,
+      "ground_truth_y": 0.0,
+      "detected": false,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "est_x": null,
+      "est_y": null,
+      "horiz_error_m": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "non_person_filtered": 1
+    },
+    {
+      "scenario": "Scenario 3",
+      "description": "Partially Obscured Victim Under Foliage",
+      "drone_alt_m": 10.0,
+      "ground_truth_x": 45.0,
+      "ground_truth_y": 0.0,
+      "detected": false,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "est_x": null,
+      "est_y": null,
+      "horiz_error_m": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "non_person_filtered": 0
+    },
+    {
+      "scenario": "Scenario 4",
+      "description": "Two Adjacent Victims (3.0m apart) in Single Frame",
+      "drone_alt_m": 11.0,
+      "ground_truth_x": 60.0,
+      "ground_truth_y": 0.0,
+      "detected": false,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "est_x": null,
+      "est_y": null,
+      "horiz_error_m": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "non_person_filtered": 0
+    },
+    {
+      "scenario": "Scenario 5",
+      "description": "Empty Open Scene (No humans or objects)",
+      "drone_alt_m": 10.0,
+      "ground_truth_x": 75.0,
+      "ground_truth_y": 0.0,
+      "detected": false,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 10.0,
+      "est_x": null,
+      "est_y": null,
+      "horiz_error_m": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "non_person_filtered": 0
+    },
+    {
+      "scenario": "Scenario 6",
+      "description": "Non-Human Objects (Car, Rubble, Animal)",
+      "drone_alt_m": 10.0,
+      "ground_truth_x": 90.0,
+      "ground_truth_y": 0.0,
+      "detected": false,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 10.0,
+      "est_x": null,
+      "est_y": null,
+      "horiz_error_m": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "non_person_filtered": 0
+    },
+    {
+      "scenario": "Scenario 7",
+      "description": "Camera Offset 25m Horizontally (Victim Outside FOV)",
+      "drone_alt_m": 10.0,
+      "ground_truth_x": 0.0,
+      "ground_truth_y": 0.0,
+      "detected": false,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 10.0,
+      "est_x": null,
+      "est_y": null,
+      "horiz_error_m": null,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "non_person_filtered": 0
+    }
+  ],
+  "distance_evaluation": [
+    {
+      "altitude_m": 4.0,
+      "detected": false,
+      "bbox_width_px": 0,
+      "bbox_height_px": 0,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "horiz_error_m": null,
+      "status": "MISSED (Too Small/Far)"
+    },
+    {
+      "altitude_m": 8.0,
+      "detected": true,
+      "bbox_width_px": 52,
+      "bbox_height_px": 61,
+      "yolo_conf": 0.539,
+      "measured_depth_m": 2.594,
+      "horiz_error_m": 0.079,
+      "status": "DETECTED"
+    },
+    {
+      "altitude_m": 12.0,
+      "detected": false,
+      "bbox_width_px": 0,
+      "bbox_height_px": 0,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "horiz_error_m": null,
+      "status": "MISSED (Too Small/Far)"
+    },
+    {
+      "altitude_m": 16.0,
+      "detected": false,
+      "bbox_width_px": 0,
+      "bbox_height_px": 0,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "horiz_error_m": null,
+      "status": "MISSED (Too Small/Far)"
+    },
+    {
+      "altitude_m": 20.0,
+      "detected": false,
+      "bbox_width_px": 0,
+      "bbox_height_px": 0,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "horiz_error_m": null,
+      "status": "MISSED (Too Small/Far)"
+    },
+    {
+      "altitude_m": 25.0,
+      "detected": false,
+      "bbox_width_px": 0,
+      "bbox_height_px": 0,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "horiz_error_m": null,
+      "status": "MISSED (Too Small/Far)"
+    },
+    {
+      "altitude_m": 30.0,
+      "detected": false,
+      "bbox_width_px": 0,
+      "bbox_height_px": 0,
+      "yolo_conf": 0.0,
+      "measured_depth_m": 0.0,
+      "horiz_error_m": null,
+      "status": "MISSED (Too Small/Far)"
+    }
+  ],
+  "annotated_images": [
+    {
+      "scenario": "1A_standing",
+      "file": "scenario1_victim_clearly_visible_standing.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario1_victim_clearly_visible_standing.png"
+    },
+    {
+      "scenario": "1B_sitting",
+      "file": "scenario1_victim_clearly_visible_sitting.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario1_victim_clearly_visible_sitting.png"
+    },
+    {
+      "scenario": "1C_lying",
+      "file": "scenario1_victim_clearly_visible_lying.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario1_victim_clearly_visible_lying.png"
+    },
+    {
+      "scenario": "Scenario 2 (4.0m)",
+      "file": "scenario2_altitude_4m.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario2_altitude_4m.png"
+    },
+    {
+      "scenario": "Scenario 2 (8.0m)",
+      "file": "scenario2_altitude_8m.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario2_altitude_8m.png"
+    },
+    {
+      "scenario": "Scenario 2 (12.0m)",
+      "file": "scenario2_altitude_12m.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario2_altitude_12m.png"
+    },
+    {
+      "scenario": "Scenario 2 (16.0m)",
+      "file": "scenario2_altitude_16m.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario2_altitude_16m.png"
+    },
+    {
+      "scenario": "Scenario 2 (20.0m)",
+      "file": "scenario2_altitude_20m.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario2_altitude_20m.png"
+    },
+    {
+      "scenario": "Scenario 2 (25.0m)",
+      "file": "scenario2_altitude_25m.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario2_altitude_25m.png"
+    },
+    {
+      "scenario": "Scenario 2 (30.0m)",
+      "file": "scenario2_altitude_30m.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario2_altitude_30m.png"
+    },
+    {
+      "scenario": "Scenario 3 (Obscured)",
+      "file": "scenario3_victim_partially_obscured.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario3_victim_partially_obscured.png"
+    },
+    {
+      "scenario": "Scenario 4 (Multi)",
+      "file": "scenario4_multiple_victims_visible.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario4_multiple_victims_visible.png"
+    },
+    {
+      "scenario": "Scenario 5 (Empty)",
+      "file": "scenario5_empty_scene.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario5_empty_scene.png"
+    },
+    {
+      "scenario": "Scenario 6 (Distractors)",
+      "file": "scenario6_rubble_and_vehicles.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario6_rubble_and_vehicles.png"
+    },
+    {
+      "scenario": "Scenario 7 (Outside FOV)",
+      "file": "scenario7_victim_outside_fov.png",
+      "path": "/home/capstone/capstone_project_antigravity/results/images/scenario7_victim_outside_fov.png"
+    }
+  ]
+}

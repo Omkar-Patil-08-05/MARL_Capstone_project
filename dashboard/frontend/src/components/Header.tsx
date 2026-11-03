@@ -37,6 +37,7 @@ const Timer = ({ simTime }: { simTime?: number }) => {
 interface HeaderProps {
     isConnected: boolean;
     telemetry: MissionTelemetry | null;
+    droneCount?: number;
     backendStatus: BackendMissionStatus;
     onStop: () => void;
     onComplete: () => void;
@@ -45,7 +46,7 @@ interface HeaderProps {
     onToggleView: () => void;
 }
 
-export function Header({ isConnected, telemetry, backendStatus, onStop, onComplete, onReset, currentView, onToggleView }: HeaderProps) {
+export function Header({ isConnected, telemetry, droneCount, backendStatus, onStop, onComplete, onReset, currentView, onToggleView }: HeaderProps) {
     const isLive = isConnected && telemetry !== null;
 
     return (
@@ -61,6 +62,27 @@ export function Header({ isConnected, telemetry, backendStatus, onStop, onComple
             </div>
 
             <div className="flex-row gap-4">
+                {droneCount !== undefined && droneCount > 0 && (
+                    <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '24px' }}>
+                        <span className="value-label">Active Swarm</span>
+                        <span className="value-text" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{
+                                background: droneCount === 6 ? '#facc15' : 'var(--accent-cyan)',
+                                color: '#000000',
+                                fontWeight: 800,
+                                fontSize: '0.72rem',
+                                padding: '2px 6px',
+                                borderRadius: '4px'
+                            }}>
+                                N = {droneCount}
+                            </span>
+                            <span style={{ color: droneCount === 6 ? '#facc15' : 'var(--accent-cyan)', fontSize: '0.85rem', fontWeight: 600 }}>
+                                {droneCount === 6 ? '6-Drone Swarm' : droneCount === 2 ? '2-Drone Autonomous' : `${droneCount} Drones`}
+                            </span>
+                        </span>
+                    </div>
+                )}
+
                 <div className="value-display" style={{ alignItems: 'flex-end', marginRight: '24px' }}>
                     <span className="value-label">Backend Status</span>
                     <span className="value-text text-cyan">{backendStatus.state}</span>

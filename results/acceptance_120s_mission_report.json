@@ -1,0 +1,333 @@
+{
+  "actual_running_sec": 121.27852845191956,
+  "total_decisions": 9,
+  "decision_events": [
+    {
+      "decision_index": 1,
+      "timestamp": 1791705749.8731701,
+      "elapsed_running": 0.0,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.0,
+          "y": 140.05,
+          "z": 14.51,
+          "grid_x": 1,
+          "grid_y": 20,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -131.94,
+          "y": 140.01,
+          "z": 14.57,
+          "grid_x": 6,
+          "grid_y": 20,
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision_index": 2,
+      "timestamp": 1791705765.0371501,
+      "elapsed_running": 15.16398000717163,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.11,
+          "y": 139.16,
+          "z": 14.69,
+          "grid_x": 1,
+          "grid_y": 19,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -130.66,
+          "y": 140.27,
+          "z": 14.99,
+          "grid_x": 6,
+          "grid_y": 20,
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision_index": 3,
+      "timestamp": 1791705780.205319,
+      "elapsed_running": 30.332148790359497,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.84,
+          "y": 136.01,
+          "z": 14.85,
+          "grid_x": 1,
+          "grid_y": 19,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -125.93,
+          "y": 140.76,
+          "z": 14.94,
+          "grid_x": 6,
+          "grid_y": 20,
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision_index": 4,
+      "timestamp": 1791705794.838607,
+      "elapsed_running": 44.965436935424805,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.5,
+          "y": 130.48,
+          "z": 14.96,
+          "grid_x": 1,
+          "grid_y": 18,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -121.47,
+          "y": 142.77,
+          "z": 14.99,
+          "grid_x": 7,
+          "grid_y": 20,
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision_index": 5,
+      "timestamp": 1791705810.5621347,
+      "elapsed_running": 60.68896460533142,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.13,
+          "y": 126.3,
+          "z": 15.12,
+          "grid_x": 1,
+          "grid_y": 18,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -118.5,
+          "y": 144.03,
+          "z": 15.04,
+          "grid_x": 7,
+          "grid_y": 20,
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 6,
+      "timestamp": 1791705825.5584612,
+      "elapsed_running": 75.68529105186462,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.89,
+          "y": 121.79,
+          "z": 15.04,
+          "grid_x": 1,
+          "grid_y": 17,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -114.84,
+          "y": 143.57,
+          "z": 14.88,
+          "grid_x": 8,
+          "grid_y": 20,
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 7,
+      "timestamp": 1791705841.0542128,
+      "elapsed_running": 91.18104267120361,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.61,
+          "y": 118.28,
+          "z": 15.13,
+          "grid_x": 1,
+          "grid_y": 17,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -113.88,
+          "y": 140.85,
+          "z": 14.71,
+          "grid_x": 8,
+          "grid_y": 20,
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 8,
+      "timestamp": 1791705851.035839,
+      "elapsed_running": 101.16266894340515,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.67,
+          "y": 114.53,
+          "z": 15.02,
+          "grid_x": 1,
+          "grid_y": 16,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -112.59,
+          "y": 138.25,
+          "z": 14.9,
+          "grid_x": 8,
+          "grid_y": 19,
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision_index": 9,
+      "timestamp": 1791705866.2163653,
+      "elapsed_running": 116.34319519996643,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.81,
+          "y": 110.53,
+          "z": 15.11,
+          "grid_x": 1,
+          "grid_y": 16,
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -111.55,
+          "y": 135.41,
+          "z": 15.17,
+          "grid_x": 8,
+          "grid_y": 19,
+          "action": "-Y"
+        }
+      ]
+    }
+  ],
+  "waypoint_arrival_events": {
+    "0": [
+      {
+        "timestamp": 1791705821.3141947,
+        "elapsed_running": 71.44102454185486,
+        "decision_step": 5,
+        "pos": [
+          -167.93,
+          122.57,
+          15.04
+        ],
+        "speed": 5.79
+      }
+    ],
+    "1": [
+      {
+        "timestamp": 1791705791.3973124,
+        "elapsed_running": 41.524142265319824,
+        "decision_step": 3,
+        "pos": [
+          -122.03,
+          142.41,
+          14.98
+        ],
+        "speed": 5.72
+      },
+      {
+        "timestamp": 1791705850.3059025,
+        "elapsed_running": 100.4327323436737,
+        "decision_step": 7,
+        "pos": [
+          -112.72,
+          138.47,
+          14.86
+        ],
+        "speed": 4.72
+      }
+    ]
+  },
+  "rtf_samples": [],
+  "camera_results": [
+    {
+      "drone_id": 0,
+      "frames_received": 20,
+      "fps": 6.5,
+      "dimensions": "320x240",
+      "has_frames": true
+    },
+    {
+      "drone_id": 1,
+      "frames_received": 24,
+      "fps": 7.9,
+      "dimensions": "320x240",
+      "has_frames": true
+    }
+  ],
+  "coverage_delta": 5.02,
+  "explored_cells_delta": 21,
+  "victims": [
+    {
+      "id": "victim_0",
+      "x": 1,
+      "y": 6,
+      "world_x": -168.9453125,
+      "world_y": 28.3203125,
+      "world_z": 19.830827255249023,
+      "detected": false,
+      "state": "UNDETECTED",
+      "movement_state": "RESTING",
+      "detected_by": null,
+      "detection_distance": null,
+      "detection_time": null
+    },
+    {
+      "id": "victim_1",
+      "x": 17,
+      "y": 8,
+      "world_x": -41.452654406414084,
+      "world_y": 44.1909599112445,
+      "world_z": 18.49985076904297,
+      "detected": false,
+      "state": "UNDETECTED",
+      "movement_state": "RESTING",
+      "detected_by": null,
+      "detection_distance": null,
+      "detection_time": null
+    },
+    {
+      "id": "victim_2",
+      "x": 8,
+      "y": 19,
+      "world_x": -111.57920297294457,
+      "world_y": 138.44869657175875,
+      "world_z": 14.432585258483886,
+      "detected": true,
+      "state": "DETECTED",
+      "movement_state": "RESTING",
+      "detected_by": "drone_1",
+      "detection_distance": 1.04,
+      "detection_time": 1791705851.1466851
+    }
+  ]
+}

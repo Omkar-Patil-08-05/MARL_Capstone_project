@@ -19,6 +19,7 @@ __pycache__/
 venv/
 env/
 ENV/
+!marl_drone_project/env/
 
 # -------------------------
 # ROS 2 workspaces
@@ -36,10 +37,36 @@ drone_ws/log/
 # -------------------------
 marl_drone_project/results/
 marl_drone_project/**/__pycache__/
-results/
+results/*
+!results/*.py
+!results/*.md
+!results/*.png
+!results/*.gif
+!results/*.csv
+!results/*.json
+!results/*.txt
+!results/final_six_drone_dashboard_demo/
+!results/final_research_package/
+results/forest_simulation_recording_*/
+results/benchmark_stage5/
+results/h*_*_physical*/
+results/phase5e8/
+results/multi_seed_evaluation/
+results/stage2_three_seed_benchmark/
+results/forest_sar_validation/
+results/single_seed_live_validation_*/
+results/sar_qmix/
+results/images/
 drone_ws/results/
 analysis/outputs/
 *.pt
+!models/yolov8n.pt
+
+# Dynamic SQLite runtime database
+*.db
+*.db-wal
+*.db-shm
+dashboard/backend/results/
 
 
 # -------------------------

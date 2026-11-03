@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Info, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Bell, Info, AlertTriangle, CheckCircle, Activity } from 'lucide-react';
 import type { AlertEvent } from '../types/telemetry';
 
 export function AlertsFeed({ alerts }: { alerts: AlertEvent[] }) {
@@ -14,14 +14,38 @@ export function AlertsFeed({ alerts }: { alerts: AlertEvent[] }) {
 
     return (
         <div className="panel flex-col" style={{ flex: 1, minHeight: '200px' }}>
-            <div className="panel-header">
-                <Bell size={16} /> MISSION EVENTS
+            <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Bell size={16} /> MISSION EVENTS
+                </div>
+                {alerts.length > 0 && (
+                    <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
+                        {alerts.length} logged
+                    </span>
+                )}
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
                 {alerts.length === 0 ? (
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', marginTop: '20px' }}>
-                        No events recorded yet.
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1.5rem 1rem',
+                        textAlign: 'center',
+                        background: 'rgba(255,255,255,0.02)',
+                        borderRadius: '6px',
+                        border: '1px dashed rgba(255,255,255,0.1)',
+                        margin: '8px 0'
+                    }}>
+                        <Activity size={22} style={{ color: 'var(--accent-cyan)', opacity: 0.6, marginBottom: '8px' }} />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                            No mission events recorded
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4, maxWidth: '240px' }}>
+                            Live events (autonomous detections, state transitions, safety interventions) appear here as the swarm navigates.
+                        </span>
                     </div>
                 ) : (
                     alerts.map((alert, i) => {

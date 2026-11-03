@@ -1,0 +1,8 @@
+altitude_m,detected,bbox_width_px,bbox_height_px,yolo_conf,measured_depth_m,horiz_error_m,status
+4.0,False,0,0,0.0,0.0,,MISSED (Too Small/Far)
+8.0,True,52,61,0.539,2.594,0.079,DETECTED
+12.0,False,0,0,0.0,0.0,,MISSED (Too Small/Far)
+16.0,False,0,0,0.0,0.0,,MISSED (Too Small/Far)
+20.0,False,0,0,0.0,0.0,,MISSED (Too Small/Far)
+25.0,False,0,0,0.0,0.0,,MISSED (Too Small/Far)
+30.0,False,0,0,0.0,0.0,,MISSED (Too Small/Far)

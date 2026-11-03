@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { TelemetryPayload, BackendMissionStatus } from '../types/telemetry';
+import { formatCoverage } from '../utils/formatters';
 
 interface MissionSummaryProps {
     telemetry: TelemetryPayload | null;
@@ -82,7 +83,7 @@ export function MissionSummary({ telemetry, status, onClose }: MissionSummaryPro
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Final Coverage</span>
-                        <span style={{ fontWeight: 'bold', color: 'var(--accent-cyan)' }}>{telemetry.mission.coverage.toFixed(1)}%</span>
+                        <span style={{ fontWeight: 'bold', color: 'var(--accent-cyan)' }}>{formatCoverage(telemetry.mission.coverage, 2)}</span>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px' }}>

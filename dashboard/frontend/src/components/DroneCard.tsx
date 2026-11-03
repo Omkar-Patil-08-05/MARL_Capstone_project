@@ -186,15 +186,15 @@ export function DroneCard({
                     <div className="value-display">
                         <span className="value-label">World Position (m)</span>
                         <span className="value-text">
-                            X: {drone.x.toFixed(1)} <br/>
-                            Y: {drone.y.toFixed(1)} <br/>
-                            Alt: {drone.z.toFixed(1)}
+                            X: {drone.x !== undefined && !isNaN(drone.x) ? drone.x.toFixed(1) : '0.0'} <br/>
+                            Y: {drone.y !== undefined && !isNaN(drone.y) ? drone.y.toFixed(1) : '0.0'} <br/>
+                            Alt: {drone.z !== undefined && !isNaN(drone.z) ? drone.z.toFixed(1) : '0.0'}
                         </span>
                     </div>
                     
                     <div className="value-display" style={{ alignItems: 'flex-end' }}>
                         <span className="value-label">Grid Cell</span>
-                        <span className="value-text">({drone.grid_x}, {drone.grid_y})</span>
+                        <span className="value-text">({drone.grid_x ?? 0}, {drone.grid_y ?? 0})</span>
                         <span className="value-label" style={{ marginTop: '8px' }}>Speed</span>
                         <span className="value-text" style={{ color: hasSpeed && drone.speed! > 1.0 ? '#00f2fe' : 'inherit' }}>{speedStr}</span>
                     </div>

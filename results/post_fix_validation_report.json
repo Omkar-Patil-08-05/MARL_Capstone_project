@@ -1,0 +1,611 @@
+{
+  "initial_decisions": 1,
+  "final_decisions": 5,
+  "total_decision_events": 5,
+  "decision_history": [
+    {
+      "decision": 1,
+      "wall_time": 1792589755.52,
+      "sim_time": 17.05,
+      "coverage": 3.32,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.0,
+          "y": 140.11,
+          "z": 14.54,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -131.97,
+          "y": 140.03,
+          "z": 14.54,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision": 2,
+      "wall_time": 1792589802.29,
+      "sim_time": 19.15,
+      "coverage": 4.74,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.09,
+          "y": 135.96,
+          "z": 14.81,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -121.77,
+          "y": 142.54,
+          "z": 14.96,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision": 3,
+      "wall_time": 1792589835.02,
+      "sim_time": 20.65,
+      "coverage": 5.92,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.9,
+          "y": 130.18,
+          "z": 14.87,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -114.16,
+          "y": 144.39,
+          "z": 14.96,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "+X"
+        }
+      ]
+    },
+    {
+      "decision": 4,
+      "wall_time": 1792589865.96,
+      "sim_time": 22.15,
+      "coverage": 7.11,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -168.12,
+          "y": 121.96,
+          "z": 15.1,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -106.2,
+          "y": 144.32,
+          "z": 14.96,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        }
+      ]
+    },
+    {
+      "decision": 5,
+      "wall_time": 1792589903.21,
+      "sim_time": 23.85,
+      "coverage": 8.53,
+      "drones": [
+        {
+          "id": "drone_0",
+          "x": -167.96,
+          "y": 112.91,
+          "z": 15.02,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        },
+        {
+          "id": "drone_1",
+          "x": -103.69,
+          "y": 138.19,
+          "z": 15.03,
+          "state": "WAYPOINT_NAVIGATION",
+          "action": "-Y"
+        }
+      ]
+    }
+  ],
+  "state_transitions": [
+    {
+      "wall_time": 1792589431.57,
+      "sim_time": 2.05,
+      "decision": 0,
+      "from_state": null,
+      "to_state": "INITIALIZING"
+    },
+    {
+      "wall_time": 1792589755.52,
+      "sim_time": 17.05,
+      "decision": 1,
+      "from_state": "INITIALIZING",
+      "to_state": "NAVIGATING"
+    },
+    {
+      "wall_time": 1792589802.29,
+      "sim_time": 19.15,
+      "decision": 2,
+      "from_state": "NAVIGATING",
+      "to_state": "EXECUTING"
+    },
+    {
+      "wall_time": 1792589804.22,
+      "sim_time": 19.25,
+      "decision": 2,
+      "from_state": "EXECUTING",
+      "to_state": "NAVIGATING"
+    },
+    {
+      "wall_time": 1792589835.02,
+      "sim_time": 20.65,
+      "decision": 3,
+      "from_state": "NAVIGATING",
+      "to_state": "EXECUTING"
+    },
+    {
+      "wall_time": 1792589836.73,
+      "sim_time": 20.75,
+      "decision": 3,
+      "from_state": "EXECUTING",
+      "to_state": "NAVIGATING"
+    },
+    {
+      "wall_time": 1792589865.96,
+      "sim_time": 22.15,
+      "decision": 4,
+      "from_state": "NAVIGATING",
+      "to_state": "EXECUTING"
+    },
+    {
+      "wall_time": 1792589867.72,
+      "sim_time": 22.25,
+      "decision": 4,
+      "from_state": "EXECUTING",
+      "to_state": "NAVIGATING"
+    },
+    {
+      "wall_time": 1792589903.21,
+      "sim_time": 23.85,
+      "decision": 5,
+      "from_state": "NAVIGATING",
+      "to_state": "EXECUTING"
+    },
+    {
+      "wall_time": 1792589905.37,
+      "sim_time": 23.95,
+      "decision": 5,
+      "from_state": "EXECUTING",
+      "to_state": "NAVIGATING"
+    }
+  ],
+  "navigating_wall_sec": 153.89,
+  "synchronizing_wall_sec": 0.0,
+  "rtf_samples": [
+    {
+      "wall_time": 1792589355.6,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589433.5,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589439.9,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589446.3,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589453.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589459.5,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589466.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589472.3,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589478.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589485.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589491.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589498.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589505.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589511.5,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589518.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589523.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589530.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589535.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589540.6,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589545.7,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589552.6,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589559.2,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589565.9,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589572.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589578.7,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589585.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589591.9,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589598.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589604.5,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589610.9,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589617.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589623.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589629.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589636.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589642.3,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589648.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589654.2,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589661.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589666.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589672.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589679.6,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589686.2,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589692.6,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589699.5,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589705.9,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589712.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589718.6,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589724.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589731.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589737.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589743.3,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589749.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589755.5,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589761.6,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589766.7,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589773.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589778.3,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589784.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589791.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589798.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589804.2,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589810.3,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589816.7,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589822.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589828.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589835.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589841.2,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589847.2,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589853.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589859.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589866.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589872.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589878.3,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589885.1,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589891.8,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589898.5,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589905.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589910.4,
+      "rtf": 0.0,
+      "sim_sec": 0
+    },
+    {
+      "wall_time": 1792589917.0,
+      "rtf": 0.0,
+      "sim_sec": 0
+    }
+  ],
+  "median_rtf": 0.0,
+  "cameras": [
+    {
+      "drone_id": 0,
+      "frames": 26,
+      "fps": 8.54
+    },
+    {
+      "drone_id": 1,
+      "frames": 28,
+      "fps": 9.31
+    }
+  ]
+}

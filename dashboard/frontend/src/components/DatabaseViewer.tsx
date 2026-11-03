@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { FinalEvaluationCard } from './FinalEvaluationCard';
+import { formatCoverage } from '../utils/formatters';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,10 +22,57 @@ interface LiveSnapshot {
     telemetry_age_sec?: number | null;
     drones?: LiveDrone[];
     victims?: LiveVictim[];
+    tracked_victims?: LiveVictim[];
+    tasks?: LiveTask[];
+    task_allocation?: {
+        total_tasks: number;
+        active_tasks: number;
+        completed_tasks: number;
+        failed_tasks: number;
+        state_counts: Record<string, number>;
+        active_assignments?: Record<string, string>;
+    };
     episodes_recorded?: number;
     avg_episode_coverage?: number;
     telemetry_rows?: number;
     detection_events?: number;
+}
+
+interface LiveTask {
+    task_id: string;
+    victim_id: string;
+    world_x: number;
+    world_y: number;
+    state: string;
+    assigned_drone_id?: string | null;
+    confidence?: number;
+    verification_mode?: string;
+    reassignment_count?: number;
+    investigation_progress_sec?: number;
+    investigation_duration?: number;
+}
+
+interface SARTaskRecord {
+    id: string;
+    mission_id: string;
+    victim_id: string;
+    world_x: number;
+    world_y: number;
+    grid_x: number;
+    grid_y: number;
+    state: string;
+    assigned_drone_id?: string | null;
+    confidence?: number;
+    verification_mode?: string;
+    evidence_state?: string;
+    created_sim_time?: number;
+    updated_sim_time?: number;
+    assigned_sim_time?: number | null;
+    investigation_start_sim_time?: number | null;
+    completed_sim_time?: number | null;
+    failed_sim_time?: number | null;
+    failure_reason?: string | null;
+    reassignment_count?: number;
 }
 
 interface LiveDrone {
@@ -351,9 +399,12 @@ function LiveMissionPanel({ snap }: { snap: LiveSnapshot }) {
                 <div style={{ display: 'flex', gap: 24, fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                     <span>📊 DB TELEMETRY ROWS: <strong style={{ color: 'var(--text-main)' }}>{(snap.telemetry_rows ?? 0).toLocaleString()}</strong></span>
                     <span>🎯 DETECTION EVENTS: <strong style={{ color: 'var(--text-main)' }}>{snap.detection_events ?? 0}</strong></span>
+                    {snap.tasks && snap.tasks.length > 0 && (
+                        <span>🚁 SAR TASKS: <strong style={{ color: 'var(--accent-cyan)' }}>{snap.tasks.filter(t => t.state !== 'COMPLETED' && t.state !== 'FAILED').length} active / {snap.tasks.length} total</strong></span>
+                    )}
                     <span>🔄 EPISODES RECORDED: <strong style={{ color: 'var(--text-main)' }}>{snap.episodes_recorded ?? 0}</strong></span>
                     {(snap.avg_episode_coverage ?? 0) > 0 && (
-                        <span>📈 AVG EP COVERAGE: <strong style={{ color: 'var(--accent-cyan)' }}>{snap.avg_episode_coverage?.toFixed(1)}%</strong></span>
+                        <span>📈 AVG EP COVERAGE: <strong style={{ color: 'var(--accent-cyan)' }}>{formatCoverage(snap.avg_episode_coverage, 1)}</strong></span>
                     )}
                     {snap.sim_rtf !== null && snap.sim_rtf !== undefined && (
                         <span>⚡ SIM RTF: <strong style={{ color: 'var(--accent-cyan)' }}>{snap.sim_rtf.toFixed(2)}x</strong></span>
@@ -428,11 +479,12 @@ function MissionDetails({ missionId, onBack }: { missionId: string; onBack: () =
     const [mission, setMission] = useState<Mission | null>(null);
     const [episodes, setEpisodes] = useState<Episode[]>([]);
     const [victims, setVictims] = useState<Victim[]>([]);
+    const [tasks, setTasks] = useState<SARTaskRecord[]>([]);
     const [detections, setDetections] = useState<Detection[]>([]);
     const [safety, setSafety] = useState<SafetyEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'EPISODES' | 'VICTIMS' | 'DETECTIONS' | 'SAFETY' | 'TELEMETRY'>('EPISODES');
+    const [activeTab, setActiveTab] = useState<'EPISODES' | 'VICTIMS' | 'TASKS' | 'DETECTIONS' | 'SAFETY' | 'TELEMETRY'>('EPISODES');
 
     useEffect(() => {
         setLoading(true);
@@ -440,11 +492,12 @@ function MissionDetails({ missionId, onBack }: { missionId: string; onBack: () =
             fetch(`/api/db/missions/${missionId}`).then(r => r.json()),
             fetch(`/api/db/episodes?mission_id=${missionId}`).then(r => r.json()),
             fetch(`/api/db/victims?mission_id=${missionId}`).then(r => r.json()),
+            fetch(`/api/db/tasks?mission_id=${missionId}`).then(r => r.json()).catch(() => []),
             fetch(`/api/db/detections?mission_id=${missionId}`).then(r => r.json()),
             fetch(`/api/db/safety?mission_id=${missionId}`).then(r => r.json()),
-        ]).then(([m, ep, v, d, s]) => {
+        ]).then(([m, ep, v, t, d, s]) => {
             if (m.detail) throw new Error(m.detail);
-            setMission(m); setEpisodes(ep); setVictims(v); setDetections(d); setSafety(s);
+            setMission(m); setEpisodes(ep); setVictims(v); setTasks(Array.isArray(t) ? t : []); setDetections(d); setSafety(s);
         }).catch(err => setError(err.message))
           .finally(() => setLoading(false));
     }, [missionId]);
@@ -453,7 +506,7 @@ function MissionDetails({ missionId, onBack }: { missionId: string; onBack: () =
     if (error) return <div className="panel flex-col" style={{ flex: 1, color: 'var(--text-warning)' }}>Error: {error}</div>;
     if (!mission) return null;
 
-    const tabs = ['EPISODES', 'VICTIMS', 'DETECTIONS', 'SAFETY', 'TELEMETRY'] as const;
+    const tabs = ['EPISODES', 'VICTIMS', 'TASKS', 'DETECTIONS', 'SAFETY', 'TELEMETRY'] as const;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1, minHeight: 0 }}>
@@ -472,7 +525,7 @@ function MissionDetails({ missionId, onBack }: { missionId: string; onBack: () =
                         { label: 'Status', value: mission.status, color: stateColor(mission.status) },
                         { label: 'Map', value: mission.map_id },
                         { label: 'Drones / Victims', value: `${mission.drone_count} / ${mission.victim_count}` },
-                        { label: 'Coverage', value: mission.final_coverage !== null ? `${mission.final_coverage}%` : 'N/A', color: 'var(--accent-cyan)' },
+                        { label: 'Coverage', value: mission.final_coverage !== null && mission.final_coverage !== undefined ? formatCoverage(mission.final_coverage) : 'N/A', color: 'var(--accent-cyan)' },
                         { label: 'Duration', value: mission.end_time && mission.start_time ? fmtDuration(mission.end_time - mission.start_time) : 'N/A' },
                     ].map(({ label, value, color }) => (
                         <div key={label}>
@@ -513,7 +566,7 @@ function MissionDetails({ missionId, onBack }: { missionId: string; onBack: () =
                                     <tr key={e.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                         <td style={{ padding: '8px 4px', fontFamily: 'monospace', fontWeight: 700 }}>{e.episode_number ?? 'N/A'}</td>
                                         <td style={{ padding: '8px 4px' }}>{fmtDuration(e.duration ?? 0)}</td>
-                                        <td style={{ padding: '8px 4px', color: 'var(--accent-cyan)', fontWeight: 700 }}>{e.coverage?.toFixed(2) ?? 'N/A'}%</td>
+                                        <td style={{ padding: '8px 4px', color: 'var(--accent-cyan)', fontWeight: 700 }}>{e.coverage !== null && e.coverage !== undefined ? formatCoverage(e.coverage) : 'N/A'}</td>
                                         <td style={{ padding: '8px 4px', color: 'var(--accent-green)', fontWeight: 600 }}>{e.victims_found ?? 0}</td>
                                         <td style={{ padding: '8px 4px' }}>{e.timeout_count ?? 0}</td>
                                         <td style={{ padding: '8px 4px', color: e.invalid_flag ? 'var(--text-warning)' : 'var(--text-muted)' }}>
@@ -554,6 +607,45 @@ function MissionDetails({ missionId, onBack }: { missionId: string; onBack: () =
                                 ))}
                                 {victims.length === 0 && (
                                     <tr><td colSpan={4} style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>No victims recorded.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {activeTab === 'TASKS' && (
+                    <div className="panel flex-col" style={{ flex: 1, overflowY: 'auto' }}>
+                        <div className="panel-title">AUTONOMOUS SAR TASKS ({tasks.length})</div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', marginTop: 12 }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.15)', textAlign: 'left' }}>
+                                    {['Task ID', 'Victim', 'Target (X, Y)', 'State', 'Drone', 'Conf', 'Mode', 'Reassigns', 'Created', 'Completed', 'Failure'].map(h => (
+                                        <th key={h} style={{ padding: '6px 4px', color: 'var(--text-muted)' }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tasks.map(t => (
+                                    <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <td style={{ padding: '8px 4px', fontFamily: 'monospace', fontWeight: 700 }}>{t.id}</td>
+                                        <td style={{ padding: '8px 4px', fontFamily: 'monospace' }}>{t.victim_id}</td>
+                                        <td style={{ padding: '8px 4px', fontFamily: 'monospace' }}>({t.world_x?.toFixed(1)}, {t.world_y?.toFixed(1)})</td>
+                                        <td style={{ padding: '8px 4px', fontWeight: 600, color: t.state === 'COMPLETED' ? 'var(--accent-green)' : t.state === 'FAILED' ? 'var(--text-warning)' : 'var(--accent-cyan)' }}>
+                                            {t.state}
+                                        </td>
+                                        <td style={{ padding: '8px 4px', color: '#a78bfa' }}>{t.assigned_drone_id ? t.assigned_drone_id.replace('drone_', 'D').toUpperCase() : 'None'}</td>
+                                        <td style={{ padding: '8px 4px', fontFamily: 'monospace' }}>
+                                            {t.confidence !== null && t.confidence !== undefined ? `${(t.confidence * 100).toFixed(0)}%` : 'N/A'}
+                                        </td>
+                                        <td style={{ padding: '8px 4px', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{t.verification_mode || 'RGBD_THERMAL'}</td>
+                                        <td style={{ padding: '8px 4px', fontFamily: 'monospace' }}>{t.reassignment_count ?? 0}</td>
+                                        <td style={{ padding: '8px 4px', fontFamily: 'monospace' }}>{t.created_sim_time !== null && t.created_sim_time !== undefined ? `${t.created_sim_time.toFixed(1)}s` : 'N/A'}</td>
+                                        <td style={{ padding: '8px 4px', fontFamily: 'monospace' }}>{t.completed_sim_time !== null && t.completed_sim_time !== undefined ? `${t.completed_sim_time.toFixed(1)}s` : 'N/A'}</td>
+                                        <td style={{ padding: '8px 4px', color: 'var(--text-warning)', fontSize: '0.75rem' }}>{t.failure_reason || '-'}</td>
+                                    </tr>
+                                ))}
+                                {tasks.length === 0 && (
+                                    <tr><td colSpan={11} style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>No SAR tasks recorded for this mission.</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -745,7 +837,7 @@ function HistoricalView({ onSelectMission }: { onSelectMission: (id: string) => 
                                     <td style={{ padding: '10px 4px', textAlign: 'center' }}>{m.drone_count}</td>
                                     <td style={{ padding: '10px 4px', textAlign: 'center' }}>{m.victim_count}</td>
                                     <td style={{ padding: '10px 4px', color: 'var(--accent-cyan)', fontWeight: 700 }}>
-                                        {m.final_coverage !== null && m.final_coverage !== undefined ? `${m.final_coverage}%` : 'N/A'}
+                                        {m.final_coverage !== null && m.final_coverage !== undefined ? formatCoverage(m.final_coverage) : 'N/A'}
                                     </td>
                                     <td style={{ padding: '10px 4px', fontFamily: 'monospace', fontSize: '0.8rem' }}>
                                         {m.end_time && m.start_time ? fmtDuration(m.end_time - m.start_time) : 'N/A'}

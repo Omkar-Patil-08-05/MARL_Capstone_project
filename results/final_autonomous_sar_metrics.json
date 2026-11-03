@@ -1,0 +1,48 @@
+{
+  "mission_success": true,
+  "failure_reason": null,
+  "world": "worlds/realistic_sar.sdf",
+  "drone_count": 2,
+  "altitude_m": 10.0,
+  "camera_frames_collected": {
+    "drone_0": 169,
+    "drone_1": 224
+  },
+  "total_yolo_candidate_detections": 7,
+  "total_autonomous_discoveries": 1,
+  "discovery_payload": {
+    "event_type": "VICTIM_DISCOVERED",
+    "timestamp": 53.0,
+    "victim_track_id": 2,
+    "confirming_drone_id": 0,
+    "world_x": 13.55,
+    "world_y": 95.42,
+    "grid_x": 3,
+    "grid_y": 23,
+    "grid_cell_size_m": 4.0,
+    "confidence": 0.562,
+    "median_depth_estimate": 9.74,
+    "confirmation_count": 3,
+    "confirmation_window": 6,
+    "consensus_span_sec": 1.4,
+    "depth_valid_samples": 60,
+    "depth_spread": 0.63,
+    "verification_mode": "RGBD",
+    "thermal_peak_k": null,
+    "thermal_delta_k": null
+  },
+  "ground_truth_target": {
+    "id": "victim_24",
+    "x": 10.0,
+    "y": 98.0,
+    "z": 0.25
+  },
+  "localization_error_m": 4.388,
+  "task_assignments_count": 1,
+  "assigned_drone_id": "drone_0",
+  "investigation_started": true,
+  "task_completed": true,
+  "min_drone_separation_m": 7.95,
+  "wall_duration_sec": 245.27,
+  "sim_time_sec": 59.4
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+    <model name="casual_female_lying">
+        <static>true</static>
+        <link name="link">
+            <pose>0 0 0 0 0 0</pose>
+            <!-- Lying/supine victim on ground:
+                 - Casual female mesh (~1.65m height, 0.60m width, 0.35m depth)
+                 - Oriented with back flat on the ground and chest/face pointing upward toward drone cameras:
+                   Visual pose roll = -1.5707963 rad (-90 deg), Z offset = 0.21m places back at Z=0.0m.
+                 - Body extends along Y axis from Y=0.0m (feet) to Y=1.65m (head).
+                 - Body center in X is ~0.0m, in Y is ~0.82m, in Z is ~0.19m. -->
+            <collision name="collision">
+                <pose>0 0.82 0.19 0 0 0</pose>
+                <geometry>
+                    <box>
+                        <size>0.70 1.75 0.38</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <pose>0 0 0.21 -1.5707963 0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/casual_female.dae</uri>
+                    </mesh>
+                </geometry>
+                <!-- gz-sim-thermal-system: attaches human body heat signature.
+                     max_temp=308 K (34.85°C) representing a victim with hypothermia risk or resting body. -->
+                <plugin filename="gz-sim-thermal-system" name="gz::sim::systems::Thermal">
+                    <heat_signature>materials/textures/RescueRandy_Thermal.png</heat_signature>
+                    <max_temp>308</max_temp>
+                </plugin>
+            </visual>
+        </link>
+    </model>
+</sdf>

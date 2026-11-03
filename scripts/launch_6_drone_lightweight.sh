@@ -82,11 +82,13 @@ done
 # Setup PX4 Gazebo environment
 source /home/capstone/PX4-Autopilot/build/px4_sitl_default/rootfs/gz_env.sh
 export PX4_GZ_WORLDS="/home/capstone/capstone_project_antigravity/worlds"
-export GZ_SIM_RESOURCE_PATH="/home/capstone/capstone_project_antigravity/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds:/home/capstone/capstone_project_antigravity/assets_real/victims:/home/capstone/capstone_project_antigravity/generated_worlds:/home/capstone/capstone_project_antigravity/worlds"
+export GZ_SIM_RESOURCE_PATH="/home/capstone/capstone_project_antigravity/models:/home/capstone/capstone_project_antigravity/assets_real:/home/capstone/capstone_project_antigravity/assets_real/victims:/home/capstone/PX4-Autopilot/Tools/simulation/gz/models:/home/capstone/PX4-Autopilot/Tools/simulation/gz/worlds:/home/capstone/capstone_project_antigravity/generated_worlds:/home/capstone/capstone_project_antigravity/worlds"
 
 # 1. Start Gazebo Server (headless by default)
 echo "Starting Gazebo Server with headless rendering..."
-gz sim -s -v 4 -r ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf > /tmp/gz.log 2>&1 &
+export __NV_PRIME_RENDER_OFFLOAD=1
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+gz sim -s -v 4 -r --headless-rendering ${PX4_GZ_WORLDS}/${PX4_GZ_WORLD}.sdf > /tmp/gz.log 2>&1 &
 GZ_PID=$!
 
 # 2. Wait for stabilization
@@ -148,7 +150,7 @@ for ((i=0; i<$DRONE_COUNT; i++)); do
     mkdir -p /tmp/px4_instance_$i
 done
 
-# Launch PX4 instances concurrently
+# Launch PX4 instances with stagger for clean EKF2 initialization
 for ((i=0; i<$DRONE_COUNT; i++)); do
     echo "Starting PX4 Instance $i..."
     (
@@ -160,6 +162,10 @@ for ((i=0; i<$DRONE_COUNT; i++)); do
         export PX4_UXRCE_DDS_NS="drone_$i"
         ${BUILD_DIR}/bin/px4 -i $i -d ${BUILD_DIR}/etc > out.log 2> err.log
     ) &
+    if [ $i -lt $((DRONE_COUNT - 1)) ]; then
+        echo "Waiting 3s before launching next PX4 instance..."
+        sleep 3
+    fi
 done
 
 echo "All $DRONE_COUNT drone instances launched in high-speed mode!"

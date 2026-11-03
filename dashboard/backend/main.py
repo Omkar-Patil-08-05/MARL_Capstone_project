@@ -43,6 +43,8 @@ app.add_middleware(
 _LATEST_TELEMETRY = None
 _TELEMETRY_RECEIVED = False
 _LAST_TIMESTAMP = None
+_RECENT_EVENTS = []
+_RECORDED_EVENT_KEYS = set()
 
 # ---------------------------------------------------------
 # WebSocket Manager
@@ -313,7 +315,7 @@ async def start_mission_task(map_id: str, drone_count: int, victim_count: int = 
 
         # 4. Start QMIX Controller
         max_dec_env = f"export MAX_DECISIONS={max_decisions} && " if max_decisions else ""
-        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && export ROS_DISABLE_TYPE_HASH_CHECK=1 && export PX4_GZ_WORLD=\"{map_id}\" && {max_dec_env}ros2 run swarm_controller swarm_runner --map {map_id} --drones {drone_count} --controller qmix --ros-args -p use_sim_time:=true"
+        qmix_cmd = f"source /opt/ros/jazzy/setup.bash && source /home/capstone/capstone_project_antigravity/drone_ws/install/setup.bash && export ROS_LOCALHOST_ONLY=1 && export ROS_DISABLE_TYPE_HASH_CHECK=1 && export PX4_GZ_WORLD=\"{map_id}\" && {max_dec_env}ros2 run swarm_controller swarm_runner --map {map_id} --drones {drone_count} --controller hybrid --ros-args -p use_sim_time:=true"
         qmix_proc = subprocess.Popen(["bash", "-c", qmix_cmd], preexec_fn=os.setsid)
         mission_manager.process_groups.append(os.getpgid(qmix_proc.pid))
 
@@ -334,7 +336,7 @@ class TelemetrySubscriber(Node):
         self.subscription = self.create_subscription(String, '/swarm/telemetry', self.listener_callback, 10)
 
     def listener_callback(self, msg):
-        global _LATEST_TELEMETRY, _TELEMETRY_RECEIVED, _LAST_TIMESTAMP
+        global _LATEST_TELEMETRY, _TELEMETRY_RECEIVED, _LAST_TIMESTAMP, _RECENT_EVENTS, _RECORDED_EVENT_KEYS
         try:
             data = json.loads(msg.data)
             if data.get("type") == "telemetry":
@@ -342,6 +344,14 @@ class TelemetrySubscriber(Node):
                 msg_timestamp = data.get("timestamp", 0)
                 if _LAST_TIMESTAMP is not None and msg_timestamp < _LAST_TIMESTAMP:
                     return
+
+                # Auto-promote to RUNNING if active external swarm is publishing telemetry
+                if mission_manager.state in ["IDLE", "STOPPED"] and data.get("mission", {}).get("status") != "COMPLETE":
+                    mission_manager.state = "RUNNING"
+                    if not mission_manager.active_mission_id:
+                        mission_manager.active_mission_id = str(uuid.uuid4())
+                    if not mission_manager.active_map_id:
+                        mission_manager.active_map_id = "realistic_sar"
 
                 # Inject active map into telemetry
                 data["active_map_id"] = mission_manager.active_map_id
@@ -355,6 +365,66 @@ class TelemetrySubscriber(Node):
                 if data.get("mission", {}).get("status") == "COMPLETE":
                     if mission_manager.state == "RUNNING":
                         mission_manager.set_state("COMPLETE")
+
+                # Normalize task_allocation so both nested counts and flat fields are provided
+                task_alloc = data.get("task_allocation")
+                if isinstance(task_alloc, dict):
+                    counts = task_alloc.get("counts", {})
+                    if counts:
+                        task_alloc["total_tasks"] = counts.get("total", 0)
+                        task_alloc["active_tasks"] = (
+                            counts.get("assigned", 0) +
+                            counts.get("approaching", 0) +
+                            counts.get("investigating", 0) +
+                            counts.get("discovered", 0)
+                        )
+                        task_alloc["completed_tasks"] = counts.get("completed", 0)
+                        task_alloc["failed_tasks"] = counts.get("failed", 0)
+                    if "assignments" in task_alloc and "active_assignments" not in task_alloc:
+                        task_alloc["active_assignments"] = task_alloc["assignments"]
+
+                # Track mission events in memory for instant delivery on refresh / GET /api/events
+                for v in data.get("victims", []):
+                    if v.get("detected") and v.get("id"):
+                        ekey = f"v_det_{v['id']}"
+                        if ekey not in _RECORDED_EVENT_KEYS:
+                            _RECORDED_EVENT_KEYS.add(ekey)
+                            d_id = str(v.get('detected_by', 'DRONE')).replace('drone_', 'D')
+                            _RECENT_EVENTS.insert(0, {
+                                "id": str(uuid.uuid4()),
+                                "timestamp": v.get("detection_time") or msg_timestamp,
+                                "message": f"MISSION DETECTION: VICTIM {str(v['id']).replace('victim_', '').upper()} LOCATED by {d_id}",
+                                "type": "success"
+                            })
+
+                for tv in data.get("tracked_victims", []):
+                    if tv.get("id"):
+                        ekey = f"tv_{tv['id']}"
+                        if ekey not in _RECORDED_EVENT_KEYS:
+                            _RECORDED_EVENT_KEYS.add(ekey)
+                            src = tv.get('source') or 'YOLO/RGB-D'
+                            _RECENT_EVENTS.insert(0, {
+                                "id": str(uuid.uuid4()),
+                                "timestamp": tv.get("sim_time") or msg_timestamp,
+                                "message": f"AUTONOMOUS DETECTION: {str(tv['id']).upper()} CONFIRMED ({src})",
+                                "type": "success"
+                            })
+
+                holds = data.get("coordination", {}).get("safety_holds", {})
+                if holds:
+                    for d_id in holds.keys():
+                        ekey = f"hold_{d_id}_{int(msg_timestamp // 5)}"
+                        if ekey not in _RECORDED_EVENT_KEYS:
+                            _RECORDED_EVENT_KEYS.add(ekey)
+                            _RECENT_EVENTS.insert(0, {
+                                "id": str(uuid.uuid4()),
+                                "timestamp": msg_timestamp,
+                                "message": f"🚨 SAFETY HOLD: {str(d_id).replace('drone_', 'D').upper()} predictive separation hold",
+                                "type": "warning"
+                            })
+
+                if len(_RECENT_EVENTS) > 50:
+                    _RECENT_EVENTS = _RECENT_EVENTS[:50]
 
                 out_msg = json.dumps(data)
                 _LATEST_TELEMETRY = out_msg
@@ -396,6 +466,47 @@ class TelemetrySubscriber(Node):
                                 'detection_world_y': v.get('world_y'),
                                 'euclidean_distance': v.get('detection_distance')
                             })
+
+                    # Autonomous perception tracks
+                    for tv in data.get("tracked_victims", []):
+                        db_writer.enqueue(EventType.DETECTION, {
+                            'mission_id': mission_manager.active_mission_id,
+                            'victim_id': tv.get('id'),
+                            'drone_id': str(tv.get('detected_by', '')),
+                            'timestamp': tv.get('sim_time') or msg_timestamp,
+                            'detection_source': tv.get('source') or 'AUTONOMOUS_PERCEPTION',
+                            'detection_world_x': tv.get('world_x'),
+                            'detection_world_y': tv.get('world_y'),
+                            'detection_world_z': 0.1,
+                            'euclidean_distance': tv.get('gt_error', 0.0),
+                            'confidence': tv.get('confidence', 1.0),
+                            'confirmation_count': tv.get('confirmation_count', tv.get('observations', 1))
+                        })
+
+                    # Autonomous SAR tasks
+                    for task in data.get("tasks", []):
+                        db_writer.enqueue(EventType.TASK, {
+                            'id': task.get('task_id'),
+                            'mission_id': mission_manager.active_mission_id,
+                            'victim_id': task.get('victim_id'),
+                            'world_x': task.get('world_x'),
+                            'world_y': task.get('world_y'),
+                            'grid_x': task.get('grid_x'),
+                            'grid_y': task.get('grid_y'),
+                            'state': task.get('state'),
+                            'assigned_drone_id': task.get('assigned_drone_id'),
+                            'confidence': task.get('confidence', 1.0),
+                            'verification_mode': task.get('verification_mode'),
+                            'evidence_state': task.get('evidence_state', 'TEMPORALLY_CONFIRMED'),
+                            'created_sim_time': task.get('created_sim_time', 0.0),
+                            'updated_sim_time': task.get('updated_sim_time', 0.0),
+                            'assigned_sim_time': task.get('assigned_sim_time'),
+                            'investigation_start_sim_time': task.get('investigation_start_sim_time'),
+                            'completed_sim_time': task.get('completed_sim_time'),
+                            'failed_sim_time': task.get('failed_sim_time'),
+                            'failure_reason': task.get('failure_reason'),
+                            'reassignment_count': task.get('reassignment_count', 0)
+                        })
                             
         except json.JSONDecodeError:
             pass
@@ -664,6 +775,13 @@ def get_db_detections(mission_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/db/tasks")
+def get_db_tasks(mission_id: str):
+    try:
+        return query_db("SELECT * FROM sar_tasks WHERE mission_id = ? ORDER BY created_sim_time ASC", [mission_id])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/db/victims")
 def get_db_victims(mission_id: str):
     try:
@@ -677,6 +795,60 @@ def get_db_safety(mission_id: str):
         return query_db("SELECT * FROM safety_events WHERE mission_id = ? ORDER BY timestamp ASC", [mission_id])
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/events")
+def get_mission_events(limit: int = 30):
+    """
+    Returns recent mission events for the dashboard event feed.
+    Combines in-memory recent alerts with persisted detection/safety events from SQLite.
+    """
+    global _RECENT_EVENTS
+    if _RECENT_EVENTS:
+        return _RECENT_EVENTS[:limit]
+
+    events = []
+    try:
+        active_id = mission_manager.active_mission_id
+        if not active_id:
+            m = query_db("SELECT id FROM missions ORDER BY start_time DESC LIMIT 1", one=True)
+            active_id = m['id'] if m else None
+
+        if active_id:
+            detections = query_db(
+                "SELECT victim_id, drone_id, timestamp, detection_source FROM detection_events WHERE mission_id = ? ORDER BY timestamp DESC LIMIT ?",
+                [active_id, limit]
+            )
+            for d in (detections or []):
+                v_name = str(d.get('victim_id', '')).replace('victim_', 'VICTIM ').upper()
+                d_name = str(d.get('drone_id', '')).replace('drone_', 'D')
+                src = d.get('detection_source') or 'PERCEPTION'
+                events.append({
+                    "id": f"det_{d.get('victim_id')}_{d.get('timestamp')}",
+                    "timestamp": d.get('timestamp') or time.time(),
+                    "message": f"MISSION DETECTION: {v_name} LOCATED ({src}) by {d_name}",
+                    "type": "success"
+                })
+
+            safety = query_db(
+                "SELECT drone_ids, conflict_type, action_taken, timestamp FROM safety_events WHERE mission_id = ? ORDER BY timestamp DESC LIMIT ?",
+                [active_id, limit]
+            )
+            for s in (safety or []):
+                d_ids = str(s.get('drone_ids', ''))
+                action = str(s.get('action_taken', 'OVERRIDE'))
+                events.append({
+                    "id": f"saf_{s.get('timestamp')}",
+                    "timestamp": s.get('timestamp') or time.time(),
+                    "message": f"🚨 SAFETY OVERRIDE: {d_ids} → {action}",
+                    "type": "warning"
+                })
+
+            events.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+    except Exception as e:
+        print(f"[API_EVENTS] Query error: {e}")
+
+    return events[:limit]
 
 
 @app.get("/api/db/live")
@@ -760,6 +932,30 @@ def get_live_mission_snapshot():
                 }
                 for v in data.get("victims", [])
             ]
+
+            snapshot["tracked_victims"] = [
+                {
+                    "id": tv.get("id"),
+                    "world_x": round(tv.get("world_x", 0), 2),
+                    "world_y": round(tv.get("world_y", 0), 2),
+                    "grid_x": tv.get("x") or tv.get("grid_x"),
+                    "grid_y": tv.get("y") or tv.get("grid_y"),
+                    "confidence": tv.get("confidence", 1.0),
+                    "detected_by": tv.get("detected_by"),
+                    "source": tv.get("source"),
+                    "verification_mode": tv.get("verification_mode"),
+                    "evidence_state": tv.get("evidence_state"),
+                    "observations": tv.get("observations", 1),
+                    "confirmation_count": tv.get("confirmation_count"),
+                    "sim_time": tv.get("sim_time")
+                }
+                for tv in data.get("tracked_victims", [])
+            ]
+
+            snapshot["tasks"] = data.get("tasks", [])
+            snapshot["task_allocation"] = data.get("task_allocation", {})
+            snapshot["coordination"] = data.get("coordination", {})
+            snapshot["evaluation"] = data.get("evaluation", {})
         except Exception:
             pass
 
@@ -839,6 +1035,34 @@ def get_authoritative_evaluation():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/evaluation/metrics")
+def get_evaluation_metrics_endpoint():
+    """
+    Returns real-time online evaluation KPIs comparing autonomous victim tracks
+    against ground truth via Hungarian matching.
+    """
+    global _LATEST_TELEMETRY
+    if _LATEST_TELEMETRY:
+        try:
+            data = json.loads(_LATEST_TELEMETRY)
+            eval_data = data.get("evaluation")
+            if eval_data:
+                return eval_data
+        except Exception:
+            pass
+    return {
+        "total_ground_truth_victims": 0,
+        "total_autonomous_tracks": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "mean_localization_error_m": 0.0,
+        "median_localization_error_m": 0.0
+    }
+
 
 class GenerateRequest(BaseModel):
     map_id: str
@@ -917,6 +1141,11 @@ async def api_mission_complete():
 @app.post("/api/mission/reset")
 async def reset_mission():
     await mission_manager.stop_mission()
+    global _RECENT_EVENTS, _RECORDED_EVENT_KEYS, _LATEST_TELEMETRY, _LAST_TIMESTAMP
+    _RECENT_EVENTS = []
+    _RECORDED_EVENT_KEYS = set()
+    _LATEST_TELEMETRY = None
+    _LAST_TIMESTAMP = None
     return {"status": "reset"}
 
 @app.get("/api/mission/status")

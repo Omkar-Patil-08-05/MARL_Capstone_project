@@ -27,6 +27,7 @@ function App() {
             <Header
                 isConnected={isConnected}
                 telemetry={telemetry ? telemetry.mission : null}
+                droneCount={telemetry?.drones?.length || 0}
                 backendStatus={backendStatus}
                 onStop={stopMission}
                 onComplete={completeMission}
@@ -64,6 +65,14 @@ function App() {
             }}>
                 {/* Top Left: Drone Stats */}
                 <div style={{ gridColumn: '1', gridRow: '1', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px', marginBottom: '-6px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Active Drones ({telemetry?.drones?.length || 0})
+                        </span>
+                        <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: (telemetry?.drones?.length || 0) === 6 ? '#facc15' : 'var(--accent-cyan)' }}>
+                            {(telemetry?.drones?.length || 0) === 6 ? 'N=6 HYBRID' : (telemetry?.drones?.length || 0) === 2 ? 'N=2 QMIX' : `N=${telemetry?.drones?.length || 0}`}
+                        </span>
+                    </div>
                     {(telemetry?.drones || []).map(drone => (
                         <DroneCard
                             key={drone.id}
@@ -84,6 +93,7 @@ function App() {
                         exploredCells={telemetry?.explored_cells || []}
                         victims={telemetry?.victims || []}
                         trackedVictims={telemetry?.tracked_victims || []}
+                        tasks={telemetry?.tasks || []}
                         activeFrontiers={telemetry?.coordination?.active_frontiers}
                         coverage={telemetry?.mission.coverage || 0}
                     />
@@ -91,14 +101,20 @@ function App() {
 
                 {/* Right Column: Victims, Coordination, Alerts */}
                 <div style={{ gridColumn: '3', gridRow: '1 / 3', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
-                    <VictimDetectionPanel victims={telemetry ? (telemetry.victims || []) : []} />
+                    <VictimDetectionPanel
+                        victims={telemetry ? (telemetry.victims || []) : []}
+                        trackedVictims={telemetry ? (telemetry.tracked_victims || []) : []}
+                        tasks={telemetry ? (telemetry.tasks || []) : []}
+                        taskAllocation={telemetry ? telemetry.task_allocation : undefined}
+                        evaluation={telemetry ? telemetry.evaluation : undefined}
+                    />
                     <SwarmCoordinationStats telemetry={telemetry} />
                     <AlertsFeed alerts={alerts} />
                 </div>
 
                 {/* Bottom Left+Center: Coverage Graph */}
                 <div style={{ gridColumn: '1 / 3', gridRow: '2', display: 'flex' }}>
-                    <CoverageGraph history={coverageHistory} />
+                    <CoverageGraph history={coverageHistory} currentCoverage={telemetry?.mission.coverage} />
                 </div>
 
                 {/* Bottom: Results */}

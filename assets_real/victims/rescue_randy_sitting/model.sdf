@@ -2,16 +2,18 @@
 <sdf version="1.6">
     <model name="rescue_randy_sitting">
         <static>true</static>
-        <include>
-            <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Artifact Proximity Detector</uri>
-        </include>
         <link name="link">
+            <!-- Sitting pose: rescue_randy.dae mesh is a seated manikin.
+                 The mesh origin is near the base of the model.
+                 A box collision with dims 0.6 x 0.5 x 1.1 approximates
+                 a seated human body (torso+head visible, legs extended forward). -->
             <pose>0 0 -0.623996 0 0 0</pose>
             <collision name="collision">
+                <pose>0 0 0.55 0 0 0</pose>
                 <geometry>
-                    <mesh>
-                        <uri>meshes/rescue_randy.dae</uri>
-                    </mesh>
+                    <box>
+                        <size>0.60 0.50 1.10</size>
+                    </box>
                 </geometry>
             </collision>
             <visual name="visual">
@@ -20,7 +22,9 @@
                         <uri>meshes/rescue_randy.dae</uri>
                     </mesh>
                 </geometry>
-                <plugin filename="ignition-gazebo-thermal-system" name="ignition::gazebo::systems::Thermal">
+                <!-- gz-sim-thermal-system attaches a heat signature to this visual element.
+                     Plugin uses Gazebo Harmonic naming convention. -->
+                <plugin filename="gz-sim-thermal-system" name="gz::sim::systems::Thermal">
                     <heat_signature>materials/textures/RescueRandy_Thermal.png</heat_signature>
                     <max_temp>305</max_temp>
                 </plugin>

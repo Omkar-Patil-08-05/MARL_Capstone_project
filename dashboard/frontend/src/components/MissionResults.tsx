@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { MissionResult } from '../types/telemetry';
+import { formatCoverage, getCoveragePercent } from '../utils/formatters';
 
 export function MissionResults() {
     const [results, setResults] = useState<MissionResult[]>([]);
@@ -57,13 +58,13 @@ export function MissionResults() {
                         <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                             <td style={{ padding: '6px 4px', color: 'var(--text-muted)' }}>Coverage</td>
                             <td style={{ padding: '6px 4px', color: n2Run ? 'var(--accent-cyan)' : 'var(--text-muted)' }}>
-                                {n2Run ? `${n2Run.final_coverage}%` : 'Planned'}
+                                {n2Run ? formatCoverage(n2Run.final_coverage) : 'Planned'}
                             </td>
                             <td style={{ padding: '6px 4px', color: n4Run ? '#a78bfa' : 'var(--text-muted)' }}>
-                                {n4Run ? `${n4Run.final_coverage}%` : 'Planned'}
+                                {n4Run ? formatCoverage(n4Run.final_coverage) : 'Planned'}
                             </td>
                             <td style={{ padding: '6px 4px', color: n6Run ? '#facc15' : 'var(--text-muted)' }}>
-                                {n6Run ? `${n6Run.final_coverage}%` : 'Planned'}
+                                {n6Run ? formatCoverage(n6Run.final_coverage) : 'Planned'}
                             </td>
                         </tr>
                         <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -122,11 +123,11 @@ export function MissionResults() {
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: '60px', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30px' }}>
                         <span style={{ fontSize: '0.65rem', marginBottom: '2px', color: n2Run ? 'var(--text-main)' : 'transparent' }}>
-                            {n2Run ? `${n2Run.final_coverage}%` : ''}
+                            {n2Run ? formatCoverage(n2Run.final_coverage) : ''}
                         </span>
                         <div style={{
                             width: '100%',
-                            height: n2Run ? `${n2Run.final_coverage}%` : '0%',
+                            height: n2Run ? `${getCoveragePercent(n2Run.final_coverage)}%` : '0%',
                             background: 'var(--accent-cyan)',
                             borderRadius: '2px 2px 0 0'
                         }} />
@@ -135,11 +136,11 @@ export function MissionResults() {
 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30px' }}>
                         <span style={{ fontSize: '0.65rem', marginBottom: '2px', color: n4Run ? 'var(--text-main)' : 'transparent' }}>
-                            {n4Run ? `${n4Run.final_coverage}%` : ''}
+                            {n4Run ? formatCoverage(n4Run.final_coverage) : ''}
                         </span>
                         <div style={{
                             width: '100%',
-                            height: n4Run ? `${n4Run.final_coverage}%` : '0%',
+                            height: n4Run ? `${getCoveragePercent(n4Run.final_coverage)}%` : '0%',
                             background: '#a78bfa',
                             borderRadius: '2px 2px 0 0'
                         }} />
@@ -148,11 +149,11 @@ export function MissionResults() {
 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30px' }}>
                         <span style={{ fontSize: '0.65rem', marginBottom: '2px', color: n6Run ? 'var(--text-main)' : 'transparent' }}>
-                            {n6Run ? `${n6Run.final_coverage}%` : ''}
+                            {n6Run ? formatCoverage(n6Run.final_coverage) : ''}
                         </span>
                         <div style={{
                             width: '100%',
-                            height: n6Run ? `${n6Run.final_coverage}%` : '0%',
+                            height: n6Run ? `${getCoveragePercent(n6Run.final_coverage)}%` : '0%',
                             background: '#facc15',
                             borderRadius: '2px 2px 0 0'
                         }} />

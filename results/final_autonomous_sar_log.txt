@@ -1,0 +1,14 @@
+[   0.0s wall |   0.00s sim] SAR Mission Monitor attached to ROS 2 topic graph.
+[ 118.9s wall |  29.95s sim] YOLO Detection on drone_1: class='person' conf=0.266 bbox=[476, 0, 540, 90]
+[ 195.2s wall |  48.29s sim] YOLO Detection on drone_0: class='person' conf=0.380 bbox=[613, 257, 639, 461]
+[ 195.2s wall |  48.29s sim] YOLO Detection on drone_0: class='person' conf=0.256 bbox=[618, 317, 639, 468]
+[ 210.0s wall |  51.70s sim] YOLO Detection on drone_0: class='person' conf=0.340 bbox=[355, 0, 369, 27]
+[ 215.1s wall |  52.90s sim] YOLO Detection on drone_0: class='person' conf=0.590 bbox=[267, 155, 288, 195]
+[ 216.0s wall |  53.10s sim] YOLO Detection on drone_0: class='person' conf=0.755 bbox=[258, 207, 279, 244]
+[ 216.0s wall |  53.11s sim] EVENT [AUTONOMOUS_VICTIM_DISCOVERY] (drone_0): {'event_type': 'VICTIM_DISCOVERED', 'timestamp': 53.0, 'victim_track_id': 2, 'confirming_drone_id': 0, 'world_x': 13.55, 'world_y': 95.42, 'grid_x': 3, 'grid_y': 23, 'grid_cell_size_m': 4.0, 'confidence': 0.562, 'median_depth_estimate': 9.74, 'confirmation_count': 3, 'confirmation_window': 6, 'consensus_span_sec': 1.4, 'depth_valid_samples': 60, 'depth_spread': 0.63, 'verification_mode': 'RGBD', 'thermal_peak_k': None, 'thermal_delta_k': None}
+[ 216.3s wall |  53.17s sim] EVENT [SAR_TASK_ASSIGNED] (drone_0): {'task_id': 'task_victim_1', 'type': 'ASSIGNED', 'drone_id': 'drone_0', 'sim_time': 53.168, 'target': (13.55, 95.42)}
+[ 216.7s wall |  53.26s sim] EVENT [SAR_INVESTIGATING_STARTED] (drone_0): {'task_id': 'task_victim_1', 'drone_id': 'drone_0', 'sim_time': 53.264, 'progress': 0.1}
+[ 216.8s wall |  53.28s sim] YOLO Detection on drone_0: class='person' conf=0.446 bbox=[248, 184, 269, 220]
+[ 237.0s wall |  58.17s sim] EVENT [SAR_TASK_COMPLETED] (drone_0): {'task_id': 'task_victim_1', 'drone_id': 'drone_0', 'sim_time': 58.168}
+[ 237.0s wall |  58.17s sim] *** SAR MISSION MILESTONE REACHED: Victim Task COMPLETED! ***
+[ 242.0s wall |  59.40s sim] Shutting down mission processes...

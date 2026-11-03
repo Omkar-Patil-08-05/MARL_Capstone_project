@@ -3,57 +3,31 @@
     <model name="rescue_randy_standing">
         <static>true</static>
         <link name="link">
-            <pose>0 0 0 0 0 0</pose>
-            <!-- Body Cylinder -->
+            <!-- Rescue Randy manikin model:
+                 The rescue_randy.dae mesh origin is at Z≈+0.624m relative to its base.
+                 A pose offset of Z=-0.624m places the base directly on the ground (Z=0).
+                 Collision box (0.65m x 0.60m x 0.85m centered at Z=0.425m) accurately bounds
+                 the physical manikin geometry for contact and raycast detection. -->
+            <pose>0 0 -0.623996 0 0 0</pose>
             <collision name="body_collision">
-                <pose>0 0 0.75 0 0 0</pose>
+                <pose>0 0 0.425 0 0 0</pose>
                 <geometry>
-                    <cylinder>
-                        <radius>0.2</radius>
-                        <length>1.5</length>
-                    </cylinder>
+                    <box>
+                        <size>0.65 0.60 0.85</size>
+                    </box>
                 </geometry>
             </collision>
-            <visual name="body_visual">
-                <pose>0 0 0.75 0 0 0</pose>
+            <visual name="visual">
                 <geometry>
-                    <cylinder>
-                        <radius>0.2</radius>
-                        <length>1.5</length>
-                    </cylinder>
+                    <mesh>
+                        <uri>meshes/rescue_randy.dae</uri>
+                    </mesh>
                 </geometry>
-                <material>
-                    <ambient>0.8 0.4 0.1 1</ambient>
-                    <diffuse>0.8 0.4 0.1 1</diffuse>
-                </material>
-                <plugin filename="ignition-gazebo-thermal-system" name="ignition::gazebo::systems::Thermal">
+                <!-- gz-sim-thermal-system: attaches a human body heat signature.
+                     max_temp=308 K (34.85°C) for consistent thermal sensor detection. -->
+                <plugin filename="gz-sim-thermal-system" name="gz::sim::systems::Thermal">
                     <heat_signature>materials/textures/RescueRandy_Thermal.png</heat_signature>
-                    <max_temp>305</max_temp>
-                </plugin>
-            </visual>
-            <!-- Head Sphere -->
-            <collision name="head_collision">
-                <pose>0 0 1.65 0 0 0</pose>
-                <geometry>
-                    <sphere>
-                        <radius>0.15</radius>
-                    </sphere>
-                </geometry>
-            </collision>
-            <visual name="head_visual">
-                <pose>0 0 1.65 0 0 0</pose>
-                <geometry>
-                    <sphere>
-                        <radius>0.15</radius>
-                    </sphere>
-                </geometry>
-                <material>
-                    <ambient>0.9 0.7 0.5 1</ambient>
-                    <diffuse>0.9 0.7 0.5 1</diffuse>
-                </material>
-                <plugin filename="ignition-gazebo-thermal-system" name="ignition::gazebo::systems::Thermal">
-                    <heat_signature>materials/textures/RescueRandy_Thermal.png</heat_signature>
-                    <max_temp>307</max_temp>
+                    <max_temp>308</max_temp>
                 </plugin>
             </visual>
         </link>

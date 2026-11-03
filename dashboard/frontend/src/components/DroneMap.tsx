@@ -1,8 +1,19 @@
 import React, { useMemo } from 'react';
-import type { WorldData, DroneTelemetry, ExploredCell, VictimState } from '../types/telemetry';
+import type { WorldData, DroneTelemetry, ExploredCell, VictimState, SARTaskTelemetry } from '../types/telemetry';
 import { Map } from 'lucide-react';
+import { formatCoverage } from '../utils/formatters';
 
 const DRONE_PALETTE = ['#00f2fe', '#4facfe', '#a78bfa', '#f472b6', '#fb923c', '#facc15'];
+
+const TASK_STATE_COLORS: Record<string, string> = {
+    DISCOVERED: '#f59e0b',
+    ASSIGNED: '#00f2fe',
+    APPROACHING: '#818cf8',
+    INVESTIGATING: '#facc15',
+    COMPLETED: '#10b981',
+    FAILED: '#ef4444',
+};
+const getTaskColor = (state: string) => TASK_STATE_COLORS[state] || '#00f2fe';
 
 interface DroneMapProps {
     worldData: WorldData | null;
@@ -11,11 +22,12 @@ interface DroneMapProps {
     exploredCells: ExploredCell[];
     victims: VictimState[];
     trackedVictims: VictimState[];
+    tasks?: SARTaskTelemetry[];
     activeFrontiers?: Record<string, [number, number]>;
     coverage?: number;
 }
 
-export function DroneMap({ worldData, drones, history, exploredCells, victims, trackedVictims, coverage = 0 }: DroneMapProps) {
+export function DroneMap({ worldData, drones, history, exploredCells, victims, trackedVictims, tasks = [], coverage = 0 }: DroneMapProps) {
     const [isExpanded, setIsExpanded] = React.useState(false);
 
     // If modal is active, listen for escape key
@@ -376,6 +388,93 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
                     })}
                 </g>
 
+                {/* Task Assignment Vectors Layer */}
+                <g className="task-assignment-vectors-layer">
+                    {tasks && tasks.map(t => {
+                        if (!t.assigned_drone_id || t.state === 'COMPLETED' || t.state === 'FAILED') return null;
+                        const drone = drones.find(d =>
+                            d.id === t.assigned_drone_id ||
+                            d.id === `drone_${t.assigned_drone_id}` ||
+                            t.assigned_drone_id === d.id.replace('drone_', '')
+                        );
+                        if (!drone) return null;
+                        const dx = drone.x - originX;
+                        const dy = drone.y - originY;
+                        const tx = t.world_x - originX;
+                        const ty = t.world_y - originY;
+                        const tColor = getTaskColor(t.state);
+                        return (
+                            <g key={`vec-${t.task_id}`}>
+                                <line
+                                    x1={dx}
+                                    y1={dy}
+                                    x2={tx}
+                                    y2={ty}
+                                    stroke={tColor}
+                                    strokeWidth={0.5}
+                                    strokeDasharray="2,1.5"
+                                    opacity={0.8}
+                                />
+                            </g>
+                        );
+                    })}
+                </g>
+
+                {/* SAR Tasks Target Layer */}
+                <g className="sar-tasks-layer">
+                    {tasks && tasks.map(t => {
+                        const tx = t.world_x - originX;
+                        const ty = t.world_y - originY;
+                        const tColor = getTaskColor(t.state);
+                        const isInvestigating = t.state === 'INVESTIGATING';
+                        const isCompleted = t.state === 'COMPLETED';
+
+                        return (
+                            <g key={`task-${t.task_id}`} transform={`translate(${tx}, ${ty})`}>
+                                {/* Outer reticle / pulse if investigating */}
+                                <circle
+                                    r={isInvestigating ? 4.2 : 3.4}
+                                    fill="none"
+                                    stroke={tColor}
+                                    strokeWidth={0.4}
+                                    strokeDasharray={isInvestigating ? "1.5,1.5" : undefined}
+                                    opacity={0.85}
+                                />
+                                {/* Diamond marker */}
+                                <polygon
+                                    points="0,-2.6 2.6,0 0,2.6 -2.6,0"
+                                    fill={`${tColor}33`}
+                                    stroke={tColor}
+                                    strokeWidth={0.5}
+                                />
+                                {/* Task ID label */}
+                                <text
+                                    y={-4.0}
+                                    fill={tColor}
+                                    fontSize={1.9}
+                                    fontWeight={800}
+                                    textAnchor="middle"
+                                    fontFamily="var(--font-mono)"
+                                    style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+                                >
+                                    {t.task_id.replace('task_', 'T:').replace('victim_', 'V')}
+                                </text>
+                                {/* State pill */}
+                                <text
+                                    y={4.8}
+                                    fill={tColor}
+                                    fontSize={1.4}
+                                    fontWeight={700}
+                                    textAnchor="middle"
+                                    fontFamily="var(--font-mono)"
+                                >
+                                    {isCompleted ? '✓ DONE' : t.state}
+                                </text>
+                            </g>
+                        );
+                    })}
+                </g>
+
                 {/* Trajectories Layer */}
                 <g className="trajectories-layer">
                     {Object.entries(history).map(([droneId, pts]) => {
@@ -485,6 +584,10 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
                 <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#00ff87', border: '1px solid #fff' }} />
                 <span>VICTIM CONFIRMED</span>
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: 8, height: 8, transform: 'rotate(45deg)', background: 'rgba(0,242,254,0.4)', border: '1px solid #00f2fe' }} />
+                <span>SAR TASK TARGET</span>
+            </div>
             {drones.map(d => (
                 <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <div style={{ width: 9, height: 9, borderRadius: '50%', background: getDroneColor(d.id) }} />
@@ -528,7 +631,7 @@ export function DroneMap({ worldData, drones, history, exploredCells, victims, t
                                 <Map size={24} /> OPERATIONAL SAR GRID HEATMAP
                             </h2>
                             <div style={{ background: 'rgba(0, 242, 254, 0.15)', border: '1px solid var(--accent-cyan)', color: 'var(--accent-cyan)', padding: '4px 12px', borderRadius: '4px', fontSize: '1rem', fontWeight: 'bold', fontFamily: 'var(--font-mono)' }}>
-                                COVERAGE: {coverage.toFixed(1)}%
+                                COVERAGE: {formatCoverage(coverage, 2)}
                             </div>
                         </div>
                         <button

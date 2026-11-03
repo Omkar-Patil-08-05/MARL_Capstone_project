@@ -3216,31 +3216,31 @@
   <include>
     <name>victim_22</name>
     <uri>model://casual_female</uri>
-    <pose>94.00 86.00 0.0 0 0 0</pose>
+    <pose>18.00 38.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_23</name>
     <uri>model://casual_female</uri>
-    <pose>18.00 2.00 0.0 0 0 0</pose>
+    <pose>98.00 6.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_24</name>
     <uri>model://casual_female</uri>
-    <pose>6.00 90.00 0.0 0 0 0</pose>
+    <pose>94.00 90.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_25</name>
     <uri>model://casual_female</uri>
-    <pose>98.00 6.00 0.0 0 0 0</pose>
+    <pose>26.00 94.00 0.0 0 0 0</pose>
   </include>
 
   <include>
     <name>victim_26</name>
     <uri>model://casual_female</uri>
-    <pose>46.00 98.00 0.0 0 0 0</pose>
+    <pose>86.00 42.00 0.0 0 0 0</pose>
   </include>
 
 

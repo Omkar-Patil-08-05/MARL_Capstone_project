@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { formatCoverage } from '../utils/formatters';
 
 export interface Experiment {
     id: string;
@@ -121,7 +122,7 @@ export function ExperimentList({ onSelectMission }: Props) {
                                 <td style={{ padding: '12px 4px' }}>{m.drone_count}</td>
                                 <td style={{ padding: '12px 4px' }}>{m.victim_count}</td>
                                 <td style={{ padding: '12px 4px', color: 'var(--accent-cyan)' }}>
-                                    {m.final_coverage !== null ? `${m.final_coverage}%` : 'N/A'}
+                                    {m.final_coverage !== null && m.final_coverage !== undefined ? formatCoverage(m.final_coverage) : 'N/A'}
                                 </td>
                                 <td style={{ padding: '12px 4px' }}>
                                     <button 
