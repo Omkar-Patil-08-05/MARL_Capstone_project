@@ -1,0 +1,33 @@
+{
+  "provenance": {
+    "timestamp_utc": "2026-11-11T06:18:01Z",
+    "platform": "Linux-6.8.0-41-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.3",
+    "numpy_version": "1.26.4",
+    "scipy_version": "scipy.stats",
+    "torch_version": "2.1.2+cu121",
+    "ros_distribution": "ROS 2 Jazzy Jalisco",
+    "gazebo_version": "Gazebo Harmonic 8.x"
+  },
+  "model_artifacts": {
+    "qmix": {
+      "status": "VALID",
+      "path": "/home/capstone/capstone_project_antigravity/models/qmix_sar_v4_align_best.pth",
+      "size_bytes": 158042,
+      "expected_size": 158042,
+      "sha256": "f87d87528969ff3165a0cdfb299f5d228ad99502b974176d05b81479242a272d",
+      "expected_sha256": "f87d87528969ff3165a0cdfb299f5d228ad99502b974176d05b81479242a272d"
+    },
+    "yolo": {
+      "status": "VALID",
+      "path": "/home/capstone/capstone_project_antigravity/models/yolov8n.pt",
+      "size_bytes": 6549796,
+      "expected_size": 6549796,
+      "sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+      "expected_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36"
+    }
+  },
+  "execution_command": "source /opt/ros/jazzy/setup.bash && source drone_ws/install/setup.bash && python3 scripts/evaluation/run_qmix_research_evaluation.py",
+  "total_sorties": 130,
+  "runtime_seconds": 149.01
+}
